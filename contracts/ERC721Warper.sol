@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import "./Wrapping.sol";
-import "./interfaces/IERC721Wrapping.sol";
+import "./Warper.sol";
+import "./interfaces/IERC721Warper.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
+// todo: expose mint() for MetaHub
 // todo: revert with custom errors
+error BalanceQueryForZeroAddress();
+error OwnerQueryForNonexistentToken(uint256 tokenId);
+error ApprovalToCurrentOwner(address owner);
+error InvalidApproveCaller(address caller);
 
-contract ERC721Wrapping is IERC721Wrapping, Wrapping {
+contract ERC721Warper is IERC721Warper, Warper {
     using ERC165Checker for address;
     using Address for address;
 
@@ -27,7 +32,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    constructor(address origin) Wrapping(origin) {
+    constructor(address origin) Warper(origin) {
         assert(_ORIGINAL_SLOT == bytes32(uint256(keccak256("iq.protocol.nft.original")) - 1));
     }
 
@@ -46,7 +51,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
      * @inheritdoc IERC721
      */
     function balanceOf(address owner) public view virtual override returns (uint256) {
-        require(owner != address(0), "ERC721: balance query for the zero address");
+        if (owner == address(0)) revert BalanceQueryForZeroAddress();
         return _balances[owner];
     }
 
@@ -55,7 +60,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
      */
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
         address owner = _owners[tokenId];
-        require(owner != address(0), "ERC721: owner query for nonexistent token");
+        if (owner == address(0)) revert OwnerQueryForNonexistentToken(tokenId);
         return owner;
     }
 
@@ -63,13 +68,12 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
      * @inheritdoc IERC721
      */
     function approve(address to, uint256 tokenId) public virtual override {
-        address owner = ERC721Wrapping.ownerOf(tokenId);
-        require(to != owner, "ERC721: approval to current owner");
+        address owner = ERC721Warper.ownerOf(tokenId);
+        if (to == owner) revert ApprovalToCurrentOwner(owner);
 
-        require(
-            _msgSender() == owner || isApprovedForAll(owner, _msgSender()),
-            "ERC721: approve caller is not owner nor approved for all"
-        );
+        if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) {
+            revert InvalidApproveCaller(_msgSender());
+        }
 
         _approve(to, tokenId);
     }
@@ -182,7 +186,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
      */
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
         require(_exists(tokenId), "ERC721: operator query for nonexistent token");
-        address owner = ERC721Wrapping.ownerOf(tokenId);
+        address owner = ERC721Warper.ownerOf(tokenId);
         return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
     }
 
@@ -251,7 +255,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
      * Emits a {Transfer} event.
      */
     function _burn(uint256 tokenId) internal virtual {
-        address owner = ERC721Wrapping.ownerOf(tokenId);
+        address owner = ERC721Warper.ownerOf(tokenId);
 
         _beforeTokenTransfer(owner, address(0), tokenId);
 
@@ -280,7 +284,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
         address to,
         uint256 tokenId
     ) internal virtual {
-        require(ERC721Wrapping.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
+        require(ERC721Warper.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
         require(to != address(0), "ERC721: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
@@ -302,7 +306,7 @@ contract ERC721Wrapping is IERC721Wrapping, Wrapping {
      */
     function _approve(address to, uint256 tokenId) internal virtual {
         _tokenApprovals[tokenId] = to;
-        emit Approval(ERC721Wrapping.ownerOf(tokenId), to, tokenId);
+        emit Approval(ERC721Warper.ownerOf(tokenId), to, tokenId);
     }
 
     /**

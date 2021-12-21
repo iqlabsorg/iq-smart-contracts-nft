@@ -5,12 +5,12 @@ import {
   ERC20Mock__factory,
   ERC721Mock,
   ERC721Mock__factory,
-  ERC721Wrapping,
-  ERC721Wrapping__factory,
+  ERC721Warper,
+  ERC721Warper__factory,
 } from '../../typechain';
 import { expectError } from '../utils';
 
-describe('ERC721 Wrapping', () => {
+describe('ERC721 Warper', () => {
   let deployer: SignerWithAddress;
   let nftCreator: SignerWithAddress;
   let oNFT: ERC721Mock;
@@ -25,12 +25,12 @@ describe('ERC721 Wrapping', () => {
     await oNFT.deployed();
   });
 
-  describe('Wrapping', () => {
+  describe('Warper', () => {
     it('ensures the original NFT interface compatibility', async () => {
-      const wrappingFactory = new ERC721Wrapping__factory(deployer);
+      const warperFactory = new ERC721Warper__factory(deployer);
       const erc20Factory = new ERC20Mock__factory(nftCreator);
       const erc20Token = await erc20Factory.deploy('Random ERC20', 'TST', 18, 1);
-      await expectError(wrappingFactory.deploy(erc20Token.address), 'InvalidOriginalTokenInterface', [
+      await expectError(warperFactory.deploy(erc20Token.address), 'InvalidOriginalTokenInterface', [
         erc20Token.address,
         '0x5b5e139f',
       ]);
@@ -38,22 +38,22 @@ describe('ERC721 Wrapping', () => {
   });
 
   describe('When original NFT is wrapped', () => {
-    let wNFT: ERC721Wrapping;
+    let wNFT: ERC721Warper;
 
     beforeEach(async () => {
-      const wrappingFactory = new ERC721Wrapping__factory(deployer);
-      wNFT = await wrappingFactory.deploy(oNFT.address);
+      const warperFactory = new ERC721Warper__factory(deployer);
+      wNFT = await warperFactory.deploy(oNFT.address);
       await wNFT.deployed();
     });
 
-    describe('Wrapping Interface', () => {
+    describe('Warper Interface', () => {
       it('returns the original asset address', async () => {
         await expect(wNFT.__original()).to.eventually.eq(oNFT.address);
       });
     });
 
     it('can forward the call to the oNFT', async () => {
-      await expect(ERC20Mock__factory.connect(wNFT.address, deployer).symbol()).to.eventually.eq('ONFT');
+      await expect(ERC721Mock__factory.connect(wNFT.address, deployer).symbol()).to.eventually.eq('ONFT');
     });
   });
 });

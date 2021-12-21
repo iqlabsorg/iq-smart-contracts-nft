@@ -28,13 +28,4 @@ module.exports = {
     'node/no-unpublished-import': 'off',
     'node/no-missing-import': 'off',
   },
-  overrides: [
-    {
-      files: ['contracts/mocks/*.sol'],
-      excludedFiles: '*.test.js',
-      rules: {
-        quotes: ['error', 'single'],
-      },
-    },
-  ],
 };

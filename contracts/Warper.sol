@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -6,9 +7,9 @@ import "@openzeppelin/contracts/utils/StorageSlot.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./interfaces/IWrapping.sol";
+import "./interfaces/IWarper.sol";
 
-abstract contract Wrapping is IWrapping, Context, ERC165 {
+abstract contract Warper is IWarper, Context, ERC165 {
     // This is the keccak-256 hash of "iq.protocol.nft.original" subtracted by 1
     bytes32 internal constant _ORIGINAL_SLOT = 0x855a0282585e35fc8dbb4da2088acdbe4b69460635994619e934d7c30b91f660;
 
@@ -61,7 +62,7 @@ abstract contract Wrapping is IWrapping, Context, ERC165 {
     }
 
     /**
-     * @dev Delegates the current call to the address returned by `_original()`.
+     * @dev Forwards the current call to the address returned by `_original()`.
      *
      * This function does not return to its internal call site, it will return directly to the external caller.
      */
@@ -71,7 +72,7 @@ abstract contract Wrapping is IWrapping, Context, ERC165 {
     }
 
     /**
-     * @dev Fallback function that delegates calls to the address returned by `_original()`. Will run if no other
+     * @dev Fallback function that forwards calls to the address returned by `_original()`. Will run if no other
      * function in the contract matches the call data.
      */
     fallback() external payable virtual {
@@ -79,7 +80,7 @@ abstract contract Wrapping is IWrapping, Context, ERC165 {
     }
 
     /**
-     * @dev Fallback function that delegates calls to the address returned by `_original()`. Will run if call data
+     * @dev Fallback function that forwards calls to the address returned by `_original()`. Will run if call data
      * is empty.
      */
     receive() external payable virtual {

@@ -1,7 +1,6 @@
 import hre, { ethers } from 'hardhat';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import { expect } from 'chai';
-import Assertion = Chai.Assertion;
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 export type NamedSigner = Awaited<ReturnType<typeof ethers.getNamedSigner>>;
