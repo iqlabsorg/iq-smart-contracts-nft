@@ -9,16 +9,23 @@ import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
-// todo: expose mint() for MetaHub
-// todo: revert with custom errors
-error BalanceQueryForZeroAddress();
-error OwnerQueryForNonexistentToken(uint256 tokenId);
-error ApprovalToCurrentOwner(address owner);
-error InvalidApproveCaller(address caller);
-
 contract ERC721Warper is IERC721Warper, Warper {
     using ERC165Checker for address;
     using Address for address;
+
+    error BalanceQueryForZeroAddress();
+    error OwnerQueryForNonexistentToken(uint256 tokenId);
+    error OperatorQueryForNonexistentToken(uint256 tokenId);
+    error ApprovalToCurrentOwner(address owner);
+    error ApproveCallerIsNotOwnerNorApprovedForAll(address caller);
+    error ApprovedQueryForNonexistentToken(uint256 tokenId);
+    error TransferCallerIsNotOwnerNorApproved(address caller);
+    error TransferToNonERC721ReceiverImplementer(address to);
+    error MintToTheZeroAddress();
+    error TokenIsAlreadyMinted(uint256 tokenId);
+    error TransferOfTokenThatIsNotOwn(uint256 tokenId);
+    error TransferToTheZeroAddress();
+    error ApproveToCaller();
 
     // Mapping from token ID to owner address
     mapping(uint256 => address) private _owners;
@@ -52,6 +59,7 @@ contract ERC721Warper is IERC721Warper, Warper {
      */
     function balanceOf(address owner) public view virtual override returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
+
         return _balances[owner];
     }
 
@@ -61,6 +69,7 @@ contract ERC721Warper is IERC721Warper, Warper {
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
         address owner = _owners[tokenId];
         if (owner == address(0)) revert OwnerQueryForNonexistentToken(tokenId);
+
         return owner;
     }
 
@@ -72,7 +81,7 @@ contract ERC721Warper is IERC721Warper, Warper {
         if (to == owner) revert ApprovalToCurrentOwner(owner);
 
         if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) {
-            revert InvalidApproveCaller(_msgSender());
+            revert ApproveCallerIsNotOwnerNorApprovedForAll(_msgSender());
         }
 
         _approve(to, tokenId);
@@ -82,7 +91,7 @@ contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      */
     function getApproved(uint256 tokenId) public view virtual override returns (address) {
-        require(_exists(tokenId), "ERC721: approved query for nonexistent token");
+        if (!_exists(tokenId)) revert ApprovedQueryForNonexistentToken(tokenId);
 
         return _tokenApprovals[tokenId];
     }
@@ -109,7 +118,10 @@ contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId
     ) public virtual override {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
+        if (!_isApprovedOrOwner(_msgSender(), tokenId)) {
+            revert TransferCallerIsNotOwnerNorApproved(_msgSender());
+        }
+
         _transfer(from, to, tokenId);
     }
 
@@ -133,7 +145,8 @@ contract ERC721Warper is IERC721Warper, Warper {
         uint256 tokenId,
         bytes memory _data
     ) public virtual override {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
+        if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert TransferCallerIsNotOwnerNorApproved(_msgSender());
+
         _safeTransfer(from, to, tokenId, _data);
     }
 
@@ -162,7 +175,9 @@ contract ERC721Warper is IERC721Warper, Warper {
         bytes memory _data
     ) internal virtual {
         _transfer(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
+        if (!_checkOnERC721Received(from, to, tokenId, _data)) {
+            revert TransferToNonERC721ReceiverImplementer(to);
+        }
     }
 
     /**
@@ -185,8 +200,9 @@ contract ERC721Warper is IERC721Warper, Warper {
      * - `tokenId` must exist.
      */
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
-        require(_exists(tokenId), "ERC721: operator query for nonexistent token");
+        if (!_exists(tokenId)) revert OperatorQueryForNonexistentToken(tokenId);
         address owner = ERC721Warper.ownerOf(tokenId);
+
         return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
     }
 
@@ -205,7 +221,7 @@ contract ERC721Warper is IERC721Warper, Warper {
     }
 
     /**
-     * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
+     * @dev Same as `_safeMint`, with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
     function _safeMint(
@@ -214,10 +230,9 @@ contract ERC721Warper is IERC721Warper, Warper {
         bytes memory _data
     ) internal virtual {
         _mint(to, tokenId);
-        require(
-            _checkOnERC721Received(address(0), to, tokenId, _data),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
+        if (!_checkOnERC721Received(address(0), to, tokenId, _data)) {
+            revert TransferToNonERC721ReceiverImplementer(to);
+        }
     }
 
     /**
@@ -233,8 +248,8 @@ contract ERC721Warper is IERC721Warper, Warper {
      * Emits a {Transfer} event.
      */
     function _mint(address to, uint256 tokenId) internal virtual {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId), "ERC721: token already minted");
+        if (to == address(0)) revert MintToTheZeroAddress();
+        if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
@@ -284,8 +299,8 @@ contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId
     ) internal virtual {
-        require(ERC721Warper.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
-        require(to != address(0), "ERC721: transfer to the zero address");
+        if (ERC721Warper.ownerOf(tokenId) != from) revert TransferOfTokenThatIsNotOwn(tokenId);
+        if (to == address(0)) revert TransferToTheZeroAddress();
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -319,7 +334,7 @@ contract ERC721Warper is IERC721Warper, Warper {
         address operator,
         bool approved
     ) internal virtual {
-        require(owner != operator, "ERC721: approve to caller");
+        if (owner == operator) revert ApproveToCaller();
         _operatorApprovals[owner][operator] = approved;
         emit ApprovalForAll(owner, operator, approved);
     }
@@ -342,11 +357,11 @@ contract ERC721Warper is IERC721Warper, Warper {
     ) private returns (bool) {
         if (!to.isContract()) return true;
 
-        try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
-            return retval == IERC721Receiver.onERC721Received.selector;
+        try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 result) {
+            return result == IERC721Receiver.onERC721Received.selector;
         } catch (bytes memory reason) {
             if (reason.length == 0) {
-                revert("ERC721: transfer to non ERC721Receiver implementer");
+                revert TransferToNonERC721ReceiverImplementer(to);
             } else {
                 assembly {
                     revert(add(32, reason), mload(reason))
