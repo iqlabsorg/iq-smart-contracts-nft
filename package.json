@@ -30,6 +30,8 @@
     "package.json": "sort-package-json"
   },
   "devDependencies": {
+    "@commitlint/cli": "^15.0.0",
+    "@commitlint/config-conventional": "^15.0.0",
     "@fintechstudios/eslint-plugin-chai-as-promised": "^3.1.0",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@latest",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
