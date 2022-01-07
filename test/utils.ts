@@ -1,9 +1,8 @@
-import hre, { ethers } from 'hardhat';
+import hre from 'hardhat';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import { expect } from 'chai';
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
-export type NamedSigner = Awaited<ReturnType<typeof ethers.getNamedSigner>>;
 
 export const wait = async (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => {
   return (await txPromise).wait();
