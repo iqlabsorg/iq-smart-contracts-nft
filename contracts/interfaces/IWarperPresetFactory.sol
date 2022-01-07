@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-interface IWarperFactory {
+interface IWarperPresetFactory {
     struct WarperPreset {
         bytes32 id;
         address implementation;

@@ -3,9 +3,9 @@ pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "./interfaces/IWarperFactory.sol";
+import "./interfaces/IWarperPresetFactory.sol";
 
-contract WarperFactory is IWarperFactory {
+contract WarperPresetFactory is IWarperPresetFactory {
     using Clones for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
@@ -31,7 +31,7 @@ contract WarperFactory is IWarperFactory {
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function addPreset(bytes32 presetId, address implementation) external override {
         // todo: onlyOwner
@@ -44,7 +44,7 @@ contract WarperFactory is IWarperFactory {
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function removePreset(bytes32 presetId) external override {
         // todo: onlyOwner
@@ -55,7 +55,7 @@ contract WarperFactory is IWarperFactory {
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function enablePreset(bytes32 presetId) external override whenDisabled(presetId) {
         // todo: onlyOwner
@@ -64,7 +64,7 @@ contract WarperFactory is IWarperFactory {
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function disablePreset(bytes32 presetId) external override whenEnabled(presetId) {
         // todo: onlyOwner
@@ -73,14 +73,14 @@ contract WarperFactory is IWarperFactory {
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function isPresetEnabled(bytes32 presetId) external view override returns (bool) {
         return _presets[presetId].enabled;
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function getPresets() external view override returns (WarperPreset[] memory presets) {
         for (uint256 i = 0; i < _presetIds.length(); i++) {
@@ -89,14 +89,14 @@ contract WarperFactory is IWarperFactory {
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function getPreset(bytes32 presetId) external view override returns (WarperPreset memory) {
         return _presets[presetId];
     }
 
     /**
-     * @inheritdoc IWarperFactory
+     * @inheritdoc IWarperPresetFactory
      */
     function deployPreset(
         bytes32 presetId,
