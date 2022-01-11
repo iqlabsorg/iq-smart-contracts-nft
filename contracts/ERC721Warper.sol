@@ -39,10 +39,6 @@ contract ERC721Warper is IERC721Warper, Warper {
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    constructor(address origin) Warper(origin) {
-        assert(_ORIGINAL_SLOT == bytes32(uint256(keccak256("iq.protocol.nft.original")) - 1));
-    }
-
     /**
      * @dev Validates the original NFT.
      */
@@ -216,7 +212,8 @@ contract ERC721Warper is IERC721Warper, Warper {
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address to, uint256 tokenId) internal virtual {
+    function safeMint(address to, uint256 tokenId) external onlyMetaHub {
+        // todo: custom method?
         _safeMint(to, tokenId, "");
     }
 

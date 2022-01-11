@@ -79,8 +79,8 @@ interface IWarperPresetFactory {
     /**
      * @dev Deploys a new warper from the preset identified by `presetId`.
      * @param presetId Warper preset id.
-     * @param data Warper initialization data.
+     * @param initData Warper initialization data.
      * @return Deployed warper address.
      */
-    function deployPreset(bytes32 presetId, bytes calldata data) external returns (address);
+    function deployPreset(bytes32 presetId, bytes[] calldata initData) external returns (address);
 }

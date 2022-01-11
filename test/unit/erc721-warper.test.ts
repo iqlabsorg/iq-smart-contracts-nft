@@ -10,6 +10,9 @@ import {
 } from '../../typechain';
 import { expectError } from '../utils';
 
+const { AddressZero } = ethers.constants;
+const { defaultAbiCoder } = ethers.utils;
+
 describe('ERC721 Warper', () => {
   let deployer: SignerWithAddress;
   let nftCreator: SignerWithAddress;
@@ -30,10 +33,13 @@ describe('ERC721 Warper', () => {
       const warperFactory = new ERC721Warper__factory(deployer);
       const erc20Factory = new ERC20Mock__factory(nftCreator);
       const erc20Token = await erc20Factory.deploy('Random ERC20', 'TST', 18, 1);
-      await expectError(warperFactory.deploy(erc20Token.address), 'InvalidOriginalTokenInterface', [
-        erc20Token.address,
-        '0x5b5e139f',
-      ]);
+      const wNFT = await warperFactory.deploy();
+
+      await expectError(
+        wNFT.iqInitialize(defaultAbiCoder.encode(['address', 'address'], [erc20Token.address, AddressZero])),
+        'InvalidOriginalTokenInterface',
+        [erc20Token.address, '0x5b5e139f'],
+      );
     });
   });
 
@@ -42,13 +48,14 @@ describe('ERC721 Warper', () => {
 
     beforeEach(async () => {
       const warperFactory = new ERC721Warper__factory(deployer);
-      wNFT = await warperFactory.deploy(oNFT.address);
-      await wNFT.deployed();
+      wNFT = await warperFactory.deploy();
+
+      await wNFT.iqInitialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, AddressZero]));
     });
 
     describe('Warper Interface', () => {
       it('returns the original asset address', async () => {
-        await expect(wNFT.__original()).to.eventually.eq(oNFT.address);
+        await expect(wNFT.iqOriginal()).to.eventually.eq(oNFT.address);
       });
     });
 

@@ -9,25 +9,65 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IWarper.sol";
 
+// todo: add proxy safe ReentrancyGuard
 abstract contract Warper is IWarper, Context, ERC165 {
     // This is the keccak-256 hash of "iq.protocol.nft.original" subtracted by 1
-    bytes32 internal constant _ORIGINAL_SLOT = 0x855a0282585e35fc8dbb4da2088acdbe4b69460635994619e934d7c30b91f660;
+    bytes32 private constant _ORIGINAL_SLOT = 0x855a0282585e35fc8dbb4da2088acdbe4b69460635994619e934d7c30b91f660;
+
+    // This is the keccak-256 hash of "iq.protocol.nft.metahub" subtracted by 1
+    bytes32 private constant _METAHUB_SLOT = 0x2895cf34325a86852c4193be2ddd0c51203a8222624bba8bf79259901261534f;
 
     /**
      * @dev Thrown when the original NFT does not implement the interface, expected by Wrapping.
      */
     error InvalidOriginalTokenInterface(address original, bytes4 expectedInterfaceId);
+    error InvalidMetaHub(address got, address expected);
 
-    constructor(address original) {
-        _validateOriginal(original);
+    modifier onlyMetaHub() {
+        address metaHubAddress = iqMetaHub();
+        if (msg.sender != metaHubAddress) {
+            revert InvalidMetaHub(msg.sender, metaHubAddress);
+        }
+
+        _;
+    }
+
+    /**
+     * @dev Base Warper initializer.
+     *
+     * If overridden should call `super.iqInitialize()`.
+     */
+    function iqInitialize(bytes calldata config) public virtual {
+        //todo: consider initializer modifier
+        // Decode config
+        (address original, address metaHub) = abi.decode(config, (address, address));
+
+        assert(_ORIGINAL_SLOT == bytes32(uint256(keccak256("iq.protocol.nft.original")) - 1));
+        assert(_METAHUB_SLOT == bytes32(uint256(keccak256("iq.protocol.nft.metahub")) - 1));
+        _validateOriginal(original); //todo: force?
         StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value = original;
+        StorageSlot.getAddressSlot(_METAHUB_SLOT).value = metaHub;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IWarper).interfaceId || ERC165.supportsInterface(interfaceId);
     }
 
     /**
      * @dev Returns the original NFT address.
      */
-    function __original() public view override returns (address) {
+    function iqOriginal() public view override returns (address) {
         return StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value;
+    }
+
+    /**
+     * @inheritdoc IWarper
+     */
+    function iqMetaHub() public view override returns (address) {
+        return StorageSlot.getAddressSlot(_METAHUB_SLOT).value;
     }
 
     /**
@@ -62,28 +102,30 @@ abstract contract Warper is IWarper, Context, ERC165 {
     }
 
     /**
-     * @dev Forwards the current call to the address returned by `_original()`.
+     * @dev Forwards the current call to the address returned by `iqOriginal()`.
      *
      * This function does not return to its internal call site, it will return directly to the external caller.
      */
     function _fallback() internal virtual {
         _beforeFallback();
-        _forward(__original());
+        _forward(iqOriginal());
     }
 
     /**
-     * @dev Fallback function that forwards calls to the address returned by `_original()`. Will run if no other
+     * @dev Fallback function that forwards calls to the address returned by `iqOriginal()`. Will run if no other
      * function in the contract matches the call data.
      */
     fallback() external payable virtual {
+        // todo: nonReentrant?
         _fallback();
     }
 
     /**
-     * @dev Fallback function that forwards calls to the address returned by `_original()`. Will run if call data
+     * @dev Fallback function that forwards calls to the address returned by `iqOriginal()`. Will run if call data
      * is empty.
      */
     receive() external payable virtual {
+        // todo: nonReentrant?
         _fallback();
     }
 

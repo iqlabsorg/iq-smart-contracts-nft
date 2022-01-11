@@ -26,8 +26,7 @@ export const waitBlockchainTime = async (seconds: number): Promise<void> => {
  * @param error Custom error name.
  * @param errorParams Custom error params.
  */
-export const expectError = async (tx: Promise<unknown>, error: string, errorParams: unknown[]): Promise<void> => {
-  await expect(tx).to.be.revertedWith(
-    `${error}(${errorParams.map(p => (typeof p === 'string' ? `"${p}"` : p)).join(', ')})`,
-  );
+export const expectError = async (tx: Promise<unknown>, error: string, errorParams?: unknown[]): Promise<void> => {
+  const params = errorParams?.length ? errorParams.map(p => (typeof p === 'string' ? `"${p}"` : p)).join(', ') : '';
+  await expect(tx).to.be.revertedWith(`${error}(${params})`);
 };

@@ -2,14 +2,21 @@
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IWarperPresetFactory.sol";
+import "./interfaces/IWarper.sol";
 
 contract WarperPresetFactory is IWarperPresetFactory {
     using Clones for address;
+    using Address for address;
+    using ERC165Checker for address;
+
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    error DuplicateWarperPreset(bytes32 presetId);
+    error InvalidWarperPresetInterface();
+    error DuplicateWarperPresetId(bytes32 presetId);
     error DisabledWarperPreset(bytes32 presetId);
     error EnabledWarperPreset(bytes32 presetId);
 
@@ -35,11 +42,16 @@ contract WarperPresetFactory is IWarperPresetFactory {
      */
     function addPreset(bytes32 presetId, address implementation) external override {
         // todo: onlyOwner
+        // Check whether provided implementation address is a contract with the correct interface.
+        if (!implementation.supportsInterface(type(IWarper).interfaceId)) {
+            revert InvalidWarperPresetInterface();
+        }
+
         if (_presetIds.add(presetId)) {
             _presets[presetId] = WarperPreset(presetId, implementation, true);
             emit WarperPresetAdded(presetId, implementation);
         } else {
-            revert DuplicateWarperPreset(presetId);
+            revert DuplicateWarperPresetId(presetId);
         }
     }
 
@@ -82,10 +94,13 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function getPresets() external view override returns (WarperPreset[] memory presets) {
-        for (uint256 i = 0; i < _presetIds.length(); i++) {
+    function getPresets() external view override returns (WarperPreset[] memory) {
+        uint256 length = _presetIds.length();
+        WarperPreset[] memory presets = new WarperPreset[](length);
+        for (uint256 i = 0; i < length; i++) {
             presets[i] = _presets[_presetIds.at(i)];
         }
+        return presets;
     }
 
     /**
@@ -98,14 +113,19 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function deployPreset(
-        bytes32 presetId,
-        bytes calldata data //  solhint-disable no-unused-vars
-    ) external override whenEnabled(presetId) returns (address) {
+    function deployPreset(bytes32 presetId, bytes[] calldata initData)
+        external
+        override
+        whenEnabled(presetId)
+        returns (address)
+    {
         // Deploy warper preset implementation proxy.
-        address deployment = _presets[presetId].implementation.clone();
-        // todo: initialize
+        address warper = _presets[presetId].implementation.clone();
+        for (uint256 i = 0; i < initData.length; i++) {
+            warper.functionCall(initData[i]);
+        }
 
-        return deployment;
+        emit WarperPresetDeployed(presetId, warper);
+        return warper;
     }
 }

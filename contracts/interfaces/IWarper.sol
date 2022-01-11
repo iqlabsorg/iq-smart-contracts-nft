@@ -1,15 +1,24 @@
 // SPDX-License-Identifier: MIT
-// solhint-disable private-vars-leading-underscore
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 interface IWarper is IERC165 {
     /**
-     * @dev Returns the original NFT address.
+     * @dev Returns the original asset address.
      */
-    function __original() external view returns (address);
+    function iqOriginal() external view returns (address);
+
+    /**
+     * @dev Returns the MetaHub address.
+     */
+    function iqMetaHub() external view returns (address);
+
+    /**
+     * @dev Default warper initialization method.
+     * @param config Warper configuration parameters.
+     */
+    function iqInitialize(bytes calldata config) external;
 
     // todo: add lifecycle hooks
-    // __onWarp()
 }
