@@ -9,8 +9,7 @@ import {
 import { expect } from 'chai';
 import { expectError, wait } from '../utils';
 
-const { formatBytes32String } = ethers.utils;
-const { defaultAbiCoder } = ethers.utils;
+const { formatBytes32String, defaultAbiCoder } = ethers.utils;
 
 const expectWarperPresetData = async (preset: unknown | Promise<unknown>, data: Record<string, unknown>) => {
   const object = preset instanceof Promise ? await preset : preset;
@@ -120,7 +119,7 @@ describe('Warper Preset Factory', () => {
         factory.filters.WarperPresetDeployed(presetId1, null),
         receipt.blockNumber,
       );
-      const warperAddress = events[0].args.deployment;
+      const warperAddress = events[0].args.warper;
 
       // Assert warper is deployed and initialized correctly.
       expect(warperAddress).to.be.properAddress;
