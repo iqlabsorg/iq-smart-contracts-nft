@@ -40,7 +40,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function addPreset(bytes32 presetId, address implementation) external override {
+    function addPreset(bytes32 presetId, address implementation) external {
         // todo: onlyOwner
         // Check whether provided implementation address is a contract with the correct interface.
         if (!implementation.supportsInterface(type(IWarper).interfaceId)) {
@@ -58,7 +58,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function removePreset(bytes32 presetId) external override {
+    function removePreset(bytes32 presetId) external {
         // todo: onlyOwner
         if (_presetIds.remove(presetId)) {
             delete _presets[presetId];
@@ -69,7 +69,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function enablePreset(bytes32 presetId) external override whenDisabled(presetId) {
+    function enablePreset(bytes32 presetId) external whenDisabled(presetId) {
         // todo: onlyOwner
         _presets[presetId].enabled = true;
         emit WarperPresetEnabled(presetId);
@@ -78,7 +78,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function disablePreset(bytes32 presetId) external override whenEnabled(presetId) {
+    function disablePreset(bytes32 presetId) external whenEnabled(presetId) {
         // todo: onlyOwner
         _presets[presetId].enabled = false;
         emit WarperPresetDisabled(presetId);
@@ -87,14 +87,14 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function isPresetEnabled(bytes32 presetId) external view override returns (bool) {
+    function isPresetEnabled(bytes32 presetId) external view returns (bool) {
         return _presets[presetId].enabled;
     }
 
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function getPresets() external view override returns (WarperPreset[] memory) {
+    function getPresets() external view returns (WarperPreset[] memory) {
         uint256 length = _presetIds.length();
         WarperPreset[] memory presets = new WarperPreset[](length);
         for (uint256 i = 0; i < length; i++) {
@@ -106,7 +106,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function getPreset(bytes32 presetId) external view override returns (WarperPreset memory) {
+    function getPreset(bytes32 presetId) external view returns (WarperPreset memory) {
         return _presets[presetId];
     }
 
@@ -115,7 +115,6 @@ contract WarperPresetFactory is IWarperPresetFactory {
      */
     function deployPreset(bytes32 presetId, bytes[] calldata initData)
         external
-        override
         whenEnabled(presetId)
         returns (address)
     {

@@ -37,7 +37,7 @@ abstract contract Warper is IWarper, Context, ERC165 {
      *
      * If overridden should call `super.iqInitialize()`.
      */
-    function iqInitialize(bytes calldata config) public virtual {
+    function iqInitialize(bytes calldata config) external virtual {
         //todo: consider initializer modifier
         // Decode config
         (address original, address metaHub) = abi.decode(config, (address, address));
@@ -59,14 +59,14 @@ abstract contract Warper is IWarper, Context, ERC165 {
     /**
      * @dev Returns the original NFT address.
      */
-    function iqOriginal() public view override returns (address) {
+    function iqOriginal() public view returns (address) {
         return StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value;
     }
 
     /**
      * @inheritdoc IWarper
      */
-    function iqMetaHub() public view override returns (address) {
+    function iqMetaHub() public view returns (address) {
         return StorageSlot.getAddressSlot(_METAHUB_SLOT).value;
     }
 
