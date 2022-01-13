@@ -10,9 +10,9 @@ interface IWarper is IERC165 {
     function iqOriginal() external view returns (address);
 
     /**
-     * @dev Returns the MetaHub address.
+     * @dev Returns the Metahub address.
      */
-    function iqMetaHub() external view returns (address);
+    function iqMetahub() external view returns (address);
 
     /**
      * @dev Default warper initialization method.

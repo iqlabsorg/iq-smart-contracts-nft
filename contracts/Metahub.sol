@@ -4,13 +4,13 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "./Warper.sol";
-import "./interfaces/IMetaHub.sol";
+import "./interfaces/IMetahub.sol";
 import "./interfaces/IWarper.sol";
 import "./interfaces/IWarperPresetFactory.sol";
 import "./ERC721Warper.sol";
 import "hardhat/console.sol";
 
-contract MetaHub is IMetaHub {
+contract Metahub is IMetahub {
     using ERC165Checker for address;
 
     address private _warperPresetFactory;
@@ -20,14 +20,14 @@ contract MetaHub is IMetaHub {
     }
 
     /**
-     * @inheritdoc IMetaHub
+     * @inheritdoc IMetahub
      */
     function getWarperPresetFactory() external view returns (address) {
         return _warperPresetFactory;
     }
 
     /**
-     * @inheritdoc IMetaHub
+     * @inheritdoc IMetahub
      */
     function deployWarper(bytes32 presetId, address original) external returns (address) {
         // Build warper initialization payload.

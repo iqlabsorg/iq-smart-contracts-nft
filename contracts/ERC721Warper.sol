@@ -212,7 +212,7 @@ contract ERC721Warper is IERC721Warper, Warper {
      *
      * Emits a {Transfer} event.
      */
-    function safeMint(address to, uint256 tokenId) external onlyMetaHub {
+    function safeMint(address to, uint256 tokenId) external onlyMetahub {
         // todo: custom method?
         _safeMint(to, tokenId, "");
     }

@@ -21,12 +21,12 @@ abstract contract Warper is IWarper, Context, ERC165 {
      * @dev Thrown when the original NFT does not implement the interface, expected by Wrapping.
      */
     error InvalidOriginalTokenInterface(address original, bytes4 expectedInterfaceId);
-    error InvalidMetaHub(address got, address expected);
+    error InvalidMetahub(address got, address expected);
 
-    modifier onlyMetaHub() {
-        address metaHubAddress = iqMetaHub();
-        if (msg.sender != metaHubAddress) {
-            revert InvalidMetaHub(msg.sender, metaHubAddress);
+    modifier onlyMetahub() {
+        address metahubAddress = iqMetahub();
+        if (msg.sender != metahubAddress) {
+            revert InvalidMetahub(msg.sender, metahubAddress);
         }
 
         _;
@@ -40,13 +40,13 @@ abstract contract Warper is IWarper, Context, ERC165 {
     function iqInitialize(bytes calldata config) external virtual {
         //todo: consider initializer modifier
         // Decode config
-        (address original, address metaHub) = abi.decode(config, (address, address));
+        (address original, address metahub) = abi.decode(config, (address, address));
 
         assert(_ORIGINAL_SLOT == bytes32(uint256(keccak256("iq.protocol.nft.original")) - 1));
         assert(_METAHUB_SLOT == bytes32(uint256(keccak256("iq.protocol.nft.metahub")) - 1));
         _validateOriginal(original); //todo: force?
         StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value = original;
-        StorageSlot.getAddressSlot(_METAHUB_SLOT).value = metaHub;
+        StorageSlot.getAddressSlot(_METAHUB_SLOT).value = metahub;
     }
 
     /**
@@ -66,7 +66,7 @@ abstract contract Warper is IWarper, Context, ERC165 {
     /**
      * @inheritdoc IWarper
      */
-    function iqMetaHub() public view returns (address) {
+    function iqMetahub() public view returns (address) {
         return StorageSlot.getAddressSlot(_METAHUB_SLOT).value;
     }
 

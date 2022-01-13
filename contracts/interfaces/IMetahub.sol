@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-interface IMetaHub {
+interface IMetahub {
     /**
      * @dev Emitted when a warper is deployed.
      */

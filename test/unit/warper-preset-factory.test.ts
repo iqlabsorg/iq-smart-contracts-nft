@@ -126,7 +126,7 @@ describe('Warper Preset Factory', () => {
       const warper = dummyWarperFactory.attach(warperAddress);
       await expect(warper.getInitValue()).to.eventually.eq(42);
       await expect(warper.iqOriginal()).to.eventually.eq(originalAddress);
-      await expect(warper.iqMetaHub()).to.eventually.eq(metahubAddress);
+      await expect(warper.iqMetahub()).to.eventually.eq(metahubAddress);
     });
 
     describe('When preset is disabled', () => {
