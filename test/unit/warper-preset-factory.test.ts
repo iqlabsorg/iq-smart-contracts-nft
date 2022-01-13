@@ -73,20 +73,20 @@ describe('Warper Preset Factory', () => {
 
       expect(presets).to.have.length(2);
       await expectWarperPresetData(presets[0], {
-        id: '0x4552433732314261736963000000000000000000000000000000000000000000',
-        implementation: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+        id: presetId1,
+        implementation: warperImpl1.address,
         enabled: true,
       });
       await expectWarperPresetData(presets[1], {
-        id: '0x455243373231416476616e636564000000000000000000000000000000000000',
-        implementation: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
+        id: presetId2,
+        implementation: warperImpl2.address,
         enabled: true,
       });
     });
     it('returns preset by ID', async () => {
       await expectWarperPresetData(factory.getPreset(presetId1), {
-        id: '0x4552433732314261736963000000000000000000000000000000000000000000',
-        implementation: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+        id: presetId1,
+        implementation: warperImpl1.address,
         enabled: true,
       });
     });
