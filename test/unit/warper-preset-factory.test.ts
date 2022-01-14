@@ -7,7 +7,7 @@ import {
   WarperPresetFactory__factory,
 } from '../../typechain';
 import { expect } from 'chai';
-import { expectError, wait } from '../utils';
+import { wait } from '../utils';
 
 const { formatBytes32String, defaultAbiCoder } = ethers.utils;
 
@@ -41,8 +41,7 @@ describe('Warper Preset Factory', () => {
   describe('When adding new warper preset', () => {
     it('ensures preset implementation has correct interface', async () => {
       const randomExternalAddress = '0x120B46FF3b629b9695f5b28F1eeb84d61b462678';
-      await expectError(
-        factory.addPreset(formatBytes32String('Alpha'), randomExternalAddress),
+      await expect(factory.addPreset(formatBytes32String('Alpha'), randomExternalAddress)).to.be.revertedWithError(
         'InvalidWarperPresetInterface',
       );
     });
@@ -65,7 +64,10 @@ describe('Warper Preset Factory', () => {
     });
 
     it('ensures preset ID is unique', async () => {
-      await expectError(factory.addPreset(presetId1, warperImpl1.address), 'DuplicateWarperPresetId', [presetId1]);
+      await expect(factory.addPreset(presetId1, warperImpl1.address)).to.be.revertedWithError(
+        'DuplicateWarperPresetId',
+        presetId1,
+      );
     });
 
     it('returns preset list', async () => {
@@ -140,7 +142,7 @@ describe('Warper Preset Factory', () => {
       });
 
       it('forbids to deploy preset', async () => {
-        await expectError(factory.deployPreset(presetId2, []), 'DisabledWarperPreset', [presetId2]);
+        await expect(factory.deployPreset(presetId2, [])).to.be.revertedWithError('DisabledWarperPreset', presetId2);
       });
     });
   });

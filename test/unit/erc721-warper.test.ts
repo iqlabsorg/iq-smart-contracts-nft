@@ -8,7 +8,6 @@ import {
   ERC721Warper,
   ERC721Warper__factory,
 } from '../../typechain';
-import { expectError } from '../utils';
 
 const { AddressZero } = ethers.constants;
 const { defaultAbiCoder } = ethers.utils;
@@ -35,11 +34,9 @@ describe('ERC721 Warper', () => {
       const erc20Token = await erc20Factory.deploy('Random ERC20', 'TST', 18, 1);
       const wNFT = await warperFactory.deploy();
 
-      await expectError(
+      await expect(
         wNFT.iqInitialize(defaultAbiCoder.encode(['address', 'address'], [erc20Token.address, AddressZero])),
-        'InvalidOriginalTokenInterface',
-        [erc20Token.address, '0x5b5e139f'],
-      );
+      ).to.be.revertedWithError('InvalidOriginalTokenInterface', erc20Token.address, '0x5b5e139f');
     });
   });
 

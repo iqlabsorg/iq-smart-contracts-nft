@@ -2,7 +2,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import { UniverseToken, UniverseToken__factory } from '../../typechain';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { expectError } from '../utils';
 
 const { AddressZero } = ethers.constants;
 
@@ -31,7 +30,7 @@ describe('Universe Token', () => {
 
   describe('Minting', () => {
     it('owner cannot mint', async () => {
-      await expectError(universe.mint(universeOwner.address), 'CallerIsNotMetahub');
+      await expect(universe.mint(universeOwner.address)).to.be.revertedWithError('CallerIsNotMetahub');
     });
 
     it('metahub can mint', async () => {
