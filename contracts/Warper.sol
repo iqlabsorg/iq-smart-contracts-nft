@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
-// solhint-disable private-vars-leading-underscore
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IWarper.sol";
 
-// todo: add proxy safe ReentrancyGuard
 abstract contract Warper is IWarper, Context, ERC165 {
+    using ERC165Checker for address;
+
     // This is the keccak-256 hash of "iq.protocol.nft.original" subtracted by 1
     bytes32 private constant _ORIGINAL_SLOT = 0x855a0282585e35fc8dbb4da2088acdbe4b69460635994619e934d7c30b91f660;
 
@@ -53,7 +54,11 @@ abstract contract Warper is IWarper, Context, ERC165 {
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return interfaceId == type(IWarper).interfaceId || ERC165.supportsInterface(interfaceId);
+        bool supportedByWarper = interfaceId == type(IWarper).interfaceId || super.supportsInterface(interfaceId);
+        if (supportedByWarper) return true;
+
+        address original = iqOriginal();
+        return original.supportsERC165() ? original.supportsInterface(interfaceId) : false;
     }
 
     /**
@@ -116,7 +121,6 @@ abstract contract Warper is IWarper, Context, ERC165 {
      * function in the contract matches the call data.
      */
     fallback() external payable virtual {
-        // todo: nonReentrant?
         _fallback();
     }
 
@@ -125,7 +129,6 @@ abstract contract Warper is IWarper, Context, ERC165 {
      * is empty.
      */
     receive() external payable virtual {
-        // todo: nonReentrant?
         _fallback();
     }
 
