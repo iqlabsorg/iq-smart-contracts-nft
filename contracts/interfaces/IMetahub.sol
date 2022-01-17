@@ -15,5 +15,5 @@ interface IMetahub {
     /**
      * @dev Returns warper preset factory address.
      */
-    function getWarperPresetFactory() external view returns (address);
+    function warperPresetFactory() external view returns (address);
 }

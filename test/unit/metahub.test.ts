@@ -51,7 +51,7 @@ describe('Metahub', () => {
   });
 
   it('returns the warper preset factory address', async () => {
-    await expect(metahub.getWarperPresetFactory()).to.eventually.eq(warperPresetFactory.address);
+    await expect(metahub.warperPresetFactory()).to.eventually.eq(warperPresetFactory.address);
   });
 
   it('allows to deploy a warper from preset', async () => {
@@ -77,7 +77,7 @@ describe('Metahub', () => {
       const metahubV2 = (await upgrades.upgradeProxy(metahub, new MetahubV2Mock__factory(deployer))) as MetahubV2Mock;
       await expect(metahubV2.address).to.eq(metahub.address);
       await expect(metahubV2.version()).to.eventually.eq('V2');
-      await expect(metahubV2.getWarperPresetFactory()).to.eventually.eq(await metahub.getWarperPresetFactory());
+      await expect(metahubV2.warperPresetFactory()).to.eventually.eq(await metahub.warperPresetFactory());
     });
   });
 });

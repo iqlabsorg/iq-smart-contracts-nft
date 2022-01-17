@@ -35,7 +35,7 @@ describe('Warper Preset Factory', () => {
   });
 
   it('returns empty preset list', async () => {
-    await expect(factory.getPresets()).to.eventually.deep.eq([]);
+    await expect(factory.presets()).to.eventually.deep.eq([]);
   });
 
   describe('When adding new warper preset', () => {
@@ -71,7 +71,7 @@ describe('Warper Preset Factory', () => {
     });
 
     it('returns preset list', async () => {
-      const presets = await factory.getPresets();
+      const presets = await factory.presets();
 
       expect(presets).to.have.length(2);
       await expectWarperPresetData(presets[0], {
@@ -86,7 +86,7 @@ describe('Warper Preset Factory', () => {
       });
     });
     it('returns preset by ID', async () => {
-      await expectWarperPresetData(factory.getPreset(presetId1), {
+      await expectWarperPresetData(factory.preset(presetId1), {
         id: presetId1,
         implementation: warperImpl1.address,
         enabled: true,
@@ -95,12 +95,12 @@ describe('Warper Preset Factory', () => {
 
     it('allows to disable preset', async () => {
       await expect(factory.disablePreset(presetId2)).to.emit(factory, 'WarperPresetDisabled').withArgs(presetId2);
-      await expectWarperPresetData(factory.getPreset(presetId2), { enabled: false });
+      await expectWarperPresetData(factory.preset(presetId2), { enabled: false });
     });
 
     it('allows to remove preset', async () => {
       await expect(factory.removePreset(presetId2)).to.emit(factory, 'WarperPresetRemoved').withArgs(presetId2);
-      await expectWarperPresetData(factory.getPreset(presetId2), { id: formatBytes32String('') });
+      await expectWarperPresetData(factory.preset(presetId2), { id: formatBytes32String('') });
     });
 
     it('allows to deploy a warper from preset', async () => {
@@ -138,7 +138,7 @@ describe('Warper Preset Factory', () => {
 
       it('allows to enable preset', async () => {
         await expect(factory.enablePreset(presetId2)).to.emit(factory, 'WarperPresetEnabled').withArgs(presetId2);
-        await expectWarperPresetData(factory.getPreset(presetId2), { enabled: true });
+        await expectWarperPresetData(factory.preset(presetId2), { enabled: true });
       });
 
       it('forbids to deploy preset', async () => {

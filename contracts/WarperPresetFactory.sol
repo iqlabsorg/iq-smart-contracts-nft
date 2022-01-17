@@ -88,14 +88,14 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function isPresetEnabled(bytes32 presetId) external view returns (bool) {
+    function presetEnabled(bytes32 presetId) external view returns (bool) {
         return _presets[presetId].enabled;
     }
 
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function getPresets() external view returns (WarperPreset[] memory) {
+    function presets() external view returns (WarperPreset[] memory) {
         uint256 length = _presetIds.length();
         WarperPreset[] memory presets = new WarperPreset[](length);
         for (uint256 i = 0; i < length; i++) {
@@ -107,7 +107,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function getPreset(bytes32 presetId) external view returns (WarperPreset memory) {
+    function preset(bytes32 presetId) external view returns (WarperPreset memory) {
         return _presets[presetId];
     }
 

@@ -33,7 +33,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     /**
      * @inheritdoc IMetahub
      */
-    function getWarperPresetFactory() external view returns (address) {
+    function warperPresetFactory() external view returns (address) {
         return _warperPresetFactory;
     }
 

@@ -63,18 +63,18 @@ interface IWarperPresetFactory {
      * @dev Checks whether warper preset is enabled and available for deployment.
      * @param presetId Warper preset id.
      */
-    function isPresetEnabled(bytes32 presetId) external returns (bool);
+    function presetEnabled(bytes32 presetId) external view returns (bool);
 
     /**
      * @dev Returns the list of all registered warper presets.
      */
-    function getPresets() external returns (WarperPreset[] memory);
+    function presets() external view returns (WarperPreset[] memory);
 
     /**
      * @dev Returns the warper preset details.
      * @param presetId Warper preset id.
      */
-    function getPreset(bytes32 presetId) external returns (WarperPreset memory);
+    function preset(bytes32 presetId) external view returns (WarperPreset memory);
 
     /**
      * @dev Deploys a new warper from the preset identified by `presetId`.
