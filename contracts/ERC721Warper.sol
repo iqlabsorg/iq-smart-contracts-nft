@@ -27,6 +27,8 @@ contract ERC721Warper is IERC721Warper, Warper {
     error TransferToTheZeroAddress();
     error ApproveToCaller();
 
+    bytes4 internal constant _ERC721METADATA_INTERFACE_ID = type(IERC721Metadata).interfaceId;
+
     // Mapping from token ID to owner address
     mapping(uint256 => address) private _owners;
 
@@ -43,9 +45,8 @@ contract ERC721Warper is IERC721Warper, Warper {
      * @dev Validates the original NFT.
      */
     function _validateOriginal(address original) internal override {
-        bytes4 expectedInterfaceId = type(IERC721Metadata).interfaceId;
-        if (!original.supportsInterface(expectedInterfaceId)) {
-            revert InvalidOriginalTokenInterface(original, expectedInterfaceId);
+        if (!original.supportsInterface(_ERC721METADATA_INTERFACE_ID)) {
+            revert InvalidOriginalTokenInterface(original, _ERC721METADATA_INTERFACE_ID);
         }
         super._validateOriginal(original);
     }
