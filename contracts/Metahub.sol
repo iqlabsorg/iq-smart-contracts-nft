@@ -3,21 +3,32 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "./Warper.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IMetahub.sol";
 import "./interfaces/IWarper.sol";
 import "./interfaces/IWarperPresetFactory.sol";
-import "./ERC721Warper.sol";
-import "hardhat/console.sol";
 
-contract Metahub is IMetahub {
+contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     using ERC165Checker for address;
 
     address private _warperPresetFactory;
 
-    constructor(address warperPresetFactory) {
+    /**
+     * @dev Metahub initializer.
+     * @param warperPresetFactory Warper preset factory address.
+     */
+    function initialize(address warperPresetFactory) public initializer {
+        __UUPSUpgradeable_init();
+        __Ownable_init();
         _warperPresetFactory = warperPresetFactory;
     }
+
+    /**
+     * @dev Checks whether the caller is authorized to upgrade the Metahub implementation.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
      * @inheritdoc IMetahub

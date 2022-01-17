@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import {
   ERC721Mock,
@@ -7,6 +7,8 @@ import {
   ERC721Warper__factory,
   Metahub,
   Metahub__factory,
+  MetahubV2Mock,
+  MetahubV2Mock__factory,
   WarperPresetFactory,
   WarperPresetFactory__factory,
 } from '../../typechain';
@@ -43,7 +45,9 @@ describe('Metahub', () => {
     await warperPresetFactory.addPreset(warperPresetId, erc721WarperImpl.address);
 
     // Deploy Metahub
-    metahub = await new Metahub__factory(deployer).deploy(warperPresetFactory.address);
+    metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [warperPresetFactory.address], {
+      kind: 'uups',
+    })) as Metahub;
   });
 
   it('returns the warper preset factory address', async () => {
@@ -59,5 +63,21 @@ describe('Metahub', () => {
 
     await expect(warper.name()).to.eventually.eq('Test ERC721');
     await expect(warper.symbol()).to.eventually.eq('ONFT');
+  });
+
+  describe('Upgradeability', () => {
+    it('forbids unauthorized upgraded', async () => {
+      const [stranger] = await ethers.getUnnamedSigners();
+      await expect(upgrades.upgradeProxy(metahub, new MetahubV2Mock__factory(stranger))).to.be.revertedWith(
+        'Ownable: caller is not the owner',
+      );
+    });
+
+    it('allows owner to upgrade', async () => {
+      const metahubV2 = (await upgrades.upgradeProxy(metahub, new MetahubV2Mock__factory(deployer))) as MetahubV2Mock;
+      await expect(metahubV2.address).to.eq(metahub.address);
+      await expect(metahubV2.version()).to.eventually.eq('V2');
+      await expect(metahubV2.getWarperPresetFactory()).to.eventually.eq(await metahub.getWarperPresetFactory());
+    });
   });
 });
