@@ -4,6 +4,7 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
 const { AddressZero } = ethers.constants;
+const UNIVERSE_NAME = 'Universe One';
 
 describe('Universe Token', () => {
   let deployer: SignerWithAddress;
@@ -16,11 +17,11 @@ describe('Universe Token', () => {
     universe = await new UniverseToken__factory(deployer).deploy(metahub.address);
   });
 
-  it('has correct name', async () => {
+  it('has correct token name', async () => {
     await expect(universe.name()).to.eventually.eq('IQVerse');
   });
 
-  it('has correct symbol', async () => {
+  it('has correct token symbol', async () => {
     await expect(universe.symbol()).to.eventually.eq('IQV');
   });
 
@@ -30,11 +31,11 @@ describe('Universe Token', () => {
 
   describe('Minting', () => {
     it('owner cannot mint', async () => {
-      await expect(universe.mint(universeOwner.address)).to.be.revertedWithError('CallerIsNotMetahub');
+      await expect(universe.mint(universeOwner.address, UNIVERSE_NAME)).to.be.revertedWithError('CallerIsNotMetahub');
     });
 
     it('metahub can mint', async () => {
-      await expect(universe.connect(metahub).mint(universeOwner.address))
+      await expect(universe.connect(metahub).mint(universeOwner.address, UNIVERSE_NAME))
         .to.emit(universe, 'Transfer')
         .withArgs(AddressZero, universeOwner.address, 1);
       await expect(universe.ownerOf(1)).to.eventually.eq(universeOwner.address);
@@ -43,11 +44,15 @@ describe('Universe Token', () => {
 
   describe('When minted', () => {
     beforeEach(async () => {
-      await universe.connect(metahub).mint(universeOwner.address);
+      await universe.connect(metahub).mint(universeOwner.address, UNIVERSE_NAME);
     });
 
     it('returns token URI', async () => {
       await expect(universe.tokenURI(1)).to.eventually.eq('');
+    });
+
+    it('returns universe name', async () => {
+      await expect(universe.universeName(1)).to.eventually.eq(UNIVERSE_NAME);
     });
 
     it('owner can set token URI');

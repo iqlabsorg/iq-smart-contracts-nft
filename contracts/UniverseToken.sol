@@ -16,6 +16,9 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
 
     address internal _metahub;
 
+    // Mapping from token ID to universe name.
+    mapping(uint256 => string) private _universeNames;
+
     modifier onlyMetahub() {
         if (msg.sender != _metahub) {
             revert CallerIsNotMetahub();
@@ -30,10 +33,18 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
     /**
      * @inheritdoc IUniverseToken
      */
-    function mint(address to) external onlyMetahub returns (uint256 tokenId) {
+    function mint(address to, string calldata universeName) external onlyMetahub returns (uint256 tokenId) {
         _tokenIdTracker.increment();
         tokenId = _tokenIdTracker.current();
         _safeMint(to, tokenId);
+        _universeNames[tokenId] = universeName;
+    }
+
+    /**
+     * @inheritdoc IUniverseToken
+     */
+    function universeName(uint256 tokenId) external view returns (string memory) {
+        return _universeNames[tokenId];
     }
 
     /**
