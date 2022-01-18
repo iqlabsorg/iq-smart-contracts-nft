@@ -9,6 +9,8 @@ import {
   Metahub__factory,
   MetahubV2Mock,
   MetahubV2Mock__factory,
+  UniverseToken,
+  UniverseToken__factory,
   WarperPresetFactory,
   WarperPresetFactory__factory,
 } from '../../typechain';
@@ -22,6 +24,7 @@ describe('Metahub', () => {
   let deployer: SignerWithAddress;
   let nftCreator: SignerWithAddress;
   let erc721Factory: ERC721Mock__factory;
+  let universeToken: UniverseToken;
   let oNFT: ERC721Mock;
   let erc721WarperImpl: ERC721Warper;
   let warperPresetFactory: WarperPresetFactory;
@@ -47,11 +50,27 @@ describe('Metahub', () => {
     // Deploy Metahub
     metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [warperPresetFactory.address], {
       kind: 'uups',
+      initializer: false,
     })) as Metahub;
+
+    // Deploy Universe token.
+    const universeTokenFactory = new UniverseToken__factory(deployer);
+    universeToken = await universeTokenFactory.deploy(metahub.address);
+    // Initialize Metahub.
+    await wait(metahub.initialize(warperPresetFactory.address, universeToken.address));
   });
 
   it('returns the warper preset factory address', async () => {
     await expect(metahub.warperPresetFactory()).to.eventually.eq(warperPresetFactory.address);
+  });
+
+  it('can create universe', async () => {
+    const universeName = 'Universe One';
+    const universeId = 1;
+    await expect(metahub.createUniverse(universeName))
+      .to.emit(metahub, 'UniverseCreated')
+      .withArgs(universeName, universeId);
+    await expect(universeToken.universeName(universeId)).to.eventually.eq(universeName);
   });
 
   it('allows to deploy a warper from preset', async () => {

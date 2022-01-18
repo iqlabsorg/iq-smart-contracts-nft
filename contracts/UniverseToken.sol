@@ -14,7 +14,8 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
 
     error CallerIsNotMetahub();
 
-    address internal _metahub;
+    // Metahub address.
+    address private immutable _metahub;
 
     // Mapping from token ID to universe name.
     mapping(uint256 => string) private _universeNames;
