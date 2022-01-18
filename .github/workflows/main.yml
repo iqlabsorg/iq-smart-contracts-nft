@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+      - release-v*
+  pull_request: {}
+  workflow_dispatch: {}
+
+
+jobs:
+  build:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: install # will run `yarn install` command
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: compile # will run `yarn compile` command
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: lint # will run `yarn lint` command
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: test # will run `yarn test` command
