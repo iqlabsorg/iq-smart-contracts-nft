@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "./Warper.sol";
-import "./interfaces/IERC721Warper.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import "../Warper.sol";
+import "../../interfaces/IERC721Warper.sol";
 
 contract ERC721Warper is IERC721Warper, Warper {
     using ERC165Checker for address;

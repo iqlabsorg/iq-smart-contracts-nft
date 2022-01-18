@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../Warper.sol";
+import "../warpers/Warper.sol";
 
 contract DummyWarperMock is Warper {
     uint256 _initValue;

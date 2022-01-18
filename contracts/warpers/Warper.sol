@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./interfaces/IWarper.sol";
+import "../interfaces/IWarper.sol";
 
 abstract contract Warper is IWarper, Context, ERC165 {
     using ERC165Checker for address;
