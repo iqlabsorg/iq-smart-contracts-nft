@@ -3,13 +3,13 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IWarperPresetFactory.sol";
 import "./interfaces/IWarper.sol";
 
-// todo: implement ERC165
-contract WarperPresetFactory is IWarperPresetFactory {
+contract WarperPresetFactory is IWarperPresetFactory, Ownable {
     using Clones for address;
     using Address for address;
     using ERC165Checker for address;
@@ -41,8 +41,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function addPreset(bytes32 presetId, address implementation) external {
-        // todo: onlyOwner
+    function addPreset(bytes32 presetId, address implementation) external onlyOwner {
         // Check whether provided implementation address is a contract with the correct interface.
         if (!implementation.supportsInterface(type(IWarper).interfaceId)) {
             revert InvalidWarperPresetInterface();
@@ -59,8 +58,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function removePreset(bytes32 presetId) external {
-        // todo: onlyOwner
+    function removePreset(bytes32 presetId) external onlyOwner {
         if (_presetIds.remove(presetId)) {
             delete _presets[presetId];
             emit WarperPresetRemoved(presetId);
@@ -70,8 +68,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function enablePreset(bytes32 presetId) external whenDisabled(presetId) {
-        // todo: onlyOwner
+    function enablePreset(bytes32 presetId) external whenDisabled(presetId) onlyOwner {
         _presets[presetId].enabled = true;
         emit WarperPresetEnabled(presetId);
     }
@@ -79,8 +76,7 @@ contract WarperPresetFactory is IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function disablePreset(bytes32 presetId) external whenEnabled(presetId) {
-        // todo: onlyOwner
+    function disablePreset(bytes32 presetId) external whenEnabled(presetId) onlyOwner {
         _presets[presetId].enabled = false;
         emit WarperPresetDisabled(presetId);
     }
