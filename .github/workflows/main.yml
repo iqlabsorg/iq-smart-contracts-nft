@@ -12,9 +12,10 @@ on:
 jobs:
   build:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
       - uses: borales/actions-yarn@v2.3.0
         with:
           cmd: install # will run `yarn install` command
@@ -27,3 +28,16 @@ jobs:
       - uses: borales/actions-yarn@v2.3.0
         with:
           cmd: test # will run `yarn test` command
+
+      - name: OS update
+        run: sudo add-apt-repository universe && sudo apt-get update
+      - name: Install pip
+        run: apt install python3-pip -y
+      - name: Install slither
+        run: pip3 install slither-analyzer
+      - name: Install solc-select
+        run: pip3 install solc-select
+      - name: Install Solidity compiler
+        run: solc-select install 0.8.11
+      - name: Run slither
+        run: slither . --ignore-compile
