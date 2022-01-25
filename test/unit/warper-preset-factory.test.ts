@@ -7,7 +7,7 @@ import {
   WarperPresetFactory__factory,
 } from '../../typechain';
 import { expect } from 'chai';
-import { wait } from '../utils';
+import { deployWarperPreset, wait } from '../utils';
 
 const { formatBytes32String, defaultAbiCoder } = ethers.utils;
 
@@ -131,12 +131,10 @@ describe('Warper Preset Factory', () => {
       ]);
 
       // Deploy warper and get address from event.
-      const receipt = await wait(factory.connect(stranger).deployPreset(presetId1, [defaultInitData, customInitData]));
-      const events = await factory.queryFilter(
-        factory.filters.WarperPresetDeployed(presetId1, null),
-        receipt.blockNumber,
-      );
-      const warperAddress = events[0].args.warper;
+      const warperAddress = await deployWarperPreset(factory.connect(stranger), presetId1, [
+        defaultInitData,
+        customInitData,
+      ]);
 
       // Assert warper is deployed and initialized correctly.
       expect(warperAddress).to.be.properAddress;
