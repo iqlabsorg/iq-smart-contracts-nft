@@ -9,23 +9,23 @@ import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import "../Warper.sol";
 import "../../interfaces/IERC721Warper.sol";
 
+error BalanceQueryForZeroAddress();
+error OwnerQueryForNonexistentToken(uint256 tokenId);
+error OperatorQueryForNonexistentToken(uint256 tokenId);
+error ApprovalToCurrentOwner(address owner);
+error ApproveCallerIsNotOwnerNorApprovedForAll(address caller);
+error ApprovedQueryForNonexistentToken(uint256 tokenId);
+error TransferCallerIsNotOwnerNorApproved(address caller);
+error TransferToNonERC721ReceiverImplementer(address to);
+error MintToTheZeroAddress();
+error TokenIsAlreadyMinted(uint256 tokenId);
+error TransferOfTokenThatIsNotOwn(uint256 tokenId);
+error TransferToTheZeroAddress();
+error ApproveToCaller();
+
 contract ERC721Warper is IERC721Warper, Warper {
     using ERC165Checker for address;
     using Address for address;
-
-    error BalanceQueryForZeroAddress();
-    error OwnerQueryForNonexistentToken(uint256 tokenId);
-    error OperatorQueryForNonexistentToken(uint256 tokenId);
-    error ApprovalToCurrentOwner(address owner);
-    error ApproveCallerIsNotOwnerNorApprovedForAll(address caller);
-    error ApprovedQueryForNonexistentToken(uint256 tokenId);
-    error TransferCallerIsNotOwnerNorApproved(address caller);
-    error TransferToNonERC721ReceiverImplementer(address to);
-    error MintToTheZeroAddress();
-    error TokenIsAlreadyMinted(uint256 tokenId);
-    error TransferOfTokenThatIsNotOwn(uint256 tokenId);
-    error TransferToTheZeroAddress();
-    error ApproveToCaller();
 
     bytes4 internal constant _ERC721METADATA_INTERFACE_ID = type(IERC721Metadata).interfaceId;
 

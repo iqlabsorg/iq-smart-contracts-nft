@@ -9,17 +9,17 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IWarperPresetFactory.sol";
 import "./interfaces/IWarper.sol";
 
+error InvalidWarperPresetInterface();
+error DuplicateWarperPresetId(bytes32 presetId);
+error DisabledWarperPreset(bytes32 presetId);
+error EnabledWarperPreset(bytes32 presetId);
+
 contract WarperPresetFactory is IWarperPresetFactory, Ownable {
     using Clones for address;
     using Address for address;
     using ERC165Checker for address;
 
     using EnumerableSet for EnumerableSet.Bytes32Set;
-
-    error InvalidWarperPresetInterface();
-    error DuplicateWarperPresetId(bytes32 presetId);
-    error DisabledWarperPreset(bytes32 presetId);
-    error EnabledWarperPreset(bytes32 presetId);
 
     mapping(bytes32 => WarperPreset) private _presets;
     EnumerableSet.Bytes32Set private _presetIds;

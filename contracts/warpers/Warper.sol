@@ -7,7 +7,13 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "../Errors.sol";
 import "../interfaces/IWarper.sol";
+
+/**
+ * @dev Thrown when the original asset contract does not implement the interface, expected by Warper.
+ */
+error InvalidOriginalTokenInterface(address original, bytes4 expectedInterfaceId);
 
 abstract contract Warper is IWarper, Context, ERC165 {
     using ERC165Checker for address;
@@ -18,18 +24,10 @@ abstract contract Warper is IWarper, Context, ERC165 {
     // This is the keccak-256 hash of "iq.protocol.nft.metahub" subtracted by 1
     bytes32 private constant _METAHUB_SLOT = 0x2895cf34325a86852c4193be2ddd0c51203a8222624bba8bf79259901261534f;
 
-    /**
-     * @dev Thrown when the original NFT does not implement the interface, expected by Wrapping.
-     */
-    error InvalidOriginalTokenInterface(address original, bytes4 expectedInterfaceId);
-    error InvalidMetahub(address got, address expected);
-
     modifier onlyMetahub() {
-        address metahubAddress = iqMetahub();
-        if (msg.sender != metahubAddress) {
-            revert InvalidMetahub(msg.sender, metahubAddress);
+        if (_msgSender() != iqMetahub()) {
+            revert CallerIsNotMetahub();
         }
-
         _;
     }
 

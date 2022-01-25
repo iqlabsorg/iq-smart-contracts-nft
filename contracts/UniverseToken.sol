@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Errors.sol";
 import "./interfaces/IUniverseToken.sol";
 
-// TODO: the token URI does not represent anything.
 contract UniverseToken is IUniverseToken, ERC721, Ownable {
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIdTracker;
 
-    error CallerIsNotMetahub();
+    // ID counter.
+    Counters.Counter private _tokenIdTracker;
 
     // Metahub address.
     address private immutable _metahub;
@@ -21,7 +21,7 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
     mapping(uint256 => string) private _universeNames;
 
     modifier onlyMetahub() {
-        if (msg.sender != _metahub) {
+        if (_msgSender() != _metahub) {
             revert CallerIsNotMetahub();
         }
         _;
