@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IWarperPresetFactory.sol";
 import "./interfaces/IWarper.sol";
+import "./Errors.sol";
 
 error InvalidWarperPresetInterface();
 error DuplicateWarperPresetId(bytes32 presetId);
@@ -18,10 +19,12 @@ contract WarperPresetFactory is IWarperPresetFactory, Ownable {
     using Clones for address;
     using Address for address;
     using ERC165Checker for address;
-
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
+    // Mapping presetId to preset struct.
     mapping(bytes32 => WarperPreset) private _presets;
+
+    // Registered presets.
     EnumerableSet.Bytes32Set private _presetIds;
 
     modifier whenEnabled(bytes32 presetId) {
@@ -118,6 +121,9 @@ contract WarperPresetFactory is IWarperPresetFactory, Ownable {
         // Deploy warper preset implementation proxy.
         address warper = _presets[presetId].implementation.clone();
         for (uint256 i = 0; i < initData.length; i++) {
+            if (initData[i].length == 0) {
+                revert EmptyPresetData();
+            }
             warper.functionCall(initData[i]);
         }
 

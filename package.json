@@ -34,7 +34,7 @@
     "@commitlint/config-conventional": "^15.0.0",
     "@fintechstudios/eslint-plugin-chai-as-promised": "^3.1.0",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@latest",
-    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.2",
     "@openzeppelin/contracts": "4.4.1",
     "@openzeppelin/contracts-upgradeable": "4.4.1",
     "@openzeppelin/hardhat-upgrades": "^1.13.0",

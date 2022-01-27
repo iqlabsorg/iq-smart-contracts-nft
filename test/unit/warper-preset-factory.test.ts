@@ -1,13 +1,13 @@
 import { ethers } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { expect } from 'chai';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
   DummyWarperMock,
   DummyWarperMock__factory,
   WarperPresetFactory,
   WarperPresetFactory__factory,
 } from '../../typechain';
-import { expect } from 'chai';
-import { deployWarperPreset, wait } from '../utils';
+import { deployWarperPreset } from '../utils';
 
 const { formatBytes32String, defaultAbiCoder } = ethers.utils;
 
@@ -142,6 +142,10 @@ describe('Warper Preset Factory', () => {
       await expect(warper.getInitValue()).to.eventually.eq(42);
       await expect(warper.iqOriginal()).to.eventually.eq(originalAddress);
       await expect(warper.iqMetahub()).to.eventually.eq(metahubAddress);
+    });
+
+    it('forbids deployment with empty init data', async () => {
+      await expect(factory.deployPreset(presetId1, ['0x'])).to.be.revertedWithError('EmptyPresetData');
     });
 
     describe('When preset is disabled', () => {

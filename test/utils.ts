@@ -1,7 +1,6 @@
 import hre from 'hardhat';
 import { BigNumber, ContractReceipt, ContractTransaction } from 'ethers';
-import { IWarperPresetFactory, Metahub, Warper, WarperPresetFactory } from '../typechain';
-import { expect } from 'chai';
+import { Metahub, WarperPresetFactory } from '../typechain';
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
@@ -36,7 +35,7 @@ export const createUniverse = async (
 };
 
 /**
- * Performs warper deployment call and returns warper address.
+ * Deploys a warper from preset via factory and returns warper address.
  * @param factory
  * @param params
  */
@@ -45,6 +44,20 @@ export const deployWarperPreset = async (
   ...params: Parameters<WarperPresetFactory['deployPreset']>
 ): Promise<string> => {
   const receipt = await wait(factory.deployPreset(...params));
-  const events = await factory.queryFilter(factory.filters.WarperPresetDeployed(params[0], null), receipt.blockHash);
+  const events = await factory.queryFilter(factory.filters.WarperPresetDeployed(), receipt.blockHash);
+  return events[0].args.warper;
+};
+
+/**
+ * Deploys a warper from preset via metahub and returns warper address.
+ * @param metahub
+ * @param params
+ */
+export const deployWarper = async (
+  metahub: Metahub,
+  ...params: Parameters<Metahub['deployWarper']>
+): Promise<string> => {
+  const receipt = await wait(metahub.deployWarper(...params));
+  const events = await metahub.queryFilter(metahub.filters.WarperRegistered(), receipt.blockHash);
   return events[0].args.warper;
 };
