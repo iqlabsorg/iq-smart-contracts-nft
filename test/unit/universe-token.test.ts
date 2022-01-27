@@ -1,7 +1,7 @@
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
-import { UniverseToken, UniverseToken__factory } from '../../typechain';
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { UniverseToken, UniverseToken__factory } from '../../typechain';
 
 const { AddressZero } = ethers.constants;
 const UNIVERSE_NAME = 'Universe One';
