@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Errors.sol";
-import "./interfaces/IUniverseToken.sol";
+import "../Errors.sol";
+import "./IUniverseToken.sol";
 
 contract UniverseToken is IUniverseToken, ERC721, Ownable {
     using Counters for Counters.Counter;
@@ -20,6 +20,9 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
     // Mapping from token ID to universe name.
     mapping(uint256 => string) private _universeNames;
 
+    /**
+     * @dev Modifier to make a function callable only by the metahub contract.
+     */
     modifier onlyMetahub() {
         if (_msgSender() != _metahub) {
             revert CallerIsNotMetahub();

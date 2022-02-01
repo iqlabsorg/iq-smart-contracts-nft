@@ -60,6 +60,14 @@ interface IWarperPresetFactory {
     function disablePreset(bytes32 presetId) external;
 
     /**
+     * @dev Deploys a new warper from the preset identified by `presetId`.
+     * @param presetId Warper preset id.
+     * @param initData Warper initialization data.
+     * @return Deployed warper address.
+     */
+    function deployPreset(bytes32 presetId, bytes[] calldata initData) external returns (address);
+
+    /**
      * @dev Checks whether warper preset is enabled and available for deployment.
      * @param presetId Warper preset id.
      */
@@ -75,12 +83,4 @@ interface IWarperPresetFactory {
      * @param presetId Warper preset id.
      */
     function preset(bytes32 presetId) external view returns (WarperPreset memory);
-
-    /**
-     * @dev Deploys a new warper from the preset identified by `presetId`.
-     * @param presetId Warper preset id.
-     * @param initData Warper initialization data.
-     * @return Deployed warper address.
-     */
-    function deployPreset(bytes32 presetId, bytes[] calldata initData) external returns (address);
 }

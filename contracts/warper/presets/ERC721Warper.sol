@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import "../Warper.sol";
-import "../../interfaces/IERC721Warper.sol";
+import "./IERC721Warper.sol";
 
 error BalanceQueryForZeroAddress();
 error OwnerQueryForNonexistentToken(uint256 tokenId);
@@ -29,16 +29,24 @@ contract ERC721Warper is IERC721Warper, Warper {
 
     bytes4 internal constant _ERC721METADATA_INTERFACE_ID = type(IERC721Metadata).interfaceId;
 
-    // Mapping from token ID to owner address
+    /**
+     * @dev Mapping from token ID to owner address
+     */
     mapping(uint256 => address) private _owners;
 
-    // Mapping owner address to token count
+    /**
+     * @dev Mapping owner address to token count
+     */
     mapping(address => uint256) private _balances;
 
-    // Mapping from token ID to approved address
+    /**
+     * @dev Mapping from token ID to approved address
+     */
     mapping(uint256 => address) private _tokenApprovals;
 
-    // Mapping from owner to operator approvals
+    /**
+     * @dev Mapping from owner to operator approvals
+     */
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     /**

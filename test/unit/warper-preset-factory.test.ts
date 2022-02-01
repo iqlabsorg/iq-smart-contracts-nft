@@ -123,7 +123,7 @@ describe('Warper Preset Factory', () => {
       const originalAddress = '0x385D56903e7e5Fb8acE2C2209070A58Bf6f7D8bc';
       const metahubAddress = '0xa3E8c8F56f1c8a0e08F2BF7216b31D9CDAd79fF7';
 
-      const defaultInitData = warperImpl1.interface.encodeFunctionData('iqInitialize', [
+      const defaultInitData = warperImpl1.interface.encodeFunctionData('__initialize', [
         defaultAbiCoder.encode(['address', 'address'], [originalAddress, metahubAddress]),
       ]);
       const customInitData = warperImpl1.interface.encodeFunctionData('customInitialize', [
@@ -140,8 +140,8 @@ describe('Warper Preset Factory', () => {
       expect(warperAddress).to.be.properAddress;
       const warper = dummyWarperFactory.attach(warperAddress);
       await expect(warper.getInitValue()).to.eventually.eq(42);
-      await expect(warper.iqOriginal()).to.eventually.eq(originalAddress);
-      await expect(warper.iqMetahub()).to.eventually.eq(metahubAddress);
+      await expect(warper.__original()).to.eventually.eq(originalAddress);
+      await expect(warper.__metahub()).to.eventually.eq(metahubAddress);
     });
 
     it('forbids deployment with empty init data', async () => {

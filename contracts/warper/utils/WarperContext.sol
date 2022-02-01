@@ -1,0 +1,67 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.11;
+
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/StorageSlot.sol";
+import "../../metahub/IMetahub.sol";
+import "../../Errors.sol";
+import "./InitializationContext.sol";
+
+abstract contract WarperContext is InitializationContext, Context {
+    /**
+     * @dev Metahub address slot.
+     */
+    bytes32 private constant _METAHUB_SLOT = bytes32(uint256(keccak256("iq.protocol.nft.metahub")) - 1);
+
+    /**
+     * @dev Original asset address slot.
+     */
+    bytes32 private constant _ORIGINAL_SLOT = bytes32(uint256(keccak256("iq.protocol.nft.original")) - 1);
+
+    /**
+     * @dev Modifier to make a function callable only by the metahub contract.
+     */
+    modifier onlyMetahub() {
+        if (_msgSender() != _metahub()) {
+            revert CallerIsNotMetahub();
+        }
+        _;
+    }
+    /**
+     * @dev Modifier to make a function callable only by the warper admin.
+     */
+    modifier onlyWarperAdmin() {
+        if (!IMetahub(_metahub()).isWarperAdmin(address(this), _msgSender())) {
+            revert CallerIsNotWarperAdmin();
+        }
+        _;
+    }
+
+    /**
+     * @dev Sets warper original asset address.
+     */
+    function _setOriginal(address original) internal onlyInitializing {
+        StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value = original;
+    }
+
+    /**
+     * @dev Sets warper metahub address.
+     */
+    function _setMetahub(address metahub) internal onlyInitializing {
+        StorageSlot.getAddressSlot(_METAHUB_SLOT).value = metahub;
+    }
+
+    /**
+     * @dev Returns warper original asset address.
+     */
+    function _original() internal view returns (address) {
+        return StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value;
+    }
+
+    /**
+     * @dev warper metahub address.
+     */
+    function _metahub() internal view returns (address) {
+        return StorageSlot.getAddressSlot(_METAHUB_SLOT).value;
+    }
+}

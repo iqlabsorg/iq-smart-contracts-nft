@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./interfaces/IWarperPresetFactory.sol";
-import "./interfaces/IWarper.sol";
-import "./Errors.sol";
+import "../Errors.sol";
+import "./IWarperPresetFactory.sol";
+import "./IWarper.sol";
 
 error InvalidWarperPresetInterface();
 error DuplicateWarperPresetId(bytes32 presetId);
@@ -21,10 +21,14 @@ contract WarperPresetFactory is IWarperPresetFactory, Ownable {
     using ERC165Checker for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    // Mapping presetId to preset struct.
+    /**
+     * @dev Mapping presetId to preset struct.
+     */
     mapping(bytes32 => WarperPreset) private _presets;
 
-    // Registered presets.
+    /**
+     * @dev Registered presets.
+     */
     EnumerableSet.Bytes32Set private _presetIds;
 
     modifier whenEnabled(bytes32 presetId) {
@@ -87,6 +91,27 @@ contract WarperPresetFactory is IWarperPresetFactory, Ownable {
     /**
      * @inheritdoc IWarperPresetFactory
      */
+    function deployPreset(bytes32 presetId, bytes[] calldata initData)
+        external
+        whenEnabled(presetId)
+        returns (address)
+    {
+        // Deploy warper preset implementation proxy.
+        address warper = _presets[presetId].implementation.clone();
+        for (uint256 i = 0; i < initData.length; i++) {
+            if (initData[i].length == 0) {
+                revert EmptyPresetData();
+            }
+            warper.functionCall(initData[i]);
+        }
+
+        emit WarperPresetDeployed(presetId, warper);
+        return warper;
+    }
+
+    /**
+     * @inheritdoc IWarperPresetFactory
+     */
     function presetEnabled(bytes32 presetId) external view returns (bool) {
         return _presets[presetId].enabled;
     }
@@ -108,26 +133,5 @@ contract WarperPresetFactory is IWarperPresetFactory, Ownable {
      */
     function preset(bytes32 presetId) external view returns (WarperPreset memory) {
         return _presets[presetId];
-    }
-
-    /**
-     * @inheritdoc IWarperPresetFactory
-     */
-    function deployPreset(bytes32 presetId, bytes[] calldata initData)
-        external
-        whenEnabled(presetId)
-        returns (address)
-    {
-        // Deploy warper preset implementation proxy.
-        address warper = _presets[presetId].implementation.clone();
-        for (uint256 i = 0; i < initData.length; i++) {
-            if (initData[i].length == 0) {
-                revert EmptyPresetData();
-            }
-            warper.functionCall(initData[i]);
-        }
-
-        emit WarperPresetDeployed(presetId, warper);
-        return warper;
     }
 }
