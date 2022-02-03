@@ -11,12 +11,12 @@ abstract contract WarperContext is InitializationContext, Context {
     /**
      * @dev Metahub address slot.
      */
-    bytes32 private constant _METAHUB_SLOT = bytes32(uint256(keccak256("iq.protocol.nft.metahub")) - 1);
+    bytes32 private constant _METAHUB_SLOT = bytes32(uint256(keccak256("iq.warper.metahub")) - 1);
 
     /**
      * @dev Original asset address slot.
      */
-    bytes32 private constant _ORIGINAL_SLOT = bytes32(uint256(keccak256("iq.protocol.nft.original")) - 1);
+    bytes32 private constant _ORIGINAL_SLOT = bytes32(uint256(keccak256("iq.warper.original")) - 1);
 
     /**
      * @dev Modifier to make a function callable only by the metahub contract.

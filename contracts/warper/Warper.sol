@@ -10,9 +10,8 @@ import "./IWarper.sol";
 import "./utils/InitializationContext.sol";
 import "./utils/CallForwarder.sol";
 import "./utils/WarperContext.sol";
-import "./params/RentalParamStore.sol";
 
-abstract contract Warper is IWarper, WarperContext, CallForwarder, RentalParamStore {
+abstract contract Warper is IWarper, WarperContext, CallForwarder {
     using ERC165Checker for address;
 
     /**
@@ -46,20 +45,6 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, RentalParamSt
     }
 
     /**
-     * @inheritdoc IRentalParamStore
-     */
-    function __setMinRentalPeriod(uint256 minRentalPeriod) external virtual onlyWarperAdmin {
-        _setMinRentalPeriod(minRentalPeriod);
-    }
-
-    /**
-     * @inheritdoc IRentalParamStore
-     */
-    function __setMaxRentalPeriod(uint256 maxRentalPeriod) external virtual onlyWarperAdmin {
-        _setMaxRentalPeriod(maxRentalPeriod);
-    }
-
-    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) external view virtual returns (bool) {
@@ -85,18 +70,38 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, RentalParamSt
     }
 
     /**
-     * @inheritdoc IRentalParamStore
+     * @inheritdoc IRentalParamProvider
      */
-    function __minRentalPeriod() external view virtual returns (uint256) {
-        return _minRentalPeriod();
+    function __availabilityPeriodStart() external view returns (uint32) {
+        return 0;
     }
 
     /**
-     * @inheritdoc IRentalParamStore
+     * @inheritdoc IRentalParamProvider
      */
-    function __maxRentalPeriod() external view virtual returns (uint256) {
-        uint256 value = _maxRentalPeriod();
-        return value > 0 ? value : type(uint256).max;
+    function __availabilityPeriodEnd() external view returns (uint32) {
+        return type(uint32).max;
+    }
+
+    /**
+     * @inheritdoc IRentalParamProvider
+     */
+    function __minRentalPeriod() external view virtual returns (uint32) {
+        return 0;
+    }
+
+    /**
+     * @inheritdoc IRentalParamProvider
+     */
+    function __maxRentalPeriod() external view virtual returns (uint32) {
+        return type(uint32).max;
+    }
+
+    /**
+     * @inheritdoc IRentalParamProvider
+     */
+    function __rentalParams() external view returns (RentalParams memory) {
+        return RentalParams(0, type(uint32).max, 0, type(uint32).max);
     }
 
     /**

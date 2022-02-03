@@ -2,9 +2,9 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
-import "./params/IRentalParamStore.sol";
+import "./IRentalParamProvider.sol";
 
-interface IWarper is IERC165, IRentalParamStore {
+interface IWarper is IERC165, IRentalParamProvider {
     /**
      * @dev Default warper initialization method.
      * @param config Warper configuration parameters.

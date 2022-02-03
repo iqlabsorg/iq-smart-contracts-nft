@@ -8,15 +8,11 @@ error ContractIsAlreadyInitialized();
 error ContractIsNotInitializing();
 
 abstract contract InitializationContext {
-    /**
-     * @dev Indicates that the contract has been initialized.
-     */
-    bytes32 internal constant _INITIALIZED_SLOT = bytes32(uint256(keccak256("iq.protocol.nft.initialized")) - 1);
+    /// @dev Indicates that the contract has been initialized.
+    bytes32 internal constant _INITIALIZED_SLOT = bytes32(uint256(keccak256("iq.context.initialized")) - 1);
 
-    /**
-     * @dev Indicates that the contract is in the process of being initialized.
-     */
-    bytes32 internal constant _INITIALIZING_SLOT = bytes32(uint256(keccak256("iq.protocol.nft.initializing")) - 1);
+    /// @dev Indicates that the contract is in the process of being initialized.
+    bytes32 internal constant _INITIALIZING_SLOT = bytes32(uint256(keccak256("iq.context.initializing")) - 1);
 
     /**
      * @dev Modifier to protect an initializer function from being invoked twice.
