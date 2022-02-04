@@ -18,7 +18,9 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
   let deployer: SignerWithAddress;
   let nftCreator: SignerWithAddress;
   let tokenOwner: SignerWithAddress;
-  let stranger: SignerWithAddress;
+  let stranger0: SignerWithAddress;
+  let stranger1: SignerWithAddress;
+  let stranger2: SignerWithAddress;
   let oNFT: ERC721Mock;
   let warperAsDeployer: ERC721Warper;
   let warperAsMetaHub: ERC721Warper;
@@ -29,7 +31,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
     // Resolve primary roles
     deployer = await ethers.getNamedSigner('deployer');
     nftCreator = await ethers.getNamedSigner('nftCreator');
-    [tokenOwner, stranger] = await ethers.getUnnamedSigners();
+    [tokenOwner, stranger0, stranger1, stranger2] = await ethers.getUnnamedSigners();
 
     // Deploy original asset mock.
     oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
@@ -66,7 +68,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
 
       context('when the given address does not own any tokens', function () {
         it('returns 0', async function () {
-          expect(await warperAsTokenOwner.balanceOf(stranger.address)).to.be.equal('0');
+          expect(await warperAsTokenOwner.balanceOf(stranger0.address)).to.be.equal('0');
         });
       });
 
@@ -91,8 +93,65 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
 
         it('reverts', async function () {
           await expect(warperAsTokenOwner.ownerOf(tokenId)).to.be.revertedWithError(
-            'ERC721: owner query for nonexistent token',
+            'OwnerQueryForNonexistentToken',
+            tokenId,
           );
+        });
+      });
+    });
+
+    describe('transfers', function () {
+      let warperAsStranger: ERC721Warper;
+      let warperAsApproved: ERC721Warper;
+      let warperAsOperator: ERC721Warper;
+      let approved: SignerWithAddress;
+      let operator: SignerWithAddress;
+      let stranger: SignerWithAddress;
+      const tokenId = 1;
+
+      beforeEach(async function () {
+        approved = stranger0;
+        operator = stranger1;
+        stranger = stranger2;
+
+        await warperAsTokenOwner.approve(approved.address, tokenId);
+        await warperAsTokenOwner.setApprovalForAll(operator.address, true);
+        warperAsStranger = warperAsDeployer.connect(stranger);
+        warperAsApproved = warperAsDeployer.connect(approved);
+        warperAsOperator = warperAsDeployer.connect(operator);
+      });
+
+      context('when the address of the previous owner is incorrect', function () {
+        it('reverts', async function () {
+          await expect(
+            warperAsTokenOwner.transferFrom(stranger.address, stranger.address, tokenId),
+          ).to.be.revertedWithError('TransferOfTokenThatIsNotOwn', tokenId);
+        });
+      });
+
+      context('when the sender is not authorized for the token id', function () {
+        it('reverts', async function () {
+          await expect(
+            warperAsStranger.transferFrom(stranger.address, stranger.address, tokenId),
+          ).to.be.revertedWithError('TransferCallerIsNotOwnerNorApproved', stranger.address);
+        });
+      });
+
+      context('when the given token ID does not exist', function () {
+        it('reverts', async function () {
+          const nonExistentTokenId = 42;
+
+          await expect(
+            warperAsTokenOwner.transferFrom(tokenOwner.address, stranger.address, nonExistentTokenId),
+          ).to.be.revertedWithError('OperatorQueryForNonexistentToken', nonExistentTokenId);
+        });
+      });
+
+      context('when the address to transfer the token to is the zero address', function () {
+        it('reverts', async function () {
+          await expect(
+            warperAsTokenOwner.transferFrom(tokenOwner.address, AddressZero, tokenId),
+          ).to.be.revertedWithError('TransferToTheZeroAddress');
         });
       });
     });
