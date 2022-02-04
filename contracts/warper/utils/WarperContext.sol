@@ -7,7 +7,7 @@ import "../../metahub/IMetahub.sol";
 import "../../Errors.sol";
 import "./InitializationContext.sol";
 
-abstract contract WarperContext is InitializationContext, Context {
+abstract contract WarperContext is Context, InitializationContext {
     /**
      * @dev Metahub address slot.
      */

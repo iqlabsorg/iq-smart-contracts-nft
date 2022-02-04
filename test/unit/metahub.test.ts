@@ -4,8 +4,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
   ERC721Mock,
   ERC721Mock__factory,
-  ERC721Warper,
-  ERC721Warper__factory,
+  ERC721PresetConfigurable__factory,
   Metahub,
   Metahub__factory,
   MetahubV2Mock,
@@ -28,7 +27,6 @@ describe('Metahub', () => {
   let erc721Factory: ERC721Mock__factory;
   let universeToken: UniverseToken;
   let oNFT: ERC721Mock;
-  let erc721WarperImpl: ERC721Warper;
   let warperPresetFactory: WarperPresetFactory;
   let metahub: Metahub;
 
@@ -47,8 +45,8 @@ describe('Metahub', () => {
     warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
 
     // Deploy and register warper preset
-    erc721WarperImpl = await new ERC721Warper__factory(deployer).deploy();
-    await warperPresetFactory.addPreset(warperPresetId, erc721WarperImpl.address);
+    const warperImpl = await new ERC721PresetConfigurable__factory(deployer).deploy();
+    await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
   });
 
   beforeEach(async () => {

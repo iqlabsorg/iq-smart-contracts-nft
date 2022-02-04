@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpg
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "../warper/IWarper.sol";
+import "../warper/IWarperPreset.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../universe/IUniverseToken.sol";
 import "../Errors.sol";
@@ -63,7 +64,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
         _;
     }
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
+    /**
+     * @custom:oz-upgrades-unsafe-allow constructor
+     */
     constructor() initializer {}
 
     /**
@@ -162,7 +165,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
         bytes[] memory initCalls = new bytes[](hasExtraData ? 2 : 1);
 
         // Call warper default initialization method first.
-        initCalls[0] = abi.encodeWithSelector(IWarper.__initialize.selector, abi.encode(original, address(this)));
+        initCalls[0] = abi.encodeWithSelector(IWarperPreset.__initialize.selector, abi.encode(original, address(this)));
 
         // Optionally add extra initialization call to the sequence.
         if (hasExtraData) {

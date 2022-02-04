@@ -3,9 +3,6 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
-//todo: validate: minRentalPeriod <= maxRentalPeriod
-//todo: validate: availabilityPeriodStart < availabilityPeriodEnd
-
 abstract contract RentalParamStore {
     /**
      * @dev Warper min rental period.

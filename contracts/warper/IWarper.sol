@@ -2,15 +2,8 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
-import "./IRentalParamProvider.sol";
 
-interface IWarper is IERC165, IRentalParamProvider {
-    /**
-     * @dev Default warper initialization method.
-     * @param config Warper configuration parameters.
-     */
-    function __initialize(bytes calldata config) external;
-
+interface IWarper is IERC165 {
     /**
      * @dev Returns the original asset address.
      */
@@ -20,6 +13,4 @@ interface IWarper is IERC165, IRentalParamProvider {
      * @dev Returns the Metahub address.
      */
     function __metahub() external view returns (address);
-
-    // todo: add lifecycle hooks
 }

@@ -2,12 +2,12 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
-  DummyWarperMock,
-  DummyWarperMock__factory,
   WarperPresetFactory,
   WarperPresetFactory__factory,
-} from '../../typechain';
-import { deployWarperPreset } from '../utils';
+  WarperPresetMock,
+  WarperPresetMock__factory,
+} from '../../../typechain';
+import { deployWarperPreset } from '../../utils';
 
 const { formatBytes32String, defaultAbiCoder } = ethers.utils;
 
@@ -23,16 +23,16 @@ describe('Warper Preset Factory', () => {
   let deployer: SignerWithAddress;
   let stranger: SignerWithAddress;
   let factory: WarperPresetFactory;
-  let dummyWarperFactory: DummyWarperMock__factory;
-  let warperImpl1: DummyWarperMock;
-  let warperImpl2: DummyWarperMock;
+  let warperImplFactory: WarperPresetMock__factory;
+  let warperImpl1: WarperPresetMock;
+  let warperImpl2: WarperPresetMock;
 
   before(async () => {
     deployer = await ethers.getNamedSigner('deployer');
     [stranger] = await ethers.getUnnamedSigners();
-    dummyWarperFactory = new DummyWarperMock__factory(deployer);
-    warperImpl1 = await dummyWarperFactory.deploy();
-    warperImpl2 = await dummyWarperFactory.deploy();
+    warperImplFactory = new WarperPresetMock__factory(deployer);
+    warperImpl1 = await warperImplFactory.deploy();
+    warperImpl2 = await warperImplFactory.deploy();
   });
 
   beforeEach(async () => {
@@ -122,26 +122,26 @@ describe('Warper Preset Factory', () => {
       // Prepare dummy warper init data.
       const originalAddress = '0x385D56903e7e5Fb8acE2C2209070A58Bf6f7D8bc';
       const metahubAddress = '0xa3E8c8F56f1c8a0e08F2BF7216b31D9CDAd79fF7';
+      const customInitValue = 10;
+      const extraValue = 20;
 
-      const defaultInitData = warperImpl1.interface.encodeFunctionData('__initialize', [
-        defaultAbiCoder.encode(['address', 'address'], [originalAddress, metahubAddress]),
+      const initData = warperImpl1.interface.encodeFunctionData('__initialize', [
+        defaultAbiCoder.encode(['address', 'address', 'uint256'], [originalAddress, metahubAddress, customInitValue]),
       ]);
-      const customInitData = warperImpl1.interface.encodeFunctionData('customInitialize', [
-        defaultAbiCoder.encode(['uint256'], [42]),
+      const extraCallData = warperImpl1.interface.encodeFunctionData('setExtraValue', [
+        defaultAbiCoder.encode(['uint256'], [extraValue]),
       ]);
 
       // Deploy warper and get address from event.
-      const warperAddress = await deployWarperPreset(factory.connect(stranger), presetId1, [
-        defaultInitData,
-        customInitData,
-      ]);
+      const warperAddress = await deployWarperPreset(factory.connect(stranger), presetId1, [initData, extraCallData]);
 
       // Assert warper is deployed and initialized correctly.
       expect(warperAddress).to.be.properAddress;
-      const warper = dummyWarperFactory.attach(warperAddress);
-      await expect(warper.getInitValue()).to.eventually.eq(42);
+      const warper = warperImplFactory.attach(warperAddress);
       await expect(warper.__original()).to.eventually.eq(originalAddress);
       await expect(warper.__metahub()).to.eventually.eq(metahubAddress);
+      await expect(warper.initValue()).to.eventually.eq(customInitValue);
+      await expect(warper.extraValue()).to.eventually.eq(extraValue);
     });
 
     it('forbids deployment with empty init data', async () => {

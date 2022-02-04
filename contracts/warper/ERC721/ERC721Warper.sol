@@ -23,7 +23,7 @@ error TransferOfTokenThatIsNotOwn(uint256 tokenId);
 error TransferToTheZeroAddress();
 error ApproveToCaller();
 
-contract ERC721Warper is IERC721Warper, Warper {
+contract ERC721Warper is Warper, IERC721Warper {
     using ERC165Checker for address;
     using Address for address;
 
@@ -50,13 +50,13 @@ contract ERC721Warper is IERC721Warper, Warper {
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     /**
-     * @dev Validates the original NFT.
+     * @inheritdoc IERC165
      */
-    function _validateOriginal(address original) internal override {
-        if (!original.supportsInterface(_ERC721METADATA_INTERFACE_ID)) {
-            revert InvalidOriginalTokenInterface(original, _ERC721METADATA_INTERFACE_ID);
-        }
-        super._validateOriginal(original);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Warper, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC721Warper).interfaceId ||
+            interfaceId == type(IERC721).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /**
@@ -156,6 +156,16 @@ contract ERC721Warper is IERC721Warper, Warper {
     }
 
     /**
+     * @dev Validates the original NFT.
+     */
+    function _validateOriginal(address original) internal override {
+        if (!original.supportsInterface(_ERC721METADATA_INTERFACE_ID)) {
+            revert InvalidOriginalTokenInterface(original, _ERC721METADATA_INTERFACE_ID);
+        }
+        super._validateOriginal(original);
+    }
+
+    /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
      * are aware of the ERC721 protocol to prevent tokens from being forever locked.
      *
@@ -221,7 +231,7 @@ contract ERC721Warper is IERC721Warper, Warper {
      *
      * Emits a {Transfer} event.
      */
-    function safeMint(address to, uint256 tokenId) external onlyMetahub {
+    function safeMint(address to, uint256 tokenId) public onlyMetahub {
         // todo: custom method?
         _safeMint(to, tokenId, "");
     }

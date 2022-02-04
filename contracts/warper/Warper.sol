@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/utils/StorageSlot.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "../Errors.sol";
 import "./IWarper.sol";
-import "./utils/InitializationContext.sol";
 import "./utils/CallForwarder.sol";
 import "./utils/WarperContext.sol";
 
-abstract contract Warper is IWarper, WarperContext, CallForwarder {
+abstract contract Warper is WarperContext, CallForwarder, IWarper {
     using ERC165Checker for address;
 
     /**
@@ -31,14 +29,10 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder {
     }
 
     /**
-     * @dev Base Warper initializer.
+     * @dev Warper initializer.
      *
-     * If overridden should call `super.__initialize()`.
      */
-    function __initialize(bytes calldata config) external virtual initializer {
-        // Decode config
-        (address original, address metahub) = abi.decode(config, (address, address));
-
+    function _Warper_init(address original, address metahub) internal onlyInitializing {
         _validateOriginal(original);
         _setOriginal(original);
         _setMetahub(metahub);
@@ -47,7 +41,7 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder {
     /**
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId) external view virtual returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         bool supportedByWarper = interfaceId == type(IWarper).interfaceId || interfaceId == type(IERC165).interfaceId;
         if (supportedByWarper) return true;
 
@@ -67,41 +61,6 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder {
      */
     function __metahub() external view returns (address) {
         return _metahub();
-    }
-
-    /**
-     * @inheritdoc IRentalParamProvider
-     */
-    function __availabilityPeriodStart() external view returns (uint32) {
-        return 0;
-    }
-
-    /**
-     * @inheritdoc IRentalParamProvider
-     */
-    function __availabilityPeriodEnd() external view returns (uint32) {
-        return type(uint32).max;
-    }
-
-    /**
-     * @inheritdoc IRentalParamProvider
-     */
-    function __minRentalPeriod() external view virtual returns (uint32) {
-        return 0;
-    }
-
-    /**
-     * @inheritdoc IRentalParamProvider
-     */
-    function __maxRentalPeriod() external view virtual returns (uint32) {
-        return type(uint32).max;
-    }
-
-    /**
-     * @inheritdoc IRentalParamProvider
-     */
-    function __rentalParams() external view returns (RentalParams memory) {
-        return RentalParams(0, type(uint32).max, 0, type(uint32).max);
     }
 
     /**

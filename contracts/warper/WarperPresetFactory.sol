@@ -8,14 +8,14 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../Errors.sol";
 import "./IWarperPresetFactory.sol";
-import "./IWarper.sol";
+import "./IWarperPreset.sol";
 
 error InvalidWarperPresetInterface();
 error DuplicateWarperPresetId(bytes32 presetId);
 error DisabledWarperPreset(bytes32 presetId);
 error EnabledWarperPreset(bytes32 presetId);
 
-contract WarperPresetFactory is IWarperPresetFactory, Ownable {
+contract WarperPresetFactory is Ownable, IWarperPresetFactory {
     using Clones for address;
     using Address for address;
     using ERC165Checker for address;
@@ -50,7 +50,7 @@ contract WarperPresetFactory is IWarperPresetFactory, Ownable {
      */
     function addPreset(bytes32 presetId, address implementation) external onlyOwner {
         // Check whether provided implementation address is a contract with the correct interface.
-        if (!implementation.supportsInterface(type(IWarper).interfaceId)) {
+        if (!implementation.supportsInterface(type(IWarperPreset).interfaceId)) {
             revert InvalidWarperPresetInterface();
         }
 
