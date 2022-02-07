@@ -45,10 +45,10 @@ interface IMetahub {
      * @param universeId Universe ID.
      * @param original Original asset contract address.
      * @param presetId Warper preset ID.
-     * @param presetData Warper preset setup call.
+     * @param presetData Warper additional initialization data.
      * @return Warper address.
      */
-    function deployWarperAndCall(
+    function deployWarperWithData(
         uint256 universeId,
         address original,
         bytes32 presetId,

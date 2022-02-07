@@ -91,21 +91,19 @@ contract WarperPresetFactory is Ownable, IWarperPresetFactory {
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function deployPreset(bytes32 presetId, bytes[] calldata initData)
-        external
-        whenEnabled(presetId)
-        returns (address)
-    {
-        // Deploy warper preset implementation proxy.
-        address warper = _presets[presetId].implementation.clone();
-        for (uint256 i = 0; i < initData.length; i++) {
-            if (initData[i].length == 0) {
-                revert EmptyPresetData();
-            }
-            warper.functionCall(initData[i]);
+    function deployPreset(bytes32 presetId, bytes calldata initData) external whenEnabled(presetId) returns (address) {
+        // Init data must never be empty here, because all presets have mandatory init params.
+        if (initData.length == 0) {
+            revert EmptyPresetData();
         }
 
+        // Deploy warper preset implementation proxy.
+        address warper = _presets[presetId].implementation.clone();
+
+        // Initialize warper.
+        warper.functionCall(initData);
         emit WarperPresetDeployed(presetId, warper);
+
         return warper;
     }
 

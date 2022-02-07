@@ -99,13 +99,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
         address original,
         bytes32 presetId
     ) external onlyUniverseOwner(universeId) returns (address) {
-        return _registerWarper(universeId, _deployWarperAndCall(original, presetId, bytes("")));
+        return _registerWarper(universeId, _deployWarperWithData(original, presetId, bytes("")));
     }
 
     /**
      * @inheritdoc IMetahub
      */
-    function deployWarperAndCall(
+    function deployWarperWithData(
         uint256 universeId,
         address original,
         bytes32 presetId,
@@ -114,7 +114,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
         if (presetData.length == 0) {
             revert EmptyPresetData();
         }
-        return _registerWarper(universeId, _deployWarperAndCall(original, presetId, presetData));
+        return _registerWarper(universeId, _deployWarperWithData(original, presetId, presetData));
     }
 
     /**
@@ -155,25 +155,24 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    function _deployWarperAndCall(
+    /**
+     * @dev Constructs warper initialization payload and
+     * calls warper preset factory to deploy a warper from preset.
+     */
+    function _deployWarperWithData(
         address original,
         bytes32 presetId,
         bytes memory presetData
     ) internal returns (address) {
-        // Build warper initialization payload.
-        bool hasExtraData = presetData.length > 0;
-        bytes[] memory initCalls = new bytes[](hasExtraData ? 2 : 1);
-
-        // Call warper default initialization method first.
-        initCalls[0] = abi.encodeWithSelector(IWarperPreset.__initialize.selector, abi.encode(original, address(this)));
-
-        // Optionally add extra initialization call to the sequence.
-        if (hasExtraData) {
-            initCalls[1] = presetData;
-        }
+        // Construct warper initialization payload call.
+        // Put warper default initialization payload first, then append additional preset data.
+        bytes memory initCall = abi.encodeWithSelector(
+            IWarperPreset.__initialize.selector,
+            abi.encode(original, address(this), presetData)
+        );
 
         // Deploy new warper instance from preset via warper preset factory.
-        return _warperPresetFactory.deployPreset(presetId, initCalls);
+        return _warperPresetFactory.deployPreset(presetId, initCall);
     }
 
     function _registerWarper(uint256 universeId, address warper) internal returns (address) {

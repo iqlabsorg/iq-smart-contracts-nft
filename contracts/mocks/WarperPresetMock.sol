@@ -9,9 +9,11 @@ contract WarperPresetMock is IWarperPreset, Warper {
     uint256 internal _extraValue;
 
     function __initialize(bytes calldata config) external initializer {
-        (address original, address metahub, uint256 initValue) = abi.decode(config, (address, address, uint256));
+        (address original, address metahub, bytes memory presetData) = abi.decode(config, (address, address, bytes));
+
+        (uint256 initValue1, uint256 initValue2) = abi.decode(presetData, (uint256, uint256));
         _Warper_init(original, metahub);
-        _initValue = initValue;
+        _initValue = initValue1 + initValue2;
     }
 
     function initValue() external view returns (uint256) {

@@ -5,8 +5,9 @@ import "../ERC721Warper.sol";
 import "../../utils/RentalParamStore.sol";
 import "../../IRentalParamStore.sol";
 
-//todo: validate: minRentalPeriod <= maxRentalPeriod
-//todo: validate: availabilityPeriodStart < availabilityPeriodEnd
+//todo: add Multicall trait
+//todo: validate: minRentalPeriod <= maxRentalPeriod (revert with InvalidMinRentalPeriod / InvalidMaxRentalPeriod)
+//todo: validate: availabilityPeriodStart < availabilityPeriodEnd (revert with InvalidAvailabilityPeriodStart / InvalidAvailabilityPeriodEnd)
 abstract contract ERC721WarperConfigurable is ERC721Warper, RentalParamStore, IRentalParamStore {
     function _ERC721WarperConfigurable_init() internal onlyInitializing {
         // Store default values.
