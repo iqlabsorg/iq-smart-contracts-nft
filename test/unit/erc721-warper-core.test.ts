@@ -6,6 +6,8 @@ import {
   ERC721Mock,
   ERC721Mock__factory,
   ERC721Warper,
+  ERC721WarperMock,
+  ERC721WarperMock__factory,
   ERC721Warper__factory,
   Metahub,
   Metahub__factory,
@@ -22,9 +24,9 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
   let stranger1: SignerWithAddress;
   let stranger2: SignerWithAddress;
   let oNFT: ERC721Mock;
-  let warperAsDeployer: ERC721Warper;
-  let warperAsMetaHub: ERC721Warper;
-  let warperAsTokenOwner: ERC721Warper;
+  let warperAsDeployer: ERC721WarperMock;
+  let warperAsMetaHub: ERC721WarperMock;
+  let warperAsTokenOwner: ERC721WarperMock;
   let metahub: FakeContract<Metahub>;
 
   before(async () => {
@@ -43,7 +45,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
   context('with minted tokens', function () {
     beforeEach(async function () {
       // Deploy preset.
-      warperAsDeployer = await new ERC721Warper__factory(deployer).deploy();
+      warperAsDeployer = await new ERC721WarperMock__factory(deployer).deploy();
       await warperAsDeployer.__initialize(
         defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]),
       );
