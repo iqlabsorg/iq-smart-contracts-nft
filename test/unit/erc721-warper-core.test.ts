@@ -12,9 +12,79 @@ import {
   Metahub,
   Metahub__factory,
 } from '../../typechain';
+import { BigNumberish, ContractTransaction } from 'ethers';
 
 const { AddressZero } = ethers.constants;
 const { defaultAbiCoder } = ethers.utils;
+
+const transferWasSuccessful = ({
+  tokenOwner,
+  token,
+  transaction,
+  tokenId,
+  approved,
+  toWhom,
+}: {
+  token: () => ERC721WarperMock;
+  transaction: () => Promise<ContractTransaction>;
+  tokenOwner: () => SignerWithAddress;
+  toWhom: () => SignerWithAddress;
+  tokenId: BigNumberish;
+  approved: boolean;
+}) => {
+  let tx: ContractTransaction;
+  beforeEach(async () => {
+    tx = await transaction();
+  });
+
+  it('transfers the ownership of the given token ID to the given address', async () => {
+    expect(await token().ownerOf(tokenId)).to.be.equal(toWhom().address);
+  });
+
+  // it('emits a Transfer event', async () => {
+  //   await expect(tx).to.emit(token, 'Transfer').withArgs({ from: tokenOwner, to: toWhom, tokenId: tokenId });
+  // });
+
+  // it('clears the approval for the token ID', async function () {
+  //   expect(await token.getApproved(tokenId)).to.be.equal(AddressZero);
+  // });
+
+  // it('emits an Approval event', async () => {
+  //   await expect(tx)
+  //     .to.emit(token, 'Approval')
+  //     .withArgs({ owner: tokenOwner, approved: AddressZero, tokenId: tokenId });
+  // });
+
+  // it('adjusts owners balances', async function () {
+  //   expect(await token.balanceOf(tokenOwner)).to.equal('1');
+  // });
+};
+
+const shouldTransferTokensByUsers = ({
+  token,
+  tokenOwner,
+  toWhom,
+  tokenId,
+  transaction,
+}: {
+  token: () => ERC721WarperMock;
+  transaction: (as: SignerWithAddress, from: string, to: string, tokenId: BigNumberish) => Promise<ContractTransaction>;
+  tokenId: BigNumberish;
+  tokenOwner: () => SignerWithAddress;
+  toWhom: () => SignerWithAddress;
+  approved: SignerWithAddress;
+}) => {
+  describe('when called by the owner', () => {
+    transferWasSuccessful({
+      token,
+      transaction: () => transaction(tokenOwner(), tokenOwner().address, toWhom().address, tokenId),
+      tokenId,
+      tokenOwner: tokenOwner,
+      approved: false,
+      toWhom: toWhom,
+    });
+  });
+};
 
 describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
   let deployer: SignerWithAddress;
@@ -35,6 +105,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
     nftCreator = await ethers.getNamedSigner('nftCreator');
     [tokenOwner, stranger0, stranger1, stranger2] = await ethers.getUnnamedSigners();
 
+    // TODO remove oNFT deployments
     // Deploy original asset mock.
     oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
 
@@ -50,6 +121,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]),
       );
 
+      // TODO: remove the warperAs_ variants, do that inside the tests themselves
       warperAsMetaHub = warperAsDeployer.connect(metahub.wallet);
       warperAsTokenOwner = warperAsDeployer.connect(tokenOwner);
 
@@ -60,6 +132,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
       await warperAsMetaHub.safeMint(tokenOwner.address, 1);
       await warperAsMetaHub.safeMint(tokenOwner.address, 2);
     });
+    // TODO replace all cotnext with describe
 
     describe('balanceOf', function () {
       context('when the given address owns some tokens', function () {
@@ -154,6 +227,23 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
           await expect(
             warperAsTokenOwner.transferFrom(tokenOwner.address, AddressZero, tokenId),
           ).to.be.revertedWithError('TransferToTheZeroAddress');
+        });
+      });
+
+      describe('via transferFrom', () => {
+        // shouldTransferTokensByUsers(warperAsTokenOwner, function (from, to, tokenId, opts) {
+        //   return this.token.transferFrom(from, to, tokenId, opts);
+        // });
+        it('aa', () => {
+          // TEST
+        });
+        shouldTransferTokensByUsers({
+          token: () => warperAsTokenOwner,
+          tokenId,
+          transaction: (as, from, to, tokenId) => warperAsTokenOwner.connect(as).transferFrom(from, to, tokenId),
+          toWhom: () => stranger,
+          approved: approved,
+          tokenOwner: () => tokenOwner,
         });
       });
     });
