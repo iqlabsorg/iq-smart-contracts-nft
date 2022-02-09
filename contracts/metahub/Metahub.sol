@@ -8,11 +8,13 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpg
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "../warper/IWarper.sol";
+import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../universe/IUniverseToken.sol";
 import "../Errors.sol";
 import "./IMetahub.sol";
+import "./MetahubStorage.sol";
 
 /**
  * @dev Thrown when the message sender doesn't match the universe owner.
@@ -25,34 +27,15 @@ error CallerIsNotUniverseOwner();
  */
 error WarperIsNotRegistered(address warper);
 
-contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable {
+/**
+ * @dev Thrown when there are no registered warpers for a particular asset.
+ * @param asset Asset address.
+ */
+error AssetHasNoWarpers(address asset);
+
+contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable, MetahubStorage {
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
-
-    /**
-     * @dev Warper preset factory contract.
-     */
-    IWarperPresetFactory internal _warperPresetFactory;
-
-    /**
-     * @dev Universe NFT contract.
-     */
-    IUniverseToken internal _universeToken;
-
-    /**
-     * @dev Registered warpers.
-     */
-    mapping(address => Warper) internal _warpers;
-
-    /**
-     * @dev Mapping from universe token ID to the set of warper addresses.
-     */
-    mapping(uint256 => EnumerableSetUpgradeable.AddressSet) internal _universeWarpers;
-
-    /**
-     * @dev Mapping from original asset address to the set of warper addresses.
-     */
-    mapping(address => EnumerableSetUpgradeable.AddressSet) internal _assetWarpers;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
@@ -60,6 +43,16 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     modifier onlyUniverseOwner(uint256 universeId) {
         if (_msgSender() != _universeOwner(universeId)) {
             revert CallerIsNotUniverseOwner();
+        }
+        _;
+    }
+
+    /**
+     * @dev Modifier to make sure the function is called for registered warper.
+     */
+    modifier onlyRegisteredWarper(address warper) {
+        if (_warpers[warper].universeId == 0) {
+            revert WarperIsNotRegistered(warper);
         }
         _;
     }
@@ -118,6 +111,22 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     /**
+     * @inheritdoc IListingController
+     */
+    function listAsset(ListingParams calldata params) external {
+        // Provided asset must have at least one associated warper.
+        if (_assetWarpers[params.asset].length() == 0) {
+            revert AssetHasNoWarpers(params.asset);
+        }
+
+        // todo: validate
+        // todo: register
+        // todo: put asset into custody
+
+        emit AssetListed(params.asset, params.assetId);
+    }
+
+    /**
      * @inheritdoc IMetahub
      */
     function warperPresetFactory() external view returns (address) {
@@ -141,13 +150,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     /**
      * @inheritdoc IMetahub
      */
-    function isWarperAdmin(address warper, address account) external view returns (bool) {
-        uint256 universeId = _warpers[warper].universeId;
-        if (universeId == 0) {
-            revert WarperIsNotRegistered(warper);
-        }
+    function isWarperAdmin(address warper, address account) external view onlyRegisteredWarper(warper) returns (bool) {
         // Universe owner is the default admin for all presets.
-        return _universeOwner(universeId) == account;
+        return _universeOwner(_warpers[warper].universeId) == account;
     }
 
     /**

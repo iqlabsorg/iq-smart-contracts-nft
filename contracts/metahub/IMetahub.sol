@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-interface IMetahub {
-    /**
-     * @dev Warper entry struct.
-     * @param universeId Warper universe ID.
-     * @param enabled True if the warper is enabled and operational.
-     */
-    struct Warper {
-        uint256 universeId;
-        bool enabled;
-    }
+import "./IListingController.sol";
 
+interface IMetahub is IListingController {
     /**
      * @dev Emitted when a new warper is registered.
      * @param universeId Universe ID.

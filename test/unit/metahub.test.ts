@@ -115,6 +115,34 @@ describe('Metahub', () => {
           warperAddress2,
         ]);
       });
+
+      describe('Listing', () => {
+        it('prevents listing asset without registered warper', async () => {
+          const params = {
+            asset: '0x2B328CCD2d38ACBF7103b059a8EB94171C68f745', // unregistered asset
+            assetId: 1,
+            maxLockPeriod: 86400,
+            baseRate: 100,
+          };
+
+          await expect(metahub.listAsset(params)).to.revertedWithError('AssetHasNoWarpers', params.asset);
+        });
+
+        it('emits correct events', async () => {
+          const params = {
+            asset: originalAsset.address,
+            assetId: 1,
+            maxLockPeriod: 86400,
+            baseRate: 100,
+          };
+
+          await expect(metahub.listAsset(params))
+            .to.emit(metahub, 'AssetListed')
+            .withArgs(params.asset, params.assetId);
+        });
+
+        it('puts listed asset into custody');
+      });
     });
   });
 
