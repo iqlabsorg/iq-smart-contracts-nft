@@ -20,7 +20,7 @@ const MaxUint32 = 2 ** 32 - 1;
 describe('ERC721 Preset Basic', () => {
   let deployer: SignerWithAddress;
   let nftCreator: SignerWithAddress;
-  let oNFT: ERC721Mock;
+  let originalAsset: ERC721Mock;
   let metahub: MockContract<Metahub>;
   let warper: ERC721PresetConfigurable;
 
@@ -28,13 +28,13 @@ describe('ERC721 Preset Basic', () => {
     deployer = await ethers.getNamedSigner('deployer');
     nftCreator = await ethers.getNamedSigner('nftCreator');
     // Deploy original asset mock.
-    oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
+    originalAsset = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
     // Mock metahub.
     const metahubFactory = await smock.mock<Metahub__factory>('Metahub');
     metahub = await metahubFactory.deploy();
     // Deploy preset.
     warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
-    await warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
+    await warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [originalAsset.address, metahub.address]));
   });
 
   describe('Warper', () => {
@@ -52,7 +52,7 @@ describe('ERC721 Preset Basic', () => {
 
   describe('Warper Interface', () => {
     it('returns the original asset address', async () => {
-      await expect(warper.__original()).to.eventually.eq(oNFT.address);
+      await expect(warper.__original()).to.eventually.eq(originalAsset.address);
     });
 
     it('returns the metahub address', async () => {
@@ -91,7 +91,7 @@ describe('ERC721 Preset Basic', () => {
     });
   });
 
-  it('can forward the call to the oNFT', async () => {
+  it('can forward the call to the original asset contract', async () => {
     await expect(ERC721Mock__factory.connect(warper.address, deployer).symbol()).to.eventually.eq('ONFT');
   });
 });

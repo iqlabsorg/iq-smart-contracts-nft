@@ -26,7 +26,7 @@ describe('Metahub', () => {
   let nftCreator: SignerWithAddress;
   let erc721Factory: ERC721Mock__factory;
   let universeToken: UniverseToken;
-  let oNFT: ERC721Mock;
+  let originalAsset: ERC721Mock;
   let warperPresetFactory: WarperPresetFactory;
   let metahub: Metahub;
 
@@ -38,8 +38,8 @@ describe('Metahub', () => {
 
     // Deploy original NFT
     erc721Factory = new ERC721Mock__factory(nftCreator);
-    oNFT = await erc721Factory.deploy('Test ERC721', 'ONFT');
-    await oNFT.deployed();
+    originalAsset = await erc721Factory.deploy('Test ERC721', 'ONFT');
+    await originalAsset.deployed();
 
     // Deploy warper preset factory
     warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
@@ -84,8 +84,8 @@ describe('Metahub', () => {
     });
 
     it('allows to deploy a warper from preset', async () => {
-      const warperAddress = await deployWarper(metahub, universeId, oNFT.address, warperPresetId);
-      // Use oNFT interface with warper address.
+      const warperAddress = await deployWarper(metahub, universeId, originalAsset.address, warperPresetId);
+      // Use original asset interface with warper address.
       const warper = erc721Factory.attach(warperAddress);
       await expect(warper.name()).to.eventually.eq('Test ERC721');
       await expect(warper.symbol()).to.eventually.eq('ONFT');
@@ -93,7 +93,7 @@ describe('Metahub', () => {
 
     it('verifies universe ownership upon warper deployment', async () => {
       await expect(
-        metahub.connect(stranger).deployWarper(universeId, oNFT.address, warperPresetId),
+        metahub.connect(stranger).deployWarper(universeId, originalAsset.address, warperPresetId),
       ).to.be.revertedWithError('CallerIsNotUniverseOwner');
     });
 
@@ -101,8 +101,8 @@ describe('Metahub', () => {
       let warperAddress1: string;
       let warperAddress2: string;
       beforeEach(async () => {
-        warperAddress1 = await deployWarper(metahub, universeId, oNFT.address, warperPresetId);
-        warperAddress2 = await deployWarper(metahub, universeId, oNFT.address, warperPresetId);
+        warperAddress1 = await deployWarper(metahub, universeId, originalAsset.address, warperPresetId);
+        warperAddress2 = await deployWarper(metahub, universeId, originalAsset.address, warperPresetId);
       });
 
       it('returns a list of warpers for universe', async () => {
@@ -110,7 +110,10 @@ describe('Metahub', () => {
       });
 
       it('returns a list of warpers for original asset', async () => {
-        await expect(metahub.assetWarpers(oNFT.address)).to.eventually.deep.eq([warperAddress1, warperAddress2]);
+        await expect(metahub.assetWarpers(originalAsset.address)).to.eventually.deep.eq([
+          warperAddress1,
+          warperAddress2,
+        ]);
       });
     });
   });
