@@ -12,17 +12,18 @@ import {
   Metahub,
   Metahub__factory,
 } from '../../typechain';
-import { BigNumberish, ContractTransaction } from 'ethers';
+import { BigNumber, BigNumberish, ContractTransaction } from 'ethers';
 
 const { AddressZero } = ethers.constants;
 const { defaultAbiCoder } = ethers.utils;
+
+const nonExistentTokenId = 42;
 
 const transferWasSuccessful = ({
   tokenOwner,
   token,
   transaction,
   tokenId,
-  approved,
   toWhom,
 }: {
   token: () => ERC721WarperMock;
@@ -30,10 +31,11 @@ const transferWasSuccessful = ({
   tokenOwner: () => SignerWithAddress;
   toWhom: () => SignerWithAddress;
   tokenId: BigNumberish;
-  approved: boolean;
 }) => {
   let tx: ContractTransaction;
+  let ownerBalanceBefore: BigNumber;
   beforeEach(async () => {
+    ownerBalanceBefore = await token().balanceOf(tokenOwner().address);
     tx = await transaction();
   });
 
@@ -41,23 +43,28 @@ const transferWasSuccessful = ({
     expect(await token().ownerOf(tokenId)).to.be.equal(toWhom().address);
   });
 
-  // it('emits a Transfer event', async () => {
-  //   await expect(tx).to.emit(token, 'Transfer').withArgs({ from: tokenOwner, to: toWhom, tokenId: tokenId });
-  // });
+  it('emits a Transfer event', async () => {
+    await expect(tx).to.emit(token(), 'Transfer').withArgs(tokenOwner, toWhom, tokenId);
+  });
 
-  // it('clears the approval for the token ID', async function () {
-  //   expect(await token.getApproved(tokenId)).to.be.equal(AddressZero);
-  // });
+  it('clears the approval for the token ID', async function () {
+    expect(await token().getApproved(tokenId)).to.be.equal(AddressZero);
+  });
 
-  // it('emits an Approval event', async () => {
-  //   await expect(tx)
-  //     .to.emit(token, 'Approval')
-  //     .withArgs({ owner: tokenOwner, approved: AddressZero, tokenId: tokenId });
-  // });
+  it('emits an Approval event', async () => {
+    await expect(tx).to.emit(token(), 'Approval').withArgs(tokenOwner, AddressZero, tokenId);
+  });
 
-  // it('adjusts owners balances', async function () {
-  //   expect(await token.balanceOf(tokenOwner)).to.equal('1');
-  // });
+  it('adjusts owners balances', async function () {
+    let expectedBalance: BigNumber;
+    // If sending to himself, balance does not change
+    if (toWhom().address == tokenOwner().address) {
+      expectedBalance = ownerBalanceBefore;
+    } else {
+      expectedBalance = ownerBalanceBefore.sub('1');
+    }
+    expect(await token().balanceOf(tokenOwner().address)).to.equal(expectedBalance.toString());
+  });
 };
 
 const shouldTransferTokensByUsers = ({
@@ -66,13 +73,18 @@ const shouldTransferTokensByUsers = ({
   toWhom,
   tokenId,
   transaction,
+  approved,
+  operator,
+  stranger,
 }: {
   token: () => ERC721WarperMock;
   transaction: (as: SignerWithAddress, from: string, to: string, tokenId: BigNumberish) => Promise<ContractTransaction>;
   tokenId: BigNumberish;
   tokenOwner: () => SignerWithAddress;
   toWhom: () => SignerWithAddress;
-  approved: SignerWithAddress;
+  approved: () => SignerWithAddress;
+  operator: () => SignerWithAddress;
+  stranger: () => SignerWithAddress;
 }) => {
   describe('when called by the owner', () => {
     transferWasSuccessful({
@@ -80,8 +92,108 @@ const shouldTransferTokensByUsers = ({
       transaction: () => transaction(tokenOwner(), tokenOwner().address, toWhom().address, tokenId),
       tokenId,
       tokenOwner: tokenOwner,
-      approved: false,
       toWhom: toWhom,
+    });
+  });
+
+  context('when called by the approved individual', function () {
+    transferWasSuccessful({
+      token,
+      transaction: () => transaction(approved(), tokenOwner().address, toWhom().address, tokenId),
+      tokenId,
+      tokenOwner: tokenOwner,
+      toWhom: toWhom,
+    });
+  });
+
+  context('when called by the operator', function () {
+    transferWasSuccessful({
+      token,
+      transaction: () => transaction(operator(), tokenOwner().address, toWhom().address, tokenId),
+      tokenId,
+      tokenOwner: tokenOwner,
+      toWhom: toWhom,
+    });
+  });
+
+  context('when called by the owner without an approved user', function () {
+    beforeEach(async () => {
+      await token().connect(tokenOwner()).approve(AddressZero, tokenId);
+    });
+
+    transferWasSuccessful({
+      token,
+      transaction: () => transaction(operator(), tokenOwner().address, toWhom().address, tokenId),
+      tokenId,
+      tokenOwner: tokenOwner,
+      toWhom: toWhom,
+    });
+  });
+
+  context('when sent to the owner', function () {
+    //   beforeEach(async function () {
+    //     ({ logs } = await transferFunction.call(this, owner, owner, tokenId, { from: owner }));
+    //   });
+
+    transferWasSuccessful({
+      token,
+      transaction: () => transaction(tokenOwner(), tokenOwner().address, tokenOwner().address, tokenId),
+      tokenId,
+      tokenOwner: tokenOwner,
+      toWhom: tokenOwner,
+    });
+
+    it('keeps ownership of the token', async () => {
+      await expect(token().ownerOf(tokenId)).to.eventually.equal(tokenOwner().address);
+    });
+
+    it('clears the approval for the token ID', async () => {
+      await expect(token().getApproved(tokenId)).to.eventually.equal(AddressZero);
+    });
+
+    it('keeps the owner balance', async () => {
+      await expect(token().balanceOf(tokenOwner().address)).to.eventually.equal('2');
+    });
+
+    // NOTE: This is a special test only for enumerable tokens
+    // it('keeps same tokens by index', async function () {
+    //   if (!this.token.tokenOfOwnerByIndex) return;
+    //   const tokensListed = await Promise.all([0, 1].map(i => this.token.tokenOfOwnerByIndex(owner, i)));
+    //   expect(tokensListed.map(t => t.toNumber())).to.have.members([firstTokenId.toNumber(), secondTokenId.toNumber()]);
+    // });
+  });
+
+  context('when the address of the previous owner is incorrect', function () {
+    it('reverts', async () => {
+      await expect(transaction(tokenOwner(), stranger().address, stranger().address, tokenId)).to.be.revertedWithError(
+        'TransferOfTokenThatIsNotOwn',
+        tokenId,
+      );
+    });
+  });
+
+  context('when the sender is not authorized for the token id', function () {
+    it('reverts', async () => {
+      await expect(transaction(stranger(), tokenOwner().address, stranger().address, tokenId)).to.be.revertedWithError(
+        'TransferCallerIsNotOwnerNorApproved',
+        stranger().address,
+      );
+    });
+  });
+
+  context('when the given token ID does not exist', function () {
+    it('reverts', async () => {
+      await expect(
+        transaction(tokenOwner(), tokenOwner().address, stranger().address, nonExistentTokenId),
+      ).to.be.revertedWithError('OperatorQueryForNonexistentToken', nonExistentTokenId);
+    });
+  });
+
+  context('when the address to transfer the token to is the zero address', function () {
+    it('reverts', async function () {
+      await expect(transaction(tokenOwner(), tokenOwner().address, AddressZero, tokenId)).to.be.revertedWithError(
+        'BalanceQueryForZeroAddress',
+      );
     });
   });
 };
@@ -214,8 +326,6 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
 
       context('when the given token ID does not exist', function () {
         it('reverts', async function () {
-          const nonExistentTokenId = 42;
-
           await expect(
             warperAsTokenOwner.transferFrom(tokenOwner.address, stranger.address, nonExistentTokenId),
           ).to.be.revertedWithError('OperatorQueryForNonexistentToken', nonExistentTokenId);
@@ -231,19 +341,15 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
       });
 
       describe('via transferFrom', () => {
-        // shouldTransferTokensByUsers(warperAsTokenOwner, function (from, to, tokenId, opts) {
-        //   return this.token.transferFrom(from, to, tokenId, opts);
-        // });
-        it('aa', () => {
-          // TEST
-        });
         shouldTransferTokensByUsers({
           token: () => warperAsTokenOwner,
           tokenId,
           transaction: (as, from, to, tokenId) => warperAsTokenOwner.connect(as).transferFrom(from, to, tokenId),
           toWhom: () => stranger,
-          approved: approved,
+          approved: () => approved,
+          operator: () => tokenOwner, // TODO who is the operator?
           tokenOwner: () => tokenOwner,
+          stranger: () => stranger,
         });
       });
     });
