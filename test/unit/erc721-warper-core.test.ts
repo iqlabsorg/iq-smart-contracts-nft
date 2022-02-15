@@ -520,5 +520,70 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         });
       });
     });
+
+    describe('safe mint', () => {
+      const tokenId = 4;
+      const data = '0x000004a2';
+
+      describe('via safeMint', () => {
+        // NOTE: `safeMint()` with data is not exposed on the warper NFT!
+
+        it('calls onERC721Received — without data', async () => {
+          const receiver = await new ERC721ReceiverMock__factory(deployer).deploy(RECEIVER_MAGIC_VALUE, 0);
+          const tx = warperAsMetaHub.safeMint(receiver.address, tokenId);
+
+          await expect(tx).to.emit(receiver, 'Received').withArgs(metahub.address, AddressZero, tokenId, '0x');
+        });
+
+        context('to a receiver contract returning unexpected value', () => {
+          it('reverts', async () => {
+            const invalidReceiver = await new ERC721ReceiverMock__factory(deployer).deploy(data, 0);
+
+            await expect(warperAsMetaHub.safeMint(invalidReceiver.address, tokenId)).to.be.revertedWithError(
+              'TransferToNonERC721ReceiverImplementer',
+              invalidReceiver.address,
+            );
+          });
+        });
+
+        context('to a receiver contract that reverts with message', () => {
+          it('reverts', async () => {
+            const revertingReceiver = await new ERC721ReceiverMock__factory(deployer).deploy(RECEIVER_MAGIC_VALUE, 1);
+
+            await expect(warperAsMetaHub.safeMint(revertingReceiver.address, tokenId)).to.be.revertedWith(
+              'ERC721ReceiverMock: reverting',
+            );
+          });
+        });
+
+        context('to a receiver contract that reverts without message', () => {
+          it('reverts', async () => {
+            const revertingReceiver = await new ERC721ReceiverMock__factory(deployer).deploy(RECEIVER_MAGIC_VALUE, 2);
+
+            await expect(warperAsMetaHub.safeMint(revertingReceiver.address, tokenId)).to.be.revertedWithError(
+              'TransferToNonERC721ReceiverImplementer',
+              revertingReceiver.address,
+            );
+          });
+        });
+
+        context('to a receiver contract that panics', () => {
+          it('reverts', async () => {
+            const revertingReceiver = await new ERC721ReceiverMock__factory(deployer).deploy(RECEIVER_MAGIC_VALUE, 3);
+
+            await expect(warperAsMetaHub.safeMint(revertingReceiver.address, tokenId)).to.be.revertedWith('panic code');
+          });
+        });
+
+        context('to a contract that does not implement the required function', () => {
+          it('reverts', async () => {
+            await expect(warperAsMetaHub.safeMint(warperAsMetaHub.address, tokenId)).to.be.revertedWithError(
+              'TransferToNonERC721ReceiverImplementer',
+              warperAsMetaHub.address,
+            );
+          });
+        });
+      });
+    });
   });
 });
