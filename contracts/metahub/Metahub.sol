@@ -7,6 +7,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "../asset/IAssetController.sol";
 import "../warper/IWarper.sol";
 import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
@@ -33,9 +36,17 @@ error WarperIsNotRegistered(address warper);
  */
 error AssetHasNoWarpers(address asset);
 
-contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable, MetahubStorage {
+contract Metahub is
+    IMetahub,
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable, // todo: replace with custom implementation (2-step owner change)
+    MetahubStorage
+{
+    using Address for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+    using Assets for Assets.Asset;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
@@ -77,6 +88,42 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     /**
      * @inheritdoc IMetahub
      */
+    function setAssetClassVault(bytes4 assetClass, address vault) external onlyOwner {
+        // todo: validate vault class
+        _assetClassVaults[assetClass] = vault;
+    }
+
+    /**
+     * @inheritdoc IMetahub
+     */
+    function setAssetClassController(bytes4 assetClass, address controller) external onlyOwner {
+        bytes4 controllerAssetClass = IAssetController(controller).assetClass();
+        if (controllerAssetClass != assetClass) {
+            revert AssetClassMismatch(controllerAssetClass, assetClass);
+        }
+
+        emit AssetClassControllerChanged(assetClass, address(_assetClassControllers[assetClass]), controller);
+        _assetClassControllers[assetClass] = IAssetController(controller);
+    }
+
+    /**
+     * @inheritdoc IMetahub
+     */
+    function removeAssetClassController(bytes4 assetClass) external onlyOwner {
+        delete _assetClassControllers[assetClass];
+        //todo: event
+    }
+
+    /**
+     * @inheritdoc IMetahub
+     */
+    function assetClassController(bytes4 assetClass) external view returns (address) {
+        return address(_assetClassControllers[assetClass]);
+    }
+
+    /**
+     * @inheritdoc IMetahub
+     */
     function createUniverse(string calldata name) external returns (uint256) {
         uint256 tokenId = _universeToken.mint(_msgSender(), name);
         emit UniverseCreated(tokenId, _universeToken.universeName(tokenId));
@@ -111,19 +158,29 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     /**
-     * @inheritdoc IListingController
+     * @inheritdoc IAssetListingController
      */
     function listAsset(ListingParams calldata params) external {
+        // todo: validate listing request
         // Provided asset must have at least one associated warper.
-        if (_assetWarpers[params.asset].length() == 0) {
-            revert AssetHasNoWarpers(params.asset);
-        }
+        //        if (_assetWarpers[params.asset].length() == 0) {
+        //            revert AssetHasNoWarpers(params.asset);
+        //        }
 
-        // todo: validate
+        address controller = address(_assetClassControllers[params.asset.id.class]);
+        address vault = _assetClassVaults[params.asset.id.class];
+
+        bytes memory transfer = abi.encodeWithSelector(
+            IAssetController.transfer.selector,
+            params.asset,
+            _msgSender(),
+            address(vault),
+            bytes("")
+        );
+        controller.functionDelegateCall(transfer);
         // todo: register
         // todo: put asset into custody
-
-        emit AssetListed(params.asset, params.assetId);
+        //        emit AssetListed(params.asset);
     }
 
     /**
@@ -181,9 +238,12 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     function _registerWarper(uint256 universeId, address warper) internal returns (address) {
+        //todo: check if asset controller is registered for this warper asset class (Does this affect presets?).
         //todo: assert correct initialization? _verifyWarper()
         //todo: check if warper is not already registered!
         //todo: check warper count against limits to prevent uncapped enumeration.
+        //todo: associate current asset class controller with warper
+        //todo: associate current asset class vault with original address
 
         address original = IWarper(warper).__original();
 

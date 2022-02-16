@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-interface IListingController {
+import "../asset/Assets.sol";
+
+interface IAssetListingController {
     /**
      * @dev Emitted when a new asset is listed for renting.
      * @param asset Listed asset address.
@@ -11,13 +13,12 @@ interface IListingController {
 
     /**
      * @dev Listing request parameters
-     * @param asset Asset address.
-     * @param assetId Asset ID.
+     * @param asset Asset to be listed.
      * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
+     * @param baseRate Asset renting base rate (base tokens per second).
      */
     struct ListingParams {
-        address asset;
-        uint256 assetId;
+        Assets.Asset asset;
         uint32 maxLockPeriod;
         uint32 baseRate;
     }

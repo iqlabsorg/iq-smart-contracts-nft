@@ -6,6 +6,7 @@ import "./IMetahub.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarper.sol";
 import "../universe/IUniverseToken.sol";
+import "../asset/IAssetController.sol";
 
 abstract contract MetahubStorage {
     /**
@@ -30,7 +31,18 @@ abstract contract MetahubStorage {
     IUniverseToken internal _universeToken;
 
     /**
+     * @dev Mapping from asset class to the asset vault address.
+     */
+    mapping(bytes4 => address) internal _assetClassVaults; // todo: address -> IAssetVault
+
+    /**
+     * @dev Mapping from asset class to the asset controller address.
+     */
+    mapping(bytes4 => IAssetController) internal _assetClassControllers;
+
+    /**
      * @dev Registered warpers.
+     * @dev Mapping from warper address to the warper entry.
      */
     mapping(address => Warper) internal _warpers;
 
