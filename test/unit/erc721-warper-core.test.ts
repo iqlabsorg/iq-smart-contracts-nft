@@ -329,20 +329,20 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
 
     // Fake MetaHub
     metahub = await smock.fake<Metahub>(Metahub__factory);
+
+    // Deploy preset.
+    warperAsDeployer = await new ERC721WarperMock__factory(deployer).deploy();
+    await warperAsDeployer.__initialize(
+      defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]),
+    );
+
+    // TODO: remove the warperAs_ variants, do that inside the tests themselves
+    warperAsMetaHub = warperAsDeployer.connect(metahub.wallet);
+    warperAsTokenOwner = warperAsDeployer.connect(tokenOwner);
   });
 
   context('with minted tokens', () => {
     beforeEach(async () => {
-      // Deploy preset.
-      warperAsDeployer = await new ERC721WarperMock__factory(deployer).deploy();
-      await warperAsDeployer.__initialize(
-        defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]),
-      );
-
-      // TODO: remove the warperAs_ variants, do that inside the tests themselves
-      warperAsMetaHub = warperAsDeployer.connect(metahub.wallet);
-      warperAsTokenOwner = warperAsDeployer.connect(tokenOwner);
-
       // Set balance to the MetaHub account so we can perform the minting operation here
       await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
 
@@ -883,6 +883,90 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
           it('returns approved account', async () => {
             await expect(warperAsTokenOwner.getApproved(1)).to.eventually.equal(approved.address);
           });
+        });
+      });
+    });
+  });
+
+  describe('_mint(address, uint256)', () => {
+    const tokenIdToMint = 4321;
+
+    it('reverts with a null destination address', async () => {
+      await expect(warperAsDeployer.mint(AddressZero, tokenIdToMint)).to.be.revertedWithError('MintToTheZeroAddress');
+    });
+
+    context('with minted token', () => {
+      let mintTx: ContractTransaction;
+      beforeEach(async () => {
+        mintTx = await warperAsDeployer.mint(tokenOwner.address, tokenIdToMint);
+      });
+
+      it('emits a Transfer event', () => {
+        expect(mintTx).to.emit(warperAsDeployer, 'Transfer').withArgs(AddressZero, tokenOwner.address, tokenIdToMint);
+      });
+
+      it('creates the token', async () => {
+        await expect(warperAsDeployer.balanceOf(tokenOwner.address)).to.eventually.be.equal('1');
+        await expect(warperAsDeployer.ownerOf(tokenIdToMint)).to.eventually.equal(tokenOwner.address);
+      });
+
+      it('reverts when adding a token id that already exists', async () => {
+        await expect(warperAsDeployer.mint(tokenOwner.address, tokenIdToMint)).to.be.revertedWithError(
+          'TokenIsAlreadyMinted',
+          tokenIdToMint,
+        );
+      });
+    });
+  });
+
+  describe('_burn', function () {
+    const firstTokenId = 1;
+    const secondTokenId = 2;
+    it('reverts when burning a non-existent token id', async function () {
+      await expect(warperAsDeployer.burn(nonExistentTokenId)).to.be.revertedWithError(
+        'OwnerQueryForNonexistentToken',
+        nonExistentTokenId,
+      );
+    });
+
+    context('with minted tokens', function () {
+      beforeEach(async function () {
+        await warperAsDeployer.mint(tokenOwner.address, firstTokenId);
+        await warperAsDeployer.mint(tokenOwner.address, secondTokenId);
+      });
+
+      context('with burnt token', function () {
+        let burnTx: ContractTransaction;
+        beforeEach(async function () {
+          burnTx = await warperAsDeployer.burn(firstTokenId);
+        });
+
+        it('emits a Transfer event', function () {
+          expect(burnTx)
+            .to.be.emit(warperAsDeployer, 'Transfer')
+            .withArgs(tokenOwner.address, AddressZero, firstTokenId);
+        });
+
+        it('emits an Approval event', function () {
+          expect(burnTx)
+            .to.be.emit(warperAsDeployer, 'Approval')
+            .withArgs(tokenOwner.address, AddressZero, firstTokenId);
+        });
+
+        it('deletes the token', async function () {
+          await expect(warperAsDeployer.balanceOf(tokenOwner.address)).to.eventually.equal('1');
+
+          await expect(warperAsDeployer.ownerOf(firstTokenId)).to.be.revertedWithError(
+            'OwnerQueryForNonexistentToken',
+            firstTokenId,
+          );
+        });
+
+        it('reverts when burning a token id that has been deleted', async function () {
+          await expect(warperAsDeployer.burn(firstTokenId)).to.be.revertedWithError(
+            'OwnerQueryForNonexistentToken',
+            firstTokenId,
+          );
         });
       });
     });
