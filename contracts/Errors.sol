@@ -19,4 +19,9 @@ error EmptyPresetData();
 /**
  * @dev Thrown when the original asset contract does not implement the interface, expected by Warper.
  */
-error InvalidOriginalTokenInterface(address original, bytes4 expectedInterfaceId);
+error InvalidOriginalTokenInterface(address original, bytes4 requiredInterfaceId);
+
+/**
+ * @dev Thrown when the asset has invalid class for specific operation.
+ */
+error AssetClassMismatch(bytes4 actual, bytes4 required);
