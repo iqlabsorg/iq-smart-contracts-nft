@@ -197,6 +197,44 @@ const shouldTransferTokensByUsers = ({
   });
 };
 
+const itClearsApproval = ({ token, tokenId }: { token: () => ERC721WarperMock; tokenId: BigNumberish }) => {
+  it('clears approval for the token', async () => {
+    await expect(token().getApproved(tokenId)).to.eventually.equal(AddressZero);
+  });
+};
+
+const itApproves = ({
+  token,
+  tokenId,
+  address,
+}: {
+  token: () => ERC721WarperMock;
+  tokenId: BigNumberish;
+  address: () => Address;
+}) => {
+  it('sets the approval for the target address', async () => {
+    await expect(token().getApproved(tokenId)).to.eventually.equal(address());
+  });
+};
+
+const itEmitsApprovalEvent = ({
+  token,
+  transaction,
+  tokenId,
+  owner,
+  approved,
+}: {
+  token: () => ERC721WarperMock;
+  transaction: () => ContractTransaction;
+  tokenId: BigNumberish;
+  owner: () => Address;
+  approved: () => Address;
+}) => {
+  it('emits an approval event', () => {
+    expect(transaction()).to.emit(token(), 'Approval').withArgs(owner(), approved(), tokenId);
+  });
+};
+
 const RECEIVER_MAGIC_VALUE = '0x150b7a02';
 
 const shouldTransferSafely = ({
@@ -582,6 +620,159 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
               warperAsMetaHub.address,
             );
           });
+        });
+      });
+    });
+
+    describe('approve', function () {
+      const tokenId = 1;
+      let approved: SignerWithAddress;
+
+      beforeEach(() => {
+        approved = stranger2;
+      });
+
+      context('when clearing approval', function () {
+        context('when there was no prior approval', function () {
+          let approvalTx: ContractTransaction;
+          beforeEach(async () => {
+            approvalTx = await warperAsTokenOwner.approve(AddressZero, tokenId);
+          });
+
+          itClearsApproval({
+            token: () => warperAsTokenOwner,
+            tokenId,
+          });
+
+          itEmitsApprovalEvent({
+            token: () => warperAsTokenOwner,
+            transaction: () => approvalTx,
+            tokenId,
+            owner: () => tokenOwner.address,
+            approved: () => AddressZero,
+          });
+        });
+
+        context('when there was a prior approval', function () {
+          let approvalTx: ContractTransaction;
+          beforeEach(async () => {
+            await warperAsTokenOwner.approve(stranger0.address, tokenId);
+            approvalTx = await warperAsTokenOwner.approve(AddressZero, tokenId);
+          });
+
+          itClearsApproval({
+            token: () => warperAsTokenOwner,
+            tokenId,
+          });
+
+          itEmitsApprovalEvent({
+            token: () => warperAsTokenOwner,
+            transaction: () => approvalTx,
+            tokenId,
+            owner: () => tokenOwner.address,
+            approved: () => AddressZero,
+          });
+        });
+      });
+
+      context('when approving a non-zero address', function () {
+        context('when there was no prior approval', function () {
+          let approvalTx: ContractTransaction;
+          beforeEach(async () => {
+            approvalTx = await warperAsTokenOwner.approve(approved.address, tokenId);
+          });
+
+          itApproves({
+            token: () => warperAsTokenOwner,
+            tokenId,
+            address: () => approved.address,
+          });
+
+          itEmitsApprovalEvent({
+            token: () => warperAsTokenOwner,
+            transaction: () => approvalTx,
+            tokenId,
+            owner: () => tokenOwner.address,
+            approved: () => approved.address,
+          });
+        });
+
+        context('when there was a prior approval to the same address', function () {
+          let approvalTx: ContractTransaction;
+          beforeEach(async () => {
+            await warperAsTokenOwner.approve(approved.address, tokenId);
+            approvalTx = await warperAsTokenOwner.approve(approved.address, tokenId);
+          });
+
+          itApproves({
+            token: () => warperAsTokenOwner,
+            tokenId,
+            address: () => approved.address,
+          });
+
+          itEmitsApprovalEvent({
+            token: () => warperAsTokenOwner,
+            transaction: () => approvalTx,
+            tokenId,
+            owner: () => tokenOwner.address,
+            approved: () => approved.address,
+          });
+        });
+
+        context('when there was a prior approval to a different address', function () {
+          let approvalTx: ContractTransaction;
+          beforeEach(async () => {
+            await warperAsTokenOwner.approve(stranger0.address, tokenId);
+            approvalTx = await warperAsTokenOwner.approve(stranger0.address, tokenId);
+          });
+
+          itApproves({
+            token: () => warperAsTokenOwner,
+            tokenId,
+            address: () => stranger0.address,
+          });
+
+          itEmitsApprovalEvent({
+            token: () => warperAsTokenOwner,
+            transaction: () => approvalTx,
+            tokenId,
+            owner: () => tokenOwner.address,
+            approved: () => stranger0.address,
+          });
+        });
+      });
+
+      context('when the address that receives the approval is the owner', function () {
+        it('reverts', async () => {
+          await expect(warperAsTokenOwner.approve(tokenOwner.address, tokenId)).to.be.revertedWithError(
+            'ApprovalToCurrentOwner',
+            tokenOwner.address,
+          );
+        });
+      });
+
+      context('when the sender does not own the given token ID', function () {
+        it('reverts', async () => {
+          await expect(
+            warperAsTokenOwner.connect(stranger1).approve(approved.address, tokenId),
+          ).to.be.revertedWithError('ApproveCallerIsNotOwnerNorApprovedForAll', stranger1.address);
+        });
+      });
+
+      context('when the sender is approved for the given token ID', function () {
+        it('reverts', async () => {
+          await warperAsTokenOwner.approve(approved.address, tokenId);
+          await expect(
+            warperAsTokenOwner.connect(approved).approve(stranger1.address, tokenId),
+          ).to.be.revertedWithError('ApproveCallerIsNotOwnerNorApprovedForAll', approved.address);
+        });
+      });
+
+      context('when the given token ID does not exist', function () {
+        it('reverts', async () => {
+          await expect(
+            warperAsTokenOwner.connect(stranger0).approve(stranger1.address, nonExistentTokenId),
+          ).to.be.revertedWithError('OwnerQueryForNonexistentToken', nonExistentTokenId);
         });
       });
     });
