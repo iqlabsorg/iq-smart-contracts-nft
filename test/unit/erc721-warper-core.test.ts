@@ -310,6 +310,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
   let stranger0: SignerWithAddress;
   let stranger1: SignerWithAddress;
   let stranger2: SignerWithAddress;
+  let operator: SignerWithAddress;
   let oNFT: ERC721Mock;
   let warperAsDeployer: ERC721WarperMock;
   let warperAsMetaHub: ERC721WarperMock;
@@ -320,7 +321,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
     // Resolve primary roles
     deployer = await ethers.getNamedSigner('deployer');
     nftCreator = await ethers.getNamedSigner('nftCreator');
-    [tokenOwner, stranger0, stranger1, stranger2] = await ethers.getUnnamedSigners();
+    [tokenOwner, stranger0, stranger1, stranger2, operator] = await ethers.getUnnamedSigners();
 
     // TODO remove oNFT deployments
     // Deploy original asset mock.
@@ -624,7 +625,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
       });
     });
 
-    describe('approve', function () {
+    describe('approve', () => {
       const tokenId = 1;
       let approved: SignerWithAddress;
 
@@ -632,8 +633,8 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         approved = stranger2;
       });
 
-      context('when clearing approval', function () {
-        context('when there was no prior approval', function () {
+      context('when clearing approval', () => {
+        context('when there was no prior approval', () => {
           let approvalTx: ContractTransaction;
           beforeEach(async () => {
             approvalTx = await warperAsTokenOwner.approve(AddressZero, tokenId);
@@ -653,7 +654,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
           });
         });
 
-        context('when there was a prior approval', function () {
+        context('when there was a prior approval', () => {
           let approvalTx: ContractTransaction;
           beforeEach(async () => {
             await warperAsTokenOwner.approve(stranger0.address, tokenId);
@@ -675,8 +676,8 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         });
       });
 
-      context('when approving a non-zero address', function () {
-        context('when there was no prior approval', function () {
+      context('when approving a non-zero address', () => {
+        context('when there was no prior approval', () => {
           let approvalTx: ContractTransaction;
           beforeEach(async () => {
             approvalTx = await warperAsTokenOwner.approve(approved.address, tokenId);
@@ -697,7 +698,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
           });
         });
 
-        context('when there was a prior approval to the same address', function () {
+        context('when there was a prior approval to the same address', () => {
           let approvalTx: ContractTransaction;
           beforeEach(async () => {
             await warperAsTokenOwner.approve(approved.address, tokenId);
@@ -719,7 +720,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
           });
         });
 
-        context('when there was a prior approval to a different address', function () {
+        context('when there was a prior approval to a different address', () => {
           let approvalTx: ContractTransaction;
           beforeEach(async () => {
             await warperAsTokenOwner.approve(stranger0.address, tokenId);
@@ -742,7 +743,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         });
       });
 
-      context('when the address that receives the approval is the owner', function () {
+      context('when the address that receives the approval is the owner', () => {
         it('reverts', async () => {
           await expect(warperAsTokenOwner.approve(tokenOwner.address, tokenId)).to.be.revertedWithError(
             'ApprovalToCurrentOwner',
@@ -751,7 +752,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         });
       });
 
-      context('when the sender does not own the given token ID', function () {
+      context('when the sender does not own the given token ID', () => {
         it('reverts', async () => {
           await expect(
             warperAsTokenOwner.connect(stranger1).approve(approved.address, tokenId),
@@ -759,7 +760,7 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         });
       });
 
-      context('when the sender is approved for the given token ID', function () {
+      context('when the sender is approved for the given token ID', () => {
         it('reverts', async () => {
           await warperAsTokenOwner.approve(approved.address, tokenId);
           await expect(
@@ -768,11 +769,120 @@ describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
         });
       });
 
-      context('when the given token ID does not exist', function () {
+      context('when the given token ID does not exist', () => {
         it('reverts', async () => {
           await expect(
             warperAsTokenOwner.connect(stranger0).approve(stranger1.address, nonExistentTokenId),
           ).to.be.revertedWithError('OwnerQueryForNonexistentToken', nonExistentTokenId);
+        });
+      });
+    });
+
+    describe('setApprovalForAll', () => {
+      context('when the operator willing to approve is not the owner', () => {
+        context('when there is no operator approval set by the sender', () => {
+          it('approves the operator', async () => {
+            await warperAsTokenOwner.setApprovalForAll(operator.address, true);
+
+            await expect(warperAsTokenOwner.isApprovedForAll(tokenOwner.address, operator.address)).to.eventually.equal(
+              true,
+            );
+          });
+
+          it('emits an approval event', async () => {
+            await expect(warperAsTokenOwner.setApprovalForAll(operator.address, true))
+              .to.emit(warperAsTokenOwner, 'ApprovalForAll')
+              .withArgs(tokenOwner.address, operator.address, true);
+          });
+        });
+
+        context('when the operator was set as not approved', () => {
+          beforeEach(async () => {
+            await warperAsTokenOwner.setApprovalForAll(operator.address, false);
+          });
+
+          it('approves the operator', async () => {
+            await warperAsTokenOwner.setApprovalForAll(operator.address, true);
+
+            await expect(warperAsTokenOwner.isApprovedForAll(tokenOwner.address, operator.address)).to.eventually.equal(
+              true,
+            );
+          });
+
+          it('emits an approval event', async () => {
+            await expect(warperAsTokenOwner.setApprovalForAll(operator.address, true))
+              .to.emit(warperAsTokenOwner, 'ApprovalForAll')
+              .withArgs(tokenOwner.address, operator.address, true);
+          });
+
+          it('can unset the operator approval', async () => {
+            await warperAsTokenOwner.setApprovalForAll(operator.address, false);
+
+            await expect(warperAsTokenOwner.isApprovedForAll(tokenOwner.address, operator.address)).to.eventually.equal(
+              false,
+            );
+          });
+        });
+
+        context('when the operator was already approved', () => {
+          beforeEach(async () => {
+            await warperAsTokenOwner.setApprovalForAll(operator.address, true);
+          });
+
+          it('keeps the approval to the given address', async () => {
+            await warperAsTokenOwner.setApprovalForAll(operator.address, true);
+
+            await expect(warperAsTokenOwner.isApprovedForAll(tokenOwner.address, operator.address)).to.eventually.equal(
+              true,
+            );
+          });
+
+          it('emits an approval event', async () => {
+            await expect(warperAsTokenOwner.setApprovalForAll(operator.address, true))
+              .to.emit(warperAsTokenOwner, 'ApprovalForAll')
+              .withArgs(tokenOwner.address, operator.address, true);
+          });
+        });
+      });
+
+      context('when the operator is the owner', () => {
+        it('reverts', async () => {
+          await expect(warperAsTokenOwner.setApprovalForAll(tokenOwner.address, true)).to.be.revertedWithError(
+            'ApproveToCaller',
+          );
+        });
+      });
+    });
+
+    describe('getApproved', () => {
+      let approved: SignerWithAddress;
+
+      beforeEach(() => {
+        approved = stranger2;
+      });
+
+      context('when token is not minted', () => {
+        it('reverts', async () => {
+          await expect(warperAsTokenOwner.getApproved(nonExistentTokenId)).to.be.revertedWithError(
+            'ApprovedQueryForNonexistentToken',
+            nonExistentTokenId,
+          );
+        });
+      });
+
+      context('when token has been minted ', () => {
+        it('should return the zero address', async () => {
+          await expect(warperAsTokenOwner.getApproved(1)).to.eventually.be.equal(AddressZero);
+        });
+
+        context('when account has been approved', () => {
+          beforeEach(async () => {
+            await warperAsTokenOwner.approve(approved.address, 1);
+          });
+
+          it('returns approved account', async () => {
+            await expect(warperAsTokenOwner.getApproved(1)).to.eventually.equal(approved.address);
+          });
         });
       });
     });
