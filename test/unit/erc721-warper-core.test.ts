@@ -394,9 +394,9 @@ describe('ERC721 Warper: Core ERC721 behaviour', () => {
     });
 
     describe('transfers', () => {
-      let warperAsStranger: ERC721Warper;
-      let warperAsApproved: ERC721Warper;
-      let warperAsOperator: ERC721Warper;
+      let warperAsStranger: ERC721WarperMock;
+      let warperAsApproved: ERC721WarperMock;
+      let warperAsOperator: ERC721WarperMock;
       let approved: SignerWithAddress;
       let operator: SignerWithAddress;
       let stranger: SignerWithAddress;
