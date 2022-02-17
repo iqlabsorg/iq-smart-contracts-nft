@@ -303,7 +303,7 @@ const shouldTransferSafely = ({
   });
 };
 
-describe.only('ERC721 Warper: Core ERC721 behaviour', () => {
+describe('ERC721 Warper: Core ERC721 behaviour', () => {
   let deployer: SignerWithAddress;
   let nftCreator: SignerWithAddress;
   let tokenOwner: SignerWithAddress;
