@@ -1,11 +1,24 @@
-import { unitFixtureERC721Warper } from '../../shared/fixtures';
-import { shouldBehaveLikeERC721 } from './ERC721.behaviour';
+import { unitFixtureERC721WarperConfigurable, unitFixtureERC721WarperMock } from '../../shared/fixtures';
+import { shouldBehaveLikeERC721, shouldBehaveLikeERC721HiddenMethods } from './ERC721.behaviour';
 
-export function unitTestERC721WarperCore(): void {
-  describe('ERC721Warper Core', function () {
+export function unitTestERC721Warper(): void {
+  describe('ERC721Warper Internals', function () {
     beforeEach(async function () {
-      const { erc721Warper } = await this.loadFixture(unitFixtureERC721Warper);
-      this.contracts.erc721Warper = erc721Warper;
+      const { erc721Warper, metahub, oNFT } = await this.loadFixture(unitFixtureERC721WarperMock);
+      this.mocks.assets.erc721 = oNFT;
+      this.mocks.metahub = metahub;
+      this.contracts.presets.core = erc721Warper;
+    });
+
+    shouldBehaveLikeERC721HiddenMethods();
+  });
+
+  describe('ERC721Warper Configurable', function () {
+    beforeEach(async function () {
+      const { erc721Warper, metahub, oNFT } = await this.loadFixture(unitFixtureERC721WarperConfigurable);
+      this.mocks.assets.erc721 = oNFT;
+      this.mocks.metahub = metahub;
+      this.contracts.presets.erc721Configurable = erc721Warper;
     });
 
     shouldBehaveLikeERC721();

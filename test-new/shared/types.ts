@@ -1,7 +1,8 @@
+import { FakeContract } from '@defi-wonderland/smock';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import type { MockContract, Fixture } from 'ethereum-waffle';
+import type { Fixture } from 'ethereum-waffle';
 import { constants } from 'ethers';
-import { Metahub, ERC721Mock, ERC721WarperMock } from '../../typechain';
+import { Metahub, ERC721Mock, ERC721PresetConfigurable, ERC721WarperMock } from '../../typechain';
 
 declare module 'mocha' {
   interface Context {
@@ -13,20 +14,24 @@ declare module 'mocha' {
 }
 
 export interface Contracts {
-  metaHub: Metahub;
+  metahub: Metahub;
   oNFT: ERC721Mock;
-  erc721Warper: ERC721WarperMock;
+  presets: {
+    core: ERC721WarperMock;
+    erc721Configurable: ERC721PresetConfigurable;
+  };
 }
 
 export interface Mocks {
-  metaHub: MockContract;
-  oNFT: MockContract;
+  metahub: FakeContract<Metahub>;
+  assets: {
+    erc721: ERC721Mock;
+  };
 }
 
 export interface Signers {
-  deployer: SignerWithAddress;
-  nftCreator: SignerWithAddress;
-  nftTokenOwner: SignerWithAddress;
+  named: Record<string, SignerWithAddress>;
+  unnamed: Array<SignerWithAddress>;
 }
 
 export const AddressZero = constants.AddressZero;

@@ -35,6 +35,7 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: 0,
     nftCreator: 1,
+    assetOwner: 2,
   },
   networks: {
     ropsten: {
