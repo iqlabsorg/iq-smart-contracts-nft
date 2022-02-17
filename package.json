@@ -22,6 +22,7 @@
     "prepare": "husky install",
     "size": "cross-env REPORT_SIZE=true hardhat compile",
     "test": "yarn test:unit",
+    "test:new": "hardhat test",
     "test:unit": "cross-env HARDHAT_DEPLOY_FIXTURE=true HARDHAT_COMPILE=true hardhat test $(find test/unit -name '*.test.ts')"
   },
   "lint-staged": {
@@ -33,6 +34,8 @@
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
     "@defi-wonderland/smock": "^2.0.7",
+    "@ethersproject/abstract-signer": "^5.5.0",
+    "@ethersproject/wallet": "^5.5.0",
     "@fintechstudios/eslint-plugin-chai-as-promised": "^3.1.0",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@latest",
     "@nomiclabs/hardhat-waffle": "^2.0.2",

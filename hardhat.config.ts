@@ -54,6 +54,9 @@ const config: HardhatUserConfig = {
     outDir: 'typechain',
     target: 'ethers-v5',
   },
+  paths: {
+    tests: './test-new',
+  },
 };
 
 export default config;
