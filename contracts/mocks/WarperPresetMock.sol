@@ -16,6 +16,10 @@ contract WarperPresetMock is IWarperPreset, Warper {
         _initValue = initValue1 + initValue2;
     }
 
+    function __assetClass() external pure returns (bytes4) {
+        return "";
+    }
+
     function initValue() external view returns (uint256) {
         return _initValue;
     }

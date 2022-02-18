@@ -42,7 +42,7 @@ library Assets {
         bytes4 class,
         bytes memory data,
         uint256 value
-    ) internal view returns (Asset memory asset) {
+    ) internal pure returns (Asset memory asset) {
         return Asset(AssetId(class, data), value);
     }
 }

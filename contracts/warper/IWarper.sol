@@ -13,4 +13,9 @@ interface IWarper is IERC165 {
      * @dev Returns the Metahub address.
      */
     function __metahub() external view returns (address);
+
+    /**
+     * @dev Returns the warper asset class ID.
+     */
+    function __assetClass() external view returns (bytes4);
 }

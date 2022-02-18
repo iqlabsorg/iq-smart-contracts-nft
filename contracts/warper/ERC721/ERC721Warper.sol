@@ -50,6 +50,13 @@ contract ERC721Warper is Warper, IERC721Warper {
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     /**
+     * @inheritdoc IWarper
+     */
+    function __assetClass() external pure returns (bytes4) {
+        return Assets.ERC721;
+    }
+
+    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(Warper, IERC165) returns (bool) {
