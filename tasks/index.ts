@@ -16,7 +16,7 @@ Assertion.addMethod('revertedWithError', function (error: string, ...expectedArg
   const args = expectedArgs.map(p => (typeof p === 'string' ? `"${p}"` : p)).join(', ');
   const reason = `${error}(${args})`;
 
-  new Assertion(this._obj).to.be.revertedWith(reason);
+  return new Assertion(this._obj).to.be.revertedWith(reason);
 });
 
 // Override default subtask to add chai plugins

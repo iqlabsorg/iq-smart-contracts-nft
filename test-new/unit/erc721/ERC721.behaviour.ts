@@ -1,21 +1,19 @@
-import { shouldBehaveLikeBurn } from './effects/burn';
-import { shouldBehaveLikeBalanceOf } from './view/balanceOf';
+import { shouldBehaveLikeApprove } from './effects/approve';
+import { shouldBehaveLikeSetApprovalForAl } from './effects/setApprovalForAll';
+import { shouldBehaveTransfer } from './effects/transfers';
+import { shouldBehaveLikeGetApproved } from './view/getApproved';
 
 /**
  * Core functionality tests of public ERC721 warper methods
  */
 export function shouldBehaveLikeERC721(): void {
   describe('View Functions', function () {
-    shouldBehaveLikeBalanceOf();
+    shouldBehaveLikeGetApproved();
   });
-}
 
-/**
- * We're testing internal methods that exist on the ERC721 Warper but do not
- * get exposed publicly on presets.
- */
-export function shouldBehaveLikeERC721HiddenMethods(): void {
-  describe('Effects Functions', function () {
-    shouldBehaveLikeBurn();
+  describe('Effect Functions', function () {
+    shouldBehaveLikeSetApprovalForAl();
+    shouldBehaveLikeApprove();
+    shouldBehaveTransfer();
   });
 }

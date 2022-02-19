@@ -2,7 +2,7 @@ import { FakeContract } from '@defi-wonderland/smock';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import type { Fixture } from 'ethereum-waffle';
 import { constants } from 'ethers';
-import { Metahub, ERC721Mock, ERC721PresetConfigurable, ERC721WarperMock } from '../../typechain';
+import { Metahub, ERC721Mock, ERC721PresetConfigurable, ERC721WarperMock, ERC721Warper } from '../../typechain';
 
 declare module 'mocha' {
   interface Context {
@@ -17,7 +17,7 @@ export interface Contracts {
   metahub: Metahub;
   oNFT: ERC721Mock;
   presets: {
-    core: ERC721WarperMock;
+    core: ERC721Warper;
     erc721Configurable: ERC721PresetConfigurable;
   };
 }
