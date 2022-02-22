@@ -338,7 +338,7 @@ export function shouldBehaveTransfer(): void {
                 revertingReceiver.address,
                 mintedTokenId,
               ),
-          ).to.be.revertedWithError('TransferToNonERC721ReceiverImplementer', revertingReceiver.address);
+          ).to.be.revertedWith(`TransferToNonERC721ReceiverImplementer("${revertingReceiver.address}")`);
         });
       });
 
@@ -363,7 +363,7 @@ export function shouldBehaveTransfer(): void {
             warper
               .connect(assetOwner)
               ['safeTransferFrom(address,address,uint256)'](assetOwner.address, warper.address, mintedTokenId),
-          ).to.be.revertedWithError('TransferToNonERC721ReceiverImplementer', warper.address);
+          ).to.be.revertedWith(`TransferToNonERC721ReceiverImplementer("${warper.address}")`);
         });
       });
     });

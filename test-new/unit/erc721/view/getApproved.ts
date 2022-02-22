@@ -22,9 +22,8 @@ export function shouldBehaveLikeGetApproved(): void {
 
     context('when token is not minted', function () {
       it('reverts', async function () {
-        await expect(warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWithError(
-          'ApprovedQueryForNonexistentToken',
-          nonExistentTokenId,
+        await expect(warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWith(
+          `ApprovedQueryForNonexistentToken(${nonExistentTokenId})`,
         );
       });
     });

@@ -35,7 +35,7 @@ export function shouldBehaveLikeBalanceOf(): void {
 
     context('when querying the zero address', function () {
       it('throws', async function () {
-        await expect(this.contracts.presets.erc721Configurable.balanceOf(AddressZero)).to.be.revertedWithError(
+        await expect(this.contracts.presets.erc721Configurable.balanceOf(AddressZero)).to.be.revertedWith(
           'BalanceQueryForZeroAddress',
         );
       });

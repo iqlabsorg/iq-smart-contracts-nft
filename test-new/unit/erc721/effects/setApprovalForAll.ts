@@ -80,7 +80,7 @@ export function shouldBehaveLikeSetApprovalForAl(): void {
 
     context('when the operator is the owner', () => {
       it('reverts', async () => {
-        await expect(warper.connect(assetOwner).setApprovalForAll(assetOwner.address, true)).to.be.revertedWithError(
+        await expect(warper.connect(assetOwner).setApprovalForAll(assetOwner.address, true)).to.be.revertedWith(
           'ApproveToCaller',
         );
       });
