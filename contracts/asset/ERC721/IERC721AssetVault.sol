@@ -2,9 +2,9 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
-import "../IAssetVaultSecurity.sol";
+import "../IAssetVault.sol";
 
-interface IERC721AssetVault is IAssetVaultSecurity, IERC721Receiver {
+interface IERC721AssetVault is IAssetVault, IERC721Receiver {
     /**
      * @dev Transfers the asset to the original owner, registered upon deposit.
      * NOTE: The asset is always returns to the owner. There is no way to send the `asset` to an arbitrary address.

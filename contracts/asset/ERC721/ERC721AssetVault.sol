@@ -2,10 +2,18 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "../AssetVaultSecurity.sol";
+import "../AssetVault.sol";
+import "../Assets.sol";
 import "./IERC721AssetVault.sol";
 
-contract ERC721AssetVault is IERC721AssetVault, AssetVaultSecurity {
+contract ERC721AssetVault is IERC721AssetVault, AssetVault {
+    /**
+     * @inheritdoc IAssetVault
+     */
+    function assetClass() external pure returns (bytes4) {
+        return Assets.ERC721;
+    }
+
     /**
      * @dev Vault inventory
      * Mapping token address -> token ID -> owner.
@@ -16,7 +24,7 @@ contract ERC721AssetVault is IERC721AssetVault, AssetVaultSecurity {
      * @dev Constructor.
      * @param operator First operator account.
      */
-    constructor(address operator) AssetVaultSecurity(operator) {}
+    constructor(address operator) AssetVault(operator) {}
 
     /**
      * @inheritdoc IERC721Receiver

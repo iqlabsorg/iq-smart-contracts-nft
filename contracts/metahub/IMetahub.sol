@@ -32,6 +32,14 @@ interface IMetahub is IAssetListingController {
     );
 
     /**
+     * @dev Emitted when the asset class vault is changed.
+     * @param assetClass Asset class ID.
+     * @param previousVault Previous vault address.
+     * @param newVault New vault address.
+     */
+    event AssetClassVaultChanged(bytes4 indexed assetClass, address indexed previousVault, address indexed newVault);
+
+    /**
      * @dev Deploys a preset warper identified by `presetId`.
      * @param universeId Universe ID.
      * @param original Original asset contract address.

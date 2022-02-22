@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "./IAssetVaultSecurity.sol";
+import "./IAssetVault.sol";
 
 /**
  * @dev Thrown when the asset is not is found among vault inventory.
@@ -25,7 +25,7 @@ error CannotRevokeDefaultAdminRole();
  */
 error AssetReturnNotAllowed();
 
-abstract contract AssetVaultSecurity is IAssetVaultSecurity, AccessControl, Pausable {
+abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
     /**
      * @dev Supervisor controls the vault pause mode.
      */
@@ -97,21 +97,21 @@ abstract contract AssetVaultSecurity is IAssetVaultSecurity, AccessControl, Paus
     }
 
     /**
-     * @inheritdoc IAssetVaultSecurity
+     * @inheritdoc IAssetVault
      */
     function pause() external onlySupervisor whenOperational {
         _pause();
     }
 
     /**
-     * @inheritdoc IAssetVaultSecurity
+     * @inheritdoc IAssetVault
      */
     function unpause() external onlySupervisor whenOperational {
         _unpause();
     }
 
     /**
-     * @inheritdoc IAssetVaultSecurity
+     * @inheritdoc IAssetVault
      */
     function shutDown() external onlyAdmin whenOperational {
         _recoveryMode = true;

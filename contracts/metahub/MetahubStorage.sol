@@ -33,7 +33,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from asset class to the asset vault address.
      */
-    mapping(bytes4 => address) internal _assetClassVaults; // todo: address -> IAssetVault
+    mapping(bytes4 => address) internal _assetClassVaults;
 
     /**
      * @dev Mapping from asset class to the asset controller address.

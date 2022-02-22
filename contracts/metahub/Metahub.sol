@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeab
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../asset/IAssetController.sol";
+import "../asset/IAssetVault.sol";
 import "../warper/IWarper.sol";
 import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
@@ -89,7 +90,11 @@ contract Metahub is
      * @inheritdoc IMetahub
      */
     function setAssetClassVault(bytes4 assetClass, address vault) external onlyOwner {
-        // todo: validate vault class
+        bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
+        if (vaultAssetClass != assetClass) {
+            revert AssetClassMismatch(vaultAssetClass, assetClass);
+        }
+        emit AssetClassVaultChanged(assetClass, _assetClassVaults[assetClass], vault);
         _assetClassVaults[assetClass] = vault;
     }
 
