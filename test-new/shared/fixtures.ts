@@ -15,6 +15,8 @@ import {
   UniverseToken__factory,
   UniverseToken,
   WarperPresetFactory,
+  WarperPresetMock__factory,
+  WarperPresetMock,
 } from '../../typechain';
 import { warperPresetId } from './types';
 
@@ -92,4 +94,27 @@ type UnitFixtureMetahub = {
   originalAsset: ERC721Mock;
   warperPresetFactory: WarperPresetFactory;
   metahub: Metahub;
+};
+
+export async function unitFixtureWarperPresetFactory(): Promise<UnitFixtureWarperPresetFactory> {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+
+  const warperImplFactory = new WarperPresetMock__factory(deployer);
+  const warperImplMock1 = await warperImplFactory.deploy();
+  const warperImplMock2 = await warperImplFactory.deploy();
+
+  const warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
+
+  return {
+    warperImplMock1,
+    warperImplMock2,
+    warperPresetFactory,
+  };
+}
+
+type UnitFixtureWarperPresetFactory = {
+  warperImplMock1: WarperPresetMock;
+  warperImplMock2: WarperPresetMock;
+  warperPresetFactory: WarperPresetFactory;
 };

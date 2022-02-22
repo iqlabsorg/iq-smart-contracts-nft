@@ -10,6 +10,7 @@ import {
   ERC721Warper,
   UniverseToken,
   WarperPresetFactory,
+  WarperPresetMock,
 } from '../../typechain';
 
 declare module 'mocha' {
@@ -36,6 +37,7 @@ export interface Mocks {
   assets: {
     erc721: ERC721Mock;
   };
+  warperPreset: Array<WarperPresetMock>;
 }
 
 export interface Signers {
