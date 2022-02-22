@@ -25,3 +25,8 @@ error InvalidOriginalTokenInterface(address original, bytes4 requiredInterfaceId
  * @dev Thrown when the asset has invalid class for specific operation.
  */
 error AssetClassMismatch(bytes4 actual, bytes4 required);
+
+/**
+ * @dev Thrown when the vault contract does not implement the interface, expected by controller.
+ */
+error InvalidVaultInterface(address vault, bytes4 requiredInterfaceId);
