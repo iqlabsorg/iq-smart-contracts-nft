@@ -1,5 +1,5 @@
 import { ERC721Warper } from '../../../typechain';
-import { unitFixtureERC721WarperConfigurable, unitFixtureERC721WarperMock } from '../../shared/fixtures';
+import { unitFixtureERC721WarperConfigurable } from '../../shared/fixtures';
 import { shouldBehaveLikeERC721 } from './ERC721.behaviour';
 
 export function unitTestERC721Warper(): void {
