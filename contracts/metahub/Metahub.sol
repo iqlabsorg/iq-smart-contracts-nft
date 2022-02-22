@@ -199,7 +199,7 @@ contract Metahub is
         address vault = _assetClassVaults[params.asset.id.class];
 
         bytes memory transfer = abi.encodeWithSelector(
-            IAssetController.transfer.selector,
+            IAssetController.transferAssetToVault.selector,
             params.asset,
             _msgSender(),
             address(vault),
