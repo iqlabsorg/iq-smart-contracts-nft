@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { AddressZero } from '../../../shared/types';
+import { AddressZero } from '../../../../shared/types';
 
 export function shouldBehaveLikeBalanceOf(): void {
   const firstTokenId = 1;

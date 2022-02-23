@@ -17,6 +17,8 @@ import {
   WarperPresetFactory,
   WarperPresetMock__factory,
   WarperPresetMock,
+  ERC20Mock__factory,
+  ERC20Mock,
 } from '../../typechain';
 import { warperPresetId } from './types';
 
@@ -35,16 +37,23 @@ export async function unitFixtureERC721WarperConfigurable(): Promise<UnitFixture
   const erc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
   await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
 
+  const uninitializedErc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
+
+  // Deploy erc20 token
+  const erc20Token = await new ERC20Mock__factory(nftCreator).deploy('Random ERC20', 'TST', 18, 1);
+
   // Set balance to the MetaHub account so we can perform the minting operation here
   await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
 
-  return { erc721Warper, metahub, oNFT };
+  return { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper };
 }
 
 type UnitFixtureERC721WarperConfigurable = {
   erc721Warper: ERC721PresetConfigurable;
+  uninitializedErc721Warper: ERC721PresetConfigurable;
   metahub: FakeContract<Metahub>;
   oNFT: ERC721Mock;
+  erc20Token: ERC20Mock;
 };
 
 export async function unitFixtureMetahub(): Promise<UnitFixtureMetahub> {

@@ -2,8 +2,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, BytesLike, ContractTransaction } from 'ethers';
 import { Address } from 'hardhat-deploy/dist/types';
-import { ERC721ReceiverMock, ERC721ReceiverMock__factory, ERC721Warper } from '../../../../typechain';
-import { AddressZero } from '../../../shared/types';
+import { ERC721ReceiverMock, ERC721ReceiverMock__factory, ERC721Warper } from '../../../../../typechain';
+import { AddressZero } from '../../../../shared/types';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {

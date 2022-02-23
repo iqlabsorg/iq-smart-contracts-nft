@@ -3,7 +3,7 @@ import { formatBytes32String } from 'ethers/lib/utils';
 import { unitFixtureWarperPresetFactory } from '../../shared/fixtures';
 import { shouldBehaveWarperPresetFactory } from './WarperPresetFactory.behaviour';
 
-export function unitWarperPresetFactory(): void {
+export function unitTestWarperPresetFactory(): void {
   describe('WarperPresetFactory', function () {
     beforeEach(async function () {
       const { warperImplMock1, warperImplMock2, warperPresetFactory } = await this.loadFixture(

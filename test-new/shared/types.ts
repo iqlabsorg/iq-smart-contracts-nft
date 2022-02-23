@@ -11,6 +11,9 @@ import {
   UniverseToken,
   WarperPresetFactory,
   WarperPresetMock,
+  ERC20,
+  ERC20Mock,
+  IWarperPreset,
 } from '../../typechain';
 
 declare module 'mocha' {
@@ -28,6 +31,7 @@ export interface Contracts {
   warperPresetFactory: WarperPresetFactory;
   presets: {
     core: ERC721Warper;
+    genericPreset: IWarperPreset;
     erc721Configurable: ERC721PresetConfigurable;
   };
 }
@@ -36,6 +40,7 @@ export interface Mocks {
   metahub: FakeContract<Metahub>;
   assets: {
     erc721: ERC721Mock;
+    erc20: ERC20Mock;
   };
   warperPreset: Array<WarperPresetMock>;
 }
