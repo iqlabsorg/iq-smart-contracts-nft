@@ -11,13 +11,14 @@ import "../asset/IAssetController.sol";
 abstract contract MetahubStorage {
     /**
      * @dev Registered warper entry.
-     * @param universeId Warper universe ID.
      * @param enabled True if the warper is enabled and operational.
+     * @param universeId Warper universe ID.
+     * @param controller Warper controller.
      */
     struct Warper {
-        uint256 universeId;
-        //todo: add asset type?
         bool enabled;
+        uint256 universeId;
+        IAssetController controller;
     }
 
     /**
@@ -34,6 +35,11 @@ abstract contract MetahubStorage {
      * @dev Mapping from asset class to the asset vault address.
      */
     mapping(bytes4 => address) internal _assetClassVaults;
+
+    /**
+     * @dev Mapping from original asset address to the vault address where this asset is stored.
+     */
+    mapping(address => address) internal _assetVaults;
 
     /**
      * @dev Mapping from asset class to the asset controller address.

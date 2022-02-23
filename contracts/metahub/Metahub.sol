@@ -32,10 +32,33 @@ error CallerIsNotUniverseOwner();
 error WarperIsNotRegistered(address warper);
 
 /**
+ * @dev Thrown upon attempting to register a warper twice.
+ * @param warper Duplicate warper address.
+ */
+error WarperIsAlreadyRegistered(address warper);
+
+/**
  * @dev Thrown when there are no registered warpers for a particular asset.
  * @param asset Asset address.
  */
 error AssetHasNoWarpers(address asset);
+
+/**
+ * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
+ * @param actual Metahub address returned by warper.
+ * @param required Required metahub address.
+ */
+error WarperHasIncorrectMetahubReference(address actual, address required);
+
+/**
+ * @dev Thrown when there is no controller registered for the provided asset class.
+ */
+error NoControllerForAssetClass(bytes4 assetClass);
+
+/**
+ * @dev Thrown when the is no vault registered for the provided asset class.
+ */
+error NoVaultForAssetClass(bytes4 assetClass);
 
 contract Metahub is
     IMetahub,
@@ -184,7 +207,6 @@ contract Metahub is
         );
         controller.functionDelegateCall(transfer);
         // todo: register
-        // todo: put asset into custody
         //        emit AssetListed(params.asset);
     }
 
@@ -242,24 +264,57 @@ contract Metahub is
         return _warperPresetFactory.deployPreset(presetId, initCall);
     }
 
+    /**
+     * @dev Performs warper registration.
+     * @param universeId The universe ID.
+     * @param warper The warper address.
+     */
     function _registerWarper(uint256 universeId, address warper) internal returns (address) {
-        //todo: check if asset controller is registered for this warper asset class (Does this affect presets?).
-        //todo: assert correct initialization? _verifyWarper()
-        //todo: check if warper is not already registered!
-        //todo: check warper count against limits to prevent uncapped enumeration.
-        //todo: associate current asset class controller with warper
-        //todo: associate current asset class vault with original address
+        // Check that warper is not already registered.
+        if (_warpers[warper].universeId != 0) {
+            revert WarperIsAlreadyRegistered(warper);
+        }
 
-        address original = IWarper(warper).__original();
+        // Check that warper has correct metahub reference.
+        address warperMetahub = IWarper(warper).__metahub();
+        if (warperMetahub != address(this)) {
+            revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
+        }
+
+        // Check that controller is registered for the warper asset class.
+        bytes4 assetClass = IWarper(warper).__assetClass();
+        IAssetController controller = _assetClassControllers[assetClass];
+        if (address(controller) == address(0)) {
+            revert NoControllerForAssetClass(assetClass);
+        }
+
+        // Check that asset vault is registered for the original asset class (same as warper).
+        address vault = _assetClassVaults[assetClass];
+        if (vault == address(0)) {
+            revert NoVaultForAssetClass(assetClass);
+        }
+
+        // todo: ensure warper compatibility with the current generation of asset controller.
+        // controller.isCompatibleWarper(warper);
+        //todo: check warper count against limits to prevent uncapped enumeration.
 
         // Create warper main registration record.
-        _warpers[warper] = Warper(universeId, false);
+        // Associate warper with the universe and current asset class controller,
+        // to maintain backward compatibility in case of controller generation upgrade.
+        // The warper is disabled by default.
+        _warpers[warper] = Warper(false, universeId, controller);
 
         // Associate the warper with the universe.
         _universeWarpers[universeId].add(warper);
 
-        // Associate the warper with the original asset.
+        // Associate the original asset with the the warper with.
+        address original = IWarper(warper).__original();
         _assetWarpers[original].add(warper);
+
+        // When original asset is seen for the first time, associate it with the vault (based on class).
+        if (_assetVaults[original] == address(0)) {
+            _assetVaults[original] = _assetClassVaults[assetClass];
+        }
 
         emit WarperRegistered(universeId, original, warper);
 
