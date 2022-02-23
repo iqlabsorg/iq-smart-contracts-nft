@@ -127,3 +127,28 @@ type UnitFixtureWarperPresetFactory = {
   warperImplMock2: WarperPresetMock;
   warperPresetFactory: WarperPresetFactory;
 };
+
+export async function unitFixtureUniverseTokenMock(): Promise<UnitFixtureUniverseTokenFactory> {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+
+  // Fake MetaHub
+  const metahub = await smock.fake<Metahub>(Metahub__factory);
+
+  // Deploy Universe token.
+  const universeTokenFactory = new UniverseToken__factory(deployer);
+  const universeToken = await universeTokenFactory.deploy(metahub.address);
+
+  // Set balance to the MetaHub account so we can perform the minting operation here
+  await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
+
+  return {
+    universeToken,
+    metahub,
+  };
+}
+
+type UnitFixtureUniverseTokenFactory = {
+  universeToken: UniverseToken;
+  metahub: FakeContract<Metahub>;
+};

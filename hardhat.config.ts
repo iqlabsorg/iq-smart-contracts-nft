@@ -37,6 +37,7 @@ const config: HardhatUserConfig = {
     nftCreator: 1,
     assetOwner: 2,
     operator: 3,
+    universeOwner: 4,
   },
   networks: {
     ropsten: {

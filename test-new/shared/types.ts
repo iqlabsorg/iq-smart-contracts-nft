@@ -11,7 +11,6 @@ import {
   UniverseToken,
   WarperPresetFactory,
   WarperPresetMock,
-  ERC20,
   ERC20Mock,
   IWarperPreset,
 } from '../../typechain';
