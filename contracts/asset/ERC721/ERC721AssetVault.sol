@@ -34,11 +34,9 @@ contract ERC721AssetVault is IERC721AssetVault, AssetVault {
         address from,
         uint256 tokenId,
         bytes calldata
-    ) external whenOperational whenNotPaused returns (bytes4) {
-        // Only authorised operator should be able put assets into vault.
-        _checkRole(OPERATOR_ROLE, operator);
+    ) external whenAssetDepositAllowed(operator) returns (bytes4) {
         // Associate received asset with the original owner address.
-        // Here message sender is an token address.
+        // Here message sender is a token address.
         _inventory[_msgSender()][tokenId] = from;
 
         return this.onERC721Received.selector;

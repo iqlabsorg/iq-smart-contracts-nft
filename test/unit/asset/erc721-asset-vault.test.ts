@@ -34,7 +34,7 @@ describe('ERC721 Asset Vault', () => {
       it('rejects ERC721 tokens', async () => {
         await expect(
           asset.functions['safeTransferFrom(address,address,uint256)'](assetOwner.address, vault.address, 1),
-        ).to.be.revertedWith('AccessControl');
+        ).to.be.revertedWithError('AssetDepositIsNotAllowed');
       });
     });
   });

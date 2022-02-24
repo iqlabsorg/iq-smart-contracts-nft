@@ -3,14 +3,15 @@ pragma solidity ^0.8.11;
 
 interface IAssetVault {
     /**
-     * @dev Emitted when the vault is shut down by `account`.
+     * @dev Emitted when the vault is switched to recovery mode by `account`.
      */
-    event ShutDown(address account);
+    event RecoveryModeActivated(address account);
 
     /**
-     * @dev Shuts the vault down and activates recovery protocol.
+     * @dev Activates asset recovery mode.
+     * Emits a {RecoveryModeActivated} event.
      */
-    function shutDown() external;
+    function switchToRecoveryMode() external;
 
     /**
      * @dev Pauses the vault.
@@ -27,4 +28,15 @@ interface IAssetVault {
      * @return Asset class ID.
      */
     function assetClass() external pure returns (bytes4);
+
+    /**
+     * @dev Returns the Metahub address.
+     */
+    function metahub() external view returns (address);
+
+    /**
+     * @dev Returns vault recovery mode flag state.
+     * @return True when the vault is in recovery mode.
+     */
+    function isRecovery() external view returns (bool);
 }

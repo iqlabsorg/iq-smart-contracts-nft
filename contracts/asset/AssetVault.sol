@@ -13,7 +13,7 @@ error AssetNotFound();
 /**
  * @dev Thrown when the function is called on the vault in recovery mode.
  */
-error VaultNotOperational();
+error VaultIsInRecoveryMode();
 
 /**
  * @dev Thrown when there is an attempt to revoke default admin role.
@@ -21,10 +21,23 @@ error VaultNotOperational();
 error CannotRevokeDefaultAdminRole();
 
 /**
- * @dev Thrown when the asset return is not allowed, due to the vault state or message sender role.
+ * @dev Thrown when the asset return is not allowed, due to the vault state or the caller permissions.
  */
-error AssetReturnNotAllowed();
+error AssetReturnIsNotAllowed();
 
+/**
+ * @dev Thrown when the asset deposit is not allowed, due to the vault state or the caller permissions.
+ */
+error AssetDepositIsNotAllowed();
+
+/**
+ * @dev During the normal operation time, only Metahub contract is allowed to initiate asset return to the original asset owner.
+ * In case of emergency, the vault admin can switch vault to recovery mode, therefore allowing anyone to initiate asset return.
+ * NOTE: There is no way to transfer asset from the vault to an arbitrary address. The asset can only be returned to the rightful owner.
+ *
+ * Warning: All tokens transferred to the vault contract directly (not by Metahub contract) will be lost forever!!!
+ *
+ */
 abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
     /**
      * @dev Supervisor controls the vault pause mode.
@@ -32,46 +45,42 @@ abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
     bytes32 public constant SUPERVISOR_ROLE = keccak256("SUPERVISOR_ROLE");
 
     /**
-     * @dev Operator can return assets to the original owner (in normal mode).
-     */
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-
-    /**
      * @dev Vault recovery mode state.
      */
-    bool private _recoveryMode;
+    bool private _recovery;
+
+    /**
+     * @dev Metahub address.
+     */
+    address private _metahub;
 
     /**
      * @dev Constructor.
-     * @param operator First operator account.
+     * @param metahub Metahub address.
      */
-    constructor(address operator) {
+    constructor(address metahub) {
+        _recovery = false;
+        _metahub = metahub;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(SUPERVISOR_ROLE, msg.sender);
-        _grantRole(OPERATOR_ROLE, operator);
+    }
+
+    /**
+     * @dev Modifier to check asset deposit possibility.
+     */
+    modifier whenAssetDepositAllowed(address operator) {
+        if (operator == _metahub && !paused() && !_recovery) _;
+        else revert AssetDepositIsNotAllowed();
     }
 
     /**
      * @dev Modifier to check asset return possibility.
      */
     modifier whenAssetReturnAllowed() {
-        if (
-            (hasRole(OPERATOR_ROLE, _msgSender()) && !paused()) ||
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) ||
-            _recoveryMode
-        ) {
-            _;
-        }
-        revert AssetReturnNotAllowed();
+        if ((_msgSender() == _metahub && !paused()) || _recovery) _;
+        else revert AssetReturnIsNotAllowed();
     }
 
-    /**
-     * @dev Modifier to make a function callable only by the vault operator.
-     */
-    modifier onlyOperator() {
-        _checkRole(OPERATOR_ROLE, _msgSender());
-        _;
-    }
     /**
      * @dev Modifier to make a function callable only by the vault administrator.
      */
@@ -89,33 +98,47 @@ abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
     }
 
     /**
-     * @dev Modifier to make a function callable only when the vault is not shut down.
+     * @dev Modifier to make a function callable only when the vault is not in recovery mode.
      */
-    modifier whenOperational() {
-        if (_recoveryMode) revert VaultNotOperational();
+    modifier whenNotRecovery() {
+        if (_recovery) revert VaultIsInRecoveryMode();
         _;
     }
 
     /**
      * @inheritdoc IAssetVault
      */
-    function pause() external onlySupervisor whenOperational {
+    function pause() external onlySupervisor whenNotRecovery {
         _pause();
     }
 
     /**
      * @inheritdoc IAssetVault
      */
-    function unpause() external onlySupervisor whenOperational {
+    function unpause() external onlySupervisor whenNotRecovery {
         _unpause();
     }
 
     /**
      * @inheritdoc IAssetVault
      */
-    function shutDown() external onlyAdmin whenOperational {
-        _recoveryMode = true;
-        emit ShutDown(_msgSender());
+    function switchToRecoveryMode() external onlyAdmin whenNotRecovery {
+        _recovery = true;
+        emit RecoveryModeActivated(_msgSender());
+    }
+
+    /**
+     * @inheritdoc IAssetVault
+     */
+    function metahub() public view returns (address) {
+        return _metahub;
+    }
+
+    /**
+     * @inheritdoc IAssetVault
+     */
+    function isRecovery() public view returns (bool) {
+        return _recovery;
     }
 
     /**
