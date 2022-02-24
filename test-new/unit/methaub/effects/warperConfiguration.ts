@@ -38,7 +38,7 @@ export function shouldBehaveWarperAndUniverseConfiguration(): void {
         universeId = await createUniverse(metahub, 'IQ Universe');
       });
 
-      it('allows to deploy a warper from preset', async () => {
+      it.skip('allows to deploy a warper from preset', async () => {
         const warperAddress = await deployWarper(metahub, universeId, originalAsset.address, warperPresetId);
         // Use original asset interface with warper address.
         const warper = new ERC721Mock__factory(deployer).attach(warperAddress);
@@ -52,7 +52,7 @@ export function shouldBehaveWarperAndUniverseConfiguration(): void {
         ).to.be.revertedWith('CallerIsNotUniverseOwner');
       });
 
-      describe('When warpers are deployed & registered', () => {
+      describe.skip('When warpers are deployed & registered', () => {
         let warperAddress1: string;
         let warperAddress2: string;
         beforeEach(async () => {
