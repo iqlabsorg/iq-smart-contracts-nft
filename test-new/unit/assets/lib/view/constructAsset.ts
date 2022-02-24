@@ -1,17 +1,16 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { AssetsMock, AssetsMock__factory } from '../../../typechain';
 import { BigNumber } from 'ethers';
-import { solidityId } from '../../utils';
+import { solidityId } from '../../../../../test/utils';
+import { AssetsMock } from '../../../../../typechain';
 
 const { defaultAbiCoder } = ethers.utils;
 
-describe('Assets Library', () => {
+export function shouldBehaveLikeConstructAssets(): void {
   let assets: AssetsMock;
 
-  before(async () => {
-    const [deployer] = await ethers.getSigners();
-    assets = await new AssetsMock__factory(deployer).deploy();
+  beforeEach(function () {
+    assets = this.mocks.assetsLib;
   });
 
   describe('ERC721', () => {
@@ -25,4 +24,4 @@ describe('Assets Library', () => {
       expect(asset.value).to.eq(value);
     });
   });
-});
+}

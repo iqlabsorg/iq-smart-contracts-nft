@@ -9,8 +9,6 @@ import {
   ERC721PresetConfigurable,
   ERC721PresetConfigurable__factory,
   ERC721Mock,
-  ERC721WarperMock__factory,
-  ERC721WarperMock,
   WarperPresetFactory__factory,
   UniverseToken__factory,
   UniverseToken,
@@ -19,6 +17,10 @@ import {
   WarperPresetMock,
   ERC20Mock__factory,
   ERC20Mock,
+  AssetsMock,
+  AssetsMock__factory,
+  ERC721AssetVault,
+  ERC721AssetVault__factory,
 } from '../../typechain';
 import { warperPresetId } from './types';
 
@@ -151,4 +153,33 @@ export async function unitFixtureUniverseTokenMock(): Promise<UnitFixtureUnivers
 type UnitFixtureUniverseTokenFactory = {
   universeToken: UniverseToken;
   metahub: FakeContract<Metahub>;
+};
+
+export async function unitFixtureAssetsLib(): Promise<UnitFixtureAsetsLib> {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+
+  const assetsLib = await new AssetsMock__factory(deployer).deploy();
+
+  return { assetsLib };
+}
+
+type UnitFixtureAsetsLib = {
+  assetsLib: AssetsMock;
+};
+
+export async function unitFixtureERC721AssetsVault(): Promise<UnitFixtureERC721AssetsVault> {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+  const operator = await ethers.getNamedSigner('operator');
+
+  const vault = await new ERC721AssetVault__factory(deployer).deploy(operator.address);
+  const asset = await new ERC721Mock__factory(deployer).deploy('Test ERC721', 'ONFT');
+
+  return { vault, asset };
+}
+
+type UnitFixtureERC721AssetsVault = {
+  vault: ERC721AssetVault;
+  asset: ERC721Mock;
 };

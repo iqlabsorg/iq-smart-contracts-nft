@@ -23,12 +23,12 @@ export function shouldBehaveLikeMint(): void {
     });
 
     it('reverts when mint msg.sender is not metahub', async function () {
-      await expect(universe.mint(universeOwner.address, universeName)).to.be.revertedWithError('CallerIsNotMetahub');
+      await expect(universe.mint(universeOwner.address, universeName)).to.be.revertedWith('CallerIsNotMetahub');
     });
 
     describe('Minting', () => {
       it('owner cannot mint', async () => {
-        await expect(universe.mint(universeOwner.address, UNIVERSE_NAME)).to.be.revertedWithError('CallerIsNotMetahub');
+        await expect(universe.mint(universeOwner.address, UNIVERSE_NAME)).to.be.revertedWith('CallerIsNotMetahub');
       });
 
       it('metahub can mint', async () => {
