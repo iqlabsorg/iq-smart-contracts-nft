@@ -240,37 +240,18 @@ contract ERC721Warper is Warper, IERC721Warper {
      */
     function safeMint(address to, uint256 tokenId) public onlyMetahub {
         // todo: custom method?
-        _safeMint(to, tokenId, "");
+        _mint(to, tokenId, "");
     }
 
     /**
-     * @dev Same as `_safeMint`, with an additional `data` parameter which is
+     * @dev Same as `_mint`, with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(
+    function _mint(
         address to,
         uint256 tokenId,
         bytes memory _data
     ) internal virtual {
-        _mint(to, tokenId);
-        if (!_checkOnERC721Received(address(0), to, tokenId, _data)) {
-            revert TransferToNonERC721ReceiverImplementer(to);
-        }
-    }
-
-    /**
-     * @dev Mints `tokenId` and transfers it to `to`.
-     *
-     * WARNING: Usage of this method is discouraged, use {_safeMint} whenever possible
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - `to` cannot be the zero address.
-     *
-     * Emits a {Transfer} event.
-     */
-    function _mint(address to, uint256 tokenId) internal virtual {
         if (to == address(0)) revert MintToTheZeroAddress();
         if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
 
@@ -280,30 +261,10 @@ contract ERC721Warper is Warper, IERC721Warper {
         _owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
-    }
 
-    /**
-     * @dev Destroys `tokenId`.
-     * The approval is cleared when the token is burned.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     *
-     * Emits a {Transfer} event.
-     */
-    function _burn(uint256 tokenId) internal virtual {
-        address owner = ERC721Warper.ownerOf(tokenId);
-
-        _beforeTokenTransfer(owner, address(0), tokenId);
-
-        // Clear approvals
-        _approve(address(0), tokenId);
-
-        _balances[owner] -= 1;
-        delete _owners[tokenId];
-
-        emit Transfer(owner, address(0), tokenId);
+        if (!_checkOnERC721Received(address(0), to, tokenId, _data)) {
+            revert TransferToNonERC721ReceiverImplementer(to);
+        }
     }
 
     /**
