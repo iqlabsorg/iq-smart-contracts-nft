@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction } from 'ethers';
-import { Metahub, WarperPresetFactory } from '../typechain';
-import { Assets } from '../typechain/Metahub';
+import { Metahub, WarperPresetFactory } from '../../typechain';
+import { Assets } from '../../typechain/Metahub';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 

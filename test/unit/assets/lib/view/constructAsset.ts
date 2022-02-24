@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { solidityId } from '../../../../../test/utils';
+import { solidityId } from '../../../../shared/utils';
 import { AssetsMock } from '../../../../../typechain';
 
 const { defaultAbiCoder } = ethers.utils;

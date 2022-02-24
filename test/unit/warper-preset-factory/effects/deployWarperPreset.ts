@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import { deployWarperPreset } from '../../../../test/utils';
+import { deployWarperPreset } from '../../../shared/utils';
 import { WarperPresetFactory, WarperPresetMock, WarperPresetMock__factory } from '../../../../typechain';
 import { presetId1, presetId2 } from '../WarperPresetFactory';
 

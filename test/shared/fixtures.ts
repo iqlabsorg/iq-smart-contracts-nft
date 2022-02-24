@@ -1,7 +1,7 @@
 import { FakeContract, smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder, formatBytes32String } from 'ethers/lib/utils';
 import hre, { ethers, upgrades } from 'hardhat';
-import { wait } from '../../test/utils';
+import { wait } from './utils';
 import {
   ERC721Mock__factory,
   Metahub,

@@ -10,7 +10,6 @@
   "include": [
     "./scripts",
     "./test",
-    "./test-new",
     "./typechain",
     "./deploy"
   ],

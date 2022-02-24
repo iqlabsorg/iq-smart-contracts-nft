@@ -1,7 +1,6 @@
 import { ERC721Warper, IWarperPreset } from '../../../typechain';
 import { unitFixtureERC721WarperConfigurable } from '../../shared/fixtures';
-import { shouldBehaveLikeERC721 } from './erc721/ERC721.behaviour';
-import { shouldBehaveLikeERC721Configurable } from './erc721';
+import { shouldBehaveLikeERC721, shouldBehaveLikeERC721Configurable } from './erc721';
 import { shouldBehaveLikeWarper } from './warper.behaviour';
 
 export function unitTestWarpers(): void {

@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { AssetClass, createUniverse, deployWarper, makeERC721Asset } from '../../../../test/utils';
+import { AssetClass, createUniverse, deployWarper, makeERC721Asset } from '../../../shared/utils';
 import {
   ERC721AssetController,
   ERC721AssetController__factory,

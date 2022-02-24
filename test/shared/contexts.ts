@@ -2,7 +2,6 @@ import hre, { ethers } from 'hardhat';
 
 import type { Contracts, Mocks, Signers } from './types';
 
-/// This is run at the beginning of each suite of tests: 2e2, integration and unit.
 export function baseContext(description: string, testSuite: () => void): void {
   describe(description, function () {
     before(async function () {
