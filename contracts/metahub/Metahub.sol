@@ -499,4 +499,14 @@ contract Metahub is
             revert NoVaultForAssetClass(assetClass);
         }
     }
+
+    //todo implement the real implementation here
+    function getActiveWarperRentalCount(address warper, address account) external view returns (uint256) {
+        return 0;
+    }
+
+    //todo implement the real implementation here
+    function getWarperRentalStatus(address warper, uint256 tokenId) external view returns (WarperRentalStatus) {
+        return WarperRentalStatus.RENTED;
+    }
 }

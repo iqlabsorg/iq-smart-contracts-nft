@@ -4,6 +4,12 @@ pragma solidity ^0.8.11;
 import "./IListingManager.sol";
 
 interface IMetahub is IListingManager {
+    enum WarperRentalStatus {
+        NOT_MINTED,
+        MINTED,
+        RENTED
+    }
+
     /**
      * @dev Emitted when a new warper is registered.
      * @param universeId Universe ID.
@@ -127,4 +133,8 @@ interface IMetahub is IListingManager {
      * @return True if the `account` is the admin of the `warper` and false otherwise.
      */
     function isWarperAdmin(address warper, address account) external view returns (bool);
+
+    function getActiveWarperRentalCount(address warper, address account) external view returns (uint256);
+
+    function getWarperRentalStatus(address warper, uint256 tokenId) external view returns (WarperRentalStatus);
 }

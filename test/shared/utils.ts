@@ -101,3 +101,13 @@ export function makeAsset(assetClass: BytesLike, data: BytesLike, value: BigNumb
     value,
   };
 }
+
+/**
+ * Typescript mapping of the possible warper rental states.
+ * Mimics the `WarperRentalStatus` enum.
+ */
+export const WarperRentalStatus = {
+  NOT_MINTED: 0,
+  MINTED: 1,
+  RENTED: 2,
+};

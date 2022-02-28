@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import "../Warper.sol";
 import "./IERC721Warper.sol";
+import "../../metahub/IMetahub.sol";
 
 error BalanceQueryForZeroAddress();
 error OwnerQueryForNonexistentToken(uint256 tokenId);
@@ -79,6 +80,14 @@ contract ERC721Warper is Warper, IERC721Warper {
      * @inheritdoc IERC721
      */
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
+        address metahubAddress = _metahub();
+        IMetahub.WarperRentalStatus rentalStatus = IMetahub(metahubAddress).getWarperRentalStatus(
+            address(this),
+            tokenId
+        );
+        if (rentalStatus == IMetahub.WarperRentalStatus.NOT_MINTED) revert OwnerQueryForNonexistentToken(tokenId);
+        if (rentalStatus == IMetahub.WarperRentalStatus.MINTED) return metahubAddress;
+
         address owner = _owners[tokenId];
         if (owner == address(0)) revert OwnerQueryForNonexistentToken(tokenId);
 
