@@ -36,11 +36,6 @@ contract ERC721Warper is Warper, IERC721Warper {
     mapping(uint256 => address) private _owners;
 
     /**
-     * @dev Mapping owner address to token count
-     */
-    mapping(address => uint256) private _balances;
-
-    /**
      * @dev Mapping from token ID to approved address
      */
     mapping(uint256 => address) private _tokenApprovals;
@@ -277,7 +272,6 @@ contract ERC721Warper is Warper, IERC721Warper {
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
-        _balances[to] += 1;
         _owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
@@ -311,8 +305,6 @@ contract ERC721Warper is Warper, IERC721Warper {
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
 
-        _balances[from] -= 1;
-        _balances[to] += 1;
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
@@ -391,5 +383,7 @@ contract ERC721Warper is Warper, IERC721Warper {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual {}
+    ) internal virtual {
+        //todo Transfer rental agreement as well here (?)
+    }
 }
