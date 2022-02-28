@@ -4,12 +4,13 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 import "../Errors.sol";
 import "./IWarper.sol";
 import "./utils/CallForwarder.sol";
 import "./utils/WarperContext.sol";
 
-abstract contract Warper is IWarper, WarperContext, CallForwarder {
+abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
     using ERC165Checker for address;
 
     /**
