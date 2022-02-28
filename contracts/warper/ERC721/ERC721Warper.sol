@@ -78,16 +78,26 @@ contract ERC721Warper is Warper, IERC721Warper {
 
     /**
      * @inheritdoc IERC721
+     * @dev The ownership is dependant on the rental status - metahub is
+     *      responsible for tracking the state:
+     *          - NOT_MINTED: revert with an error
+     *          - MINTED: means, that the token is not currently rented. Metahub is the owner.
+     *          - RENTED: Use the Warpers internal ownership constructs
      */
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
-        address metahubAddress = _metahub();
-        IMetahub.WarperRentalStatus rentalStatus = IMetahub(metahubAddress).getWarperRentalStatus(
-            address(this),
-            tokenId
-        );
-        if (rentalStatus == IMetahub.WarperRentalStatus.NOT_MINTED) revert OwnerQueryForNonexistentToken(tokenId);
-        if (rentalStatus == IMetahub.WarperRentalStatus.MINTED) return metahubAddress;
+        // Special rent-sate handling
+        {
+            address metahubAddress = _metahub();
+            IMetahub.WarperRentalStatus rentalStatus = IMetahub(metahubAddress).getWarperRentalStatus(
+                address(this),
+                tokenId
+            );
+            if (rentalStatus == IMetahub.WarperRentalStatus.NOT_MINTED) revert OwnerQueryForNonexistentToken(tokenId);
+            if (rentalStatus == IMetahub.WarperRentalStatus.MINTED) return metahubAddress;
+        }
 
+        // `rentalStatus` is now WarperRentalStatus.RENTED
+        // Fallback to using the internal owner tracker
         address owner = _owners[tokenId];
         if (owner == address(0)) revert OwnerQueryForNonexistentToken(tokenId);
 
