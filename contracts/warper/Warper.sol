@@ -9,7 +9,7 @@ import "./IWarper.sol";
 import "./utils/CallForwarder.sol";
 import "./utils/WarperContext.sol";
 
-abstract contract Warper is WarperContext, CallForwarder, IWarper {
+abstract contract Warper is IWarper, WarperContext, CallForwarder {
     using ERC165Checker for address;
 
     /**
