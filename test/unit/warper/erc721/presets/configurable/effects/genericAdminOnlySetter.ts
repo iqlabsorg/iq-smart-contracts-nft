@@ -3,11 +3,16 @@ import { expect } from 'chai';
 import { Contract } from 'ethers';
 import { Metahub } from '../../../../../../../typechain';
 
-export function shouldBehaveLikeAdminSetter({ param }: { param: string }): void {
-  const getter = `__${param}`;
-  const setter = `__set${param[0].toUpperCase()}${param.slice(1)}`;
-
-  describe(param, function () {
+export function shouldBehaveLikeAdminOnlySetter<T>({
+  getter,
+  setter,
+  value,
+}: {
+  getter: string;
+  setter: string;
+  value: T;
+}): void {
+  describe(`Only warper admin can call ${setter}`, function () {
     let warper: Contract;
     let metahub: FakeContract<Metahub>;
     beforeEach(function () {
@@ -16,13 +21,13 @@ export function shouldBehaveLikeAdminSetter({ param }: { param: string }): void 
     });
     it('allows warper admin to change param value', async () => {
       metahub.isWarperAdmin.returns(true);
-      await (warper as Contract)[setter](100);
-      await expect((warper as Contract)[getter]()).to.eventually.eq(100);
+      await (warper as Contract)[setter](value);
+      await expect((warper as Contract)[getter]()).to.eventually.eq(value);
     });
 
     it('forbids stranger to change param value', async () => {
       metahub.isWarperAdmin.returns(false);
-      await expect((warper as Contract)[setter](100)).to.be.revertedWith('CallerIsNotWarperAdmin');
+      await expect((warper as Contract)[setter](value)).to.be.revertedWith('CallerIsNotWarperAdmin');
     });
   });
 }

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { Contract } from 'ethers';
 
-export function shouldBehaveLikeGetter({ param, defaultValue }: { param: string; defaultValue: number }): void {
+export function shouldBehaveLikeGetter({ param, expectedValue }: { param: string; expectedValue: number }): void {
   const getter = `__${param}`;
 
   describe(param, function () {
@@ -11,7 +11,7 @@ export function shouldBehaveLikeGetter({ param, defaultValue }: { param: string;
     });
 
     it('returns correct default value', async () => {
-      await expect((warper as Contract)[getter]()).to.eventually.eq(defaultValue);
+      await expect((warper as Contract)[getter]()).to.eventually.eq(expectedValue);
     });
   });
 }
