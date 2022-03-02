@@ -2,7 +2,7 @@ import { unitFixtureMetahub } from '../../shared/fixtures';
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
 
 export function unitTestMetahub(): void {
-  describe('ERC721Warper Configurable', function () {
+  describe('Metahub', function () {
     beforeEach(async function () {
       const { metahub, originalAsset, universeToken, warperPresetFactory } = await this.loadFixture(unitFixtureMetahub);
       this.mocks.assets.erc721 = originalAsset;
