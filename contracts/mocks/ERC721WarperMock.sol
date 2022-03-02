@@ -12,6 +12,6 @@ contract ERC721WarperMock is ERC721Warper {
 
     // NOTE: Exposing directly for tests
     function mint(address to, uint256 tokenId) external virtual {
-        _mint(to, tokenId, "");
+        mint(to, tokenId, "");
     }
 }

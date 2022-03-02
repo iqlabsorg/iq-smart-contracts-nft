@@ -23,6 +23,7 @@ error TokenIsAlreadyMinted(uint256 tokenId);
 error TransferOfTokenThatIsNotOwn(uint256 tokenId);
 error TransferToTheZeroAddress();
 error ApproveToCaller();
+error MethodNotAllowed();
 
 contract ERC721Warper is Warper, IERC721Warper {
     using ERC165Checker for address;
@@ -34,16 +35,6 @@ contract ERC721Warper is Warper, IERC721Warper {
      * @dev Mapping from token ID to owner address
      */
     mapping(uint256 => address) private _owners;
-
-    /**
-     * @dev Mapping from token ID to approved address
-     */
-    mapping(uint256 => address) private _tokenApprovals;
-
-    /**
-     * @dev Mapping from owner to operator approvals
-     */
-    mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     /**
      * @inheritdoc IWarper
@@ -102,39 +93,34 @@ contract ERC721Warper is Warper, IERC721Warper {
 
     /**
      * @inheritdoc IERC721
+     * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function approve(address to, uint256 tokenId) public virtual override {
-        address owner = ERC721Warper.ownerOf(tokenId);
-        if (to == owner) revert ApprovalToCurrentOwner(owner);
-
-        if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) {
-            revert ApproveCallerIsNotOwnerNorApprovedForAll(_msgSender());
-        }
-
-        _approve(to, tokenId);
+    function approve(address, uint256) public virtual override {
+        revert MethodNotAllowed();
     }
 
     /**
      * @inheritdoc IERC721
+     * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function getApproved(uint256 tokenId) public view virtual override returns (address) {
-        if (!_exists(tokenId)) revert ApprovedQueryForNonexistentToken(tokenId);
-
-        return _tokenApprovals[tokenId];
+    function getApproved(uint256) public view virtual override returns (address) {
+        revert MethodNotAllowed();
     }
 
     /**
      * @inheritdoc IERC721
+     * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function setApprovalForAll(address operator, bool approved) public virtual override {
-        _setApprovalForAll(_msgSender(), operator, approved);
+    function setApprovalForAll(address, bool) public virtual override {
+        revert MethodNotAllowed();
     }
 
     /**
      * @inheritdoc IERC721
+     * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function isApprovedForAll(address owner, address operator) public view virtual override returns (bool) {
-        return _operatorApprovals[owner][operator];
+    function isApprovedForAll(address, address) public view virtual override returns (bool) {
+        revert MethodNotAllowed();
     }
 
     /**
@@ -145,10 +131,6 @@ contract ERC721Warper is Warper, IERC721Warper {
         address to,
         uint256 tokenId
     ) public virtual override {
-        if (!_isApprovedOrOwner(_msgSender(), tokenId)) {
-            revert TransferCallerIsNotOwnerNorApproved(_msgSender());
-        }
-
         _transfer(from, to, tokenId);
     }
 
@@ -172,8 +154,6 @@ contract ERC721Warper is Warper, IERC721Warper {
         uint256 tokenId,
         bytes memory _data
     ) public virtual override {
-        if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert TransferCallerIsNotOwnerNorApproved(_msgSender());
-
         _safeTransfer(from, to, tokenId, _data);
     }
 
@@ -230,20 +210,6 @@ contract ERC721Warper is Warper, IERC721Warper {
     }
 
     /**
-     * @dev Returns whether `spender` is allowed to manage `tokenId`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     */
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
-        if (!_exists(tokenId)) revert OperatorQueryForNonexistentToken(tokenId);
-        address owner = ERC721Warper.ownerOf(tokenId);
-
-        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
-    }
-
-    /**
      * @dev Safely mints `tokenId` and transfers it to `to`.
      *
      * Requirements:
@@ -253,20 +219,11 @@ contract ERC721Warper is Warper, IERC721Warper {
      *
      * Emits a {Transfer} event.
      */
-    function safeMint(address to, uint256 tokenId) public onlyMetahub {
-        // todo: custom method?
-        _mint(to, tokenId, "");
-    }
-
-    /**
-     * @dev Same as `_mint`, with an additional `data` parameter which is
-     * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
-     */
-    function _mint(
+    function mint(
         address to,
         uint256 tokenId,
-        bytes memory _data
-    ) internal virtual {
+        bytes memory data
+    ) public onlyMetahub {
         if (to == address(0)) revert MintToTheZeroAddress();
         if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
 
@@ -276,7 +233,7 @@ contract ERC721Warper is Warper, IERC721Warper {
 
         emit Transfer(address(0), to, tokenId);
 
-        if (!_checkOnERC721Received(address(0), to, tokenId, _data)) {
+        if (!_checkOnERC721Received(address(0), to, tokenId, data)) {
             revert TransferToNonERC721ReceiverImplementer(to);
         }
     }
@@ -302,37 +259,9 @@ contract ERC721Warper is Warper, IERC721Warper {
 
         _beforeTokenTransfer(from, to, tokenId);
 
-        // Clear approvals from the previous owner
-        _approve(address(0), tokenId);
-
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
-    }
-
-    /**
-     * @dev Approve `to` to operate on `tokenId`
-     *
-     * Emits a {Approval} event.
-     */
-    function _approve(address to, uint256 tokenId) internal virtual {
-        _tokenApprovals[tokenId] = to;
-        emit Approval(ERC721Warper.ownerOf(tokenId), to, tokenId);
-    }
-
-    /**
-     * @dev Approve `operator` to operate on all of `owner` tokens
-     *
-     * Emits a {ApprovalForAll} event.
-     */
-    function _setApprovalForAll(
-        address owner,
-        address operator,
-        bool approved
-    ) internal virtual {
-        if (owner == operator) revert ApproveToCaller();
-        _operatorApprovals[owner][operator] = approved;
-        emit ApprovalForAll(owner, operator, approved);
     }
 
     /**
@@ -378,12 +307,11 @@ contract ERC721Warper is Warper, IERC721Warper {
      * - When `to` is zero, ``from``'s `tokenId` will be burned.
      * - `from` and `to` are never both zero.
      *
+     * @dev Only the metahub is allowed to call this method
      */
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual {
-        //todo Transfer rental agreement as well here (?)
-    }
+    ) internal virtual onlyMetahub {}
 }

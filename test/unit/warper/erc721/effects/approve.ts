@@ -22,7 +22,7 @@ export function shouldBehaveLikeApprove(): void {
 
       [stranger0, stranger1] = this.signers.unnamed;
 
-      await warper.connect(this.mocks.metahub.wallet).safeMint(assetOwner.address, mintedTokenId);
+      await warper.connect(this.mocks.metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
     // Reusable test case dependencies

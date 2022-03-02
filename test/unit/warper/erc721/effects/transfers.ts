@@ -28,7 +28,7 @@ export function shouldBehaveTransfer(): void {
       [approved, operator, stranger] = this.signers.unnamed;
 
       // Mint
-      await warper.connect(this.mocks.metahub.wallet).safeMint(assetOwner.address, mintedTokenId);
+      await warper.connect(this.mocks.metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
 
       // Approve
       await warper.connect(assetOwner).approve(approved.address, mintedTokenId);

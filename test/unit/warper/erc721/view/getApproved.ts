@@ -23,7 +23,7 @@ export function shouldBehaveLikeGetApproved(): void {
       assetOwner = this.signers.named['assetOwner'];
       approved = this.signers.named['operator'];
 
-      await warper.connect(metahub.wallet).safeMint(assetOwner.address, mintedTokenId);
+      await warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
     context('when token is not minted', () => {

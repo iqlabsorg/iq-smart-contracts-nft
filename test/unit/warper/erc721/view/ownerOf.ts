@@ -16,7 +16,7 @@ export function shouldBehaveLikeOwnerOf(): void {
     metahub = this.mocks.metahub;
     warper = this.contracts.presets.core;
 
-    await warper.connect(metahub.wallet).safeMint(nftTokenOwner.address, mintedTokenId);
+    await warper.connect(metahub.wallet).mint(nftTokenOwner.address, mintedTokenId, '0x');
   });
 
   describe('ownerOf', () => {
