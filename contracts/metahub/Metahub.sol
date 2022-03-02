@@ -389,22 +389,6 @@ contract Metahub is
     }
 
     /**
-     * @inheritdoc IMetahub
-     */
-    function getActiveWarperRentalCount(address, address) external pure returns (uint256) {
-        //todo implement the real implementation here
-        return 0;
-    }
-
-    /**
-     * @inheritdoc IMetahub
-     */
-    function getWarperRentalStatus(address, uint256) external pure returns (WarperRentalStatus) {
-        //todo implement the real implementation here
-        return WarperRentalStatus.RENTED;
-    }
-
-    /**
      * @dev Checks whether the caller is authorized to upgrade the Metahub implementation.
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
