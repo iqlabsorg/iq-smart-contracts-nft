@@ -254,7 +254,6 @@ contract ERC721Warper is Warper, IERC721Warper {
         address to,
         uint256 tokenId
     ) internal virtual {
-        if (ERC721Warper.ownerOf(tokenId) != from) revert TransferOfTokenThatIsNotOwn(tokenId);
         if (to == address(0)) revert TransferToTheZeroAddress();
 
         _beforeTokenTransfer(from, to, tokenId);
