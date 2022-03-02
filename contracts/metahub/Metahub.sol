@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
@@ -41,7 +41,7 @@ error WarperIsAlreadyRegistered(address warper);
  * @dev Thrown when there are no registered warpers for a particular asset.
  * @param asset Asset address.
  */
-error AssetHasNoWarpers(address asset);
+error UnsupportedAsset(address asset);
 
 /**
  * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
@@ -60,6 +60,29 @@ error NoControllerForAssetClass(bytes4 assetClass);
  */
 error NoVaultForAssetClass(bytes4 assetClass);
 
+/**
+ * @dev Thrown when the `listingId` is invalid or the asset has been delisted.
+ */
+error NotListed(uint256 listingId);
+
+/**
+ * @dev Thrown when the message sender doesn't match the asset lister address.
+ */
+error CallerIsNotAssetLister();
+
+/**
+ * @dev Thrown when the operation is not allowed due to the listing being paused.
+ */
+error ListingIsPaused();
+
+/**
+ * @dev Thrown when the operation is not allowed due to the listing not being paused.
+ */
+error ListingIsNotPaused();
+
+// todo: docs, wording
+error AssetIsRented();
+
 contract Metahub is
     IMetahub,
     Initializable,
@@ -70,6 +93,7 @@ contract Metahub is
     using Address for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
     using Assets for Assets.Asset;
 
     /**
@@ -88,6 +112,46 @@ contract Metahub is
     modifier onlyRegisteredWarper(address warper) {
         if (_warpers[warper].universeId == 0) {
             revert WarperIsNotRegistered(warper);
+        }
+        _;
+    }
+
+    /**
+     * @dev Modifier to make a function callable only by the asset lister (original owner).
+     */
+    modifier onlyLister(uint256 listingId) {
+        if (_msgSender() != _listings[listingId].lister) {
+            revert CallerIsNotAssetLister();
+        }
+        _;
+    }
+
+    /**
+     * @dev Modifier to make sure the function is called for the listed asset.
+     */
+    modifier whenListed(uint256 listingId) {
+        if (_listings[listingId].lister == address(0) || _listings[listingId].delisted) {
+            revert NotListed(listingId);
+        }
+        _;
+    }
+
+    /**
+     * @dev Modifier to make sure the function is called only when the listing is paused.
+     */
+    modifier whenListingPaused(uint256 listingId) {
+        if (!_listings[listingId].paused) {
+            revert ListingIsNotPaused();
+        }
+        _;
+    }
+
+    /**
+     * @dev Modifier to make sure the function is called only when the listing is not paused.
+     */
+    modifier whenListingNotPaused(uint256 listingId) {
+        if (_listings[listingId].paused) {
+            revert ListingIsPaused();
         }
         _;
     }
@@ -117,8 +181,8 @@ contract Metahub is
         if (vaultAssetClass != assetClass) {
             revert AssetClassMismatch(vaultAssetClass, assetClass);
         }
-        emit AssetClassVaultChanged(assetClass, _assetClassVaults[assetClass], vault);
-        _assetClassVaults[assetClass] = vault;
+        emit AssetClassVaultChanged(assetClass, address(_assetClassVaults[assetClass]), vault);
+        _assetClassVaults[assetClass] = IAssetVault(vault);
     }
 
     /**
@@ -139,7 +203,7 @@ contract Metahub is
      */
     function removeAssetClassController(bytes4 assetClass) external onlyOwner {
         delete _assetClassControllers[assetClass];
-        //todo: event
+        //todo: emit AssetClassControllerRemoved(assetClass, controller)
     }
 
     /**
@@ -186,28 +250,113 @@ contract Metahub is
     }
 
     /**
-     * @inheritdoc IAssetListingController
+     * @inheritdoc IListingManager
      */
-    function listAsset(ListingParams calldata params) external {
-        // todo: validate listing request
-        // Provided asset must have at least one associated warper.
-        //        if (_assetWarpers[params.asset].length() == 0) {
-        //            revert AssetHasNoWarpers(params.asset);
-        //        }
+    function listAsset(ListingParams calldata params) external returns (uint256) {
+        // The asset must be supported by at least one warper.
+        address token = _requireAssetClassController(params.asset.id.class).getToken(params.asset);
+        if (_assetWarpers[token].length() == 0) {
+            // todo: read asset config 'supported' flag
+            revert UnsupportedAsset(token);
+        }
 
-        address controller = address(_assetClassControllers[params.asset.id.class]);
-        address vault = _assetClassVaults[params.asset.id.class];
-
-        bytes memory transfer = abi.encodeWithSelector(
-            IAssetController.transferAssetToVault.selector,
-            params.asset,
-            _msgSender(),
-            address(vault),
-            bytes("")
+        // Transfer asset to the vault. Asset transfer is performed via delegate call to the corresponding asset controller.
+        // This approach allows to keep all token approvals on the Metahub account and utilize controller asset specific transfer logic.
+        address controller = address(_assetVaults[token]);
+        address vault = address(_assetVaults[token]);
+        controller.functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, params.asset, _msgSender(), vault)
         );
-        controller.functionDelegateCall(transfer);
-        // todo: register
-        //        emit AssetListed(params.asset);
+
+        // Generate new listing ID.
+        _listingIdTracker.increment();
+        uint256 listingId = _listingIdTracker.current();
+
+        // Listing ID must be unique (this could throw only if listing ID tracker state is incorrect).
+        assert(_listings[listingId].lister == address(0));
+
+        // Store new listing record.
+        Listing memory listing = Listing(
+            _msgSender(),
+            token,
+            params.asset,
+            params.maxLockPeriod,
+            params.baseRate,
+            0,
+            false,
+            false
+        );
+        _listings[listingId] = listing;
+
+        emit AssetListed(listingId, listing.lister, listing.asset, listing.maxLockPeriod, listing.baseRate);
+
+        return listingId;
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function delistAsset(uint256 listingId) external whenListed(listingId) onlyLister(listingId) {
+        Listing storage listing = _listings[listingId];
+        listing.delisted = true;
+        emit AssetDelisted(listingId, listing.lister, listing.unlocksAt);
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function withdrawAsset(uint256 listingId) external onlyLister(listingId) {
+        Listing memory listing = _listings[listingId];
+        // Check whether the asset can be returned to the owner.
+        if (block.timestamp < listing.unlocksAt) {
+            revert AssetIsRented();
+        }
+
+        IAssetVault vault = _assetVaults[listing.token];
+        IAssetController controller = _assetControllers[listing.token];
+
+        // Delete listing record.
+        delete _listings[listingId];
+
+        // Transfer asset from the vault to the original owner.
+        address(controller).functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, listing.asset, address(vault))
+        );
+
+        emit AssetWithdrawn(listingId, listing.lister, listing.asset);
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function pauseListing(uint256 listingId)
+        external
+        whenListed(listingId)
+        onlyLister(listingId)
+        whenListingNotPaused(listingId)
+    {
+        _listings[listingId].paused = true;
+        emit ListingPaused(listingId);
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function unpauseListing(uint256 listingId)
+        external
+        whenListed(listingId)
+        onlyLister(listingId)
+        whenListingNotPaused(listingId)
+    {
+        _listings[listingId].paused = false;
+        emit ListingUnpaused(listingId);
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function listing(uint256 listingId) external view returns (Listing memory) {
+        return _listings[listingId];
     }
 
     /**
@@ -283,20 +432,13 @@ contract Metahub is
 
         // Check that controller is registered for the warper asset class.
         bytes4 assetClass = IWarper(warper).__assetClass();
-        IAssetController controller = _assetClassControllers[assetClass];
-        if (address(controller) == address(0)) {
-            revert NoControllerForAssetClass(assetClass);
-        }
-
-        // Check that asset vault is registered for the original asset class (same as warper).
-        address vault = _assetClassVaults[assetClass];
-        if (vault == address(0)) {
-            revert NoVaultForAssetClass(assetClass);
-        }
+        IAssetController controller = _requireAssetClassController(assetClass);
 
         // todo: ensure warper compatibility with the current generation of asset controller.
         // controller.isCompatibleWarper(warper);
         //todo: check warper count against limits to prevent uncapped enumeration.
+
+        IAssetVault vault = _requireAssetClassVault(assetClass);
 
         // Create warper main registration record.
         // Associate warper with the universe and current asset class controller,
@@ -311,9 +453,15 @@ contract Metahub is
         address original = IWarper(warper).__original();
         _assetWarpers[original].add(warper);
 
-        // When original asset is seen for the first time, associate it with the vault (based on class).
-        if (_assetVaults[original] == address(0)) {
-            _assetVaults[original] = _assetClassVaults[assetClass];
+        // When the original asset is seen for the first time, associate it with the vault (based on class).
+        if (address(_assetVaults[original]) == address(0)) {
+            // todo: merge into structure?
+            _assetVaults[original] = vault;
+        }
+
+        if (address(_assetControllers[original]) == address(0)) {
+            // todo: merge into structure?
+            _assetControllers[original] = controller;
         }
 
         emit WarperRegistered(universeId, original, warper);
@@ -321,7 +469,34 @@ contract Metahub is
         return warper;
     }
 
+    /**
+     * @dev Returns Universe NFT owner.
+     * @param universeId Universe ID.
+     * @return Universe owner.
+     */
     function _universeOwner(uint256 universeId) internal view returns (address) {
         return IERC721Upgradeable(address(_universeToken)).ownerOf(universeId);
+    }
+
+    /**
+     * @dev Returns controller address for specific asset class.
+     * @param assetClass Asset class ID.
+     */
+    function _requireAssetClassController(bytes4 assetClass) internal view returns (IAssetController controller) {
+        controller = _assetClassControllers[assetClass];
+        if (address(controller) == address(0)) {
+            revert NoControllerForAssetClass(assetClass);
+        }
+    }
+
+    /**
+     * @dev Returns vault address for specific asset class.
+     * @param assetClass Asset class ID.
+     */
+    function _requireAssetClassVault(bytes4 assetClass) internal view returns (IAssetVault vault) {
+        vault = _assetClassVaults[assetClass];
+        if (address(vault) == address(0)) {
+            revert NoVaultForAssetClass(assetClass);
+        }
     }
 }

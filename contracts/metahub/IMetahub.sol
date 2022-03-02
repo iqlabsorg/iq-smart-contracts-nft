@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "./IAssetListingController.sol";
+import "./IListingManager.sol";
 
-interface IMetahub is IAssetListingController {
+interface IMetahub is IListingManager {
     /**
      * @dev Emitted when a new warper is registered.
      * @param universeId Universe ID.

@@ -1,4 +1,3 @@
-import { ERC721Warper } from '../../../typechain';
 import { unitFixtureMetahub } from '../../shared/fixtures';
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
 

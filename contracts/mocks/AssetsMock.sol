@@ -11,7 +11,7 @@ contract AssetsMock {
         bytes4 assetClass,
         bytes memory data,
         uint256 value
-    ) external view returns (Assets.Asset memory) {
+    ) external pure returns (Assets.Asset memory) {
         return Assets.make(assetClass, data, value);
     }
 }

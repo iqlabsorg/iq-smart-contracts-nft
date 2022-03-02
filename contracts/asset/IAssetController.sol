@@ -30,4 +30,10 @@ interface IAssetController is IAssetTransferExecutor {
      * @param vault Asset vault contract address.
      */
     function returnAssetFromVault(Assets.Asset memory asset, address vault) external;
+
+    /**
+     * @dev Decodes asset structure and returns token address.
+     * @return Token contract address.
+     */
+    function getToken(Assets.Asset memory asset) external pure returns (address);
 }

@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "./ERC721TransferExecutor.sol";
+import "@openzeppelin/contracts/interfaces/IERC721.sol";
+import "../../Errors.sol";
 import "../IAssetController.sol";
 import "./IERC721AssetVault.sol";
 
-contract ERC721AssetController is IAssetController, ERC721TransferExecutor {
-    bytes4 internal constant _ERC721VAULT_INTERFACE_ID = type(IERC721AssetVault).interfaceId;
+/**
+ * @dev Thrown when the asset transfer value is invalid for ERC721 token standard.
+ */
+error InvalidERC721TransferValue(uint256 value);
 
+contract ERC721AssetController is IAssetController {
     /**
      * @inheritdoc IAssetController
      */
@@ -33,5 +37,61 @@ contract ERC721AssetController is IAssetController, ERC721TransferExecutor {
         // Decode asset ID to extract identification data.
         (address token, uint256 tokenId) = _decodeAssetId(asset.id);
         IERC721AssetVault(vault).returnToOwner(token, tokenId);
+    }
+
+    /**
+     * @inheritdoc IAssetController
+     */
+    function getToken(Assets.Asset memory asset) external pure returns (address) {
+        (address token, ) = _decodeAssetId(asset.id);
+        return token;
+    }
+
+    /**
+     * @inheritdoc IAssetTransferExecutor
+     */
+    function transfer(
+        Assets.Asset memory asset,
+        address from,
+        address to,
+        bytes memory data
+    ) external {
+        _transferAsset(asset, from, to, data);
+    }
+
+    /**
+     * @dev Executes asset transfer.
+     */
+    function _transferAsset(
+        Assets.Asset memory asset,
+        address from,
+        address to,
+        bytes memory data
+    ) internal virtual {
+        // Ensure correct asset class.
+        if (asset.id.class != Assets.ERC721) {
+            revert AssetClassMismatch(asset.id.class, Assets.ERC721);
+        }
+
+        // Ensure correct value, must be 1 for NFT.
+        if (asset.value != 1) {
+            revert InvalidERC721TransferValue(asset.value);
+        }
+
+        // Decode asset ID to extract identification data, required for transfer.
+        (address token, uint256 tokenId) = _decodeAssetId(asset.id);
+
+        // Execute safe transfer.
+        IERC721(token).safeTransferFrom(from, to, tokenId, data);
+        emit AssetTransfer(asset, from, to, data);
+    }
+
+    /**
+     * @dev Decodes asset ID and extracts identification data.
+     * @return token Token contract address.
+     * @return tokenId Token ID.
+     */
+    function _decodeAssetId(Assets.AssetId memory id) internal pure virtual returns (address token, uint256 tokenId) {
+        return abi.decode(id.data, (address, uint256));
     }
 }

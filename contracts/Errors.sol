@@ -23,6 +23,8 @@ error InvalidOriginalTokenInterface(address original, bytes4 requiredInterfaceId
 
 /**
  * @dev Thrown when the asset has invalid class for specific operation.
+ * @param actual Actual class ID.
+ * @param required Required class ID.
  */
 error AssetClassMismatch(bytes4 actual, bytes4 required);
 
