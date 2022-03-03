@@ -12,24 +12,18 @@ import "../../metahub/IMetahub.sol";
 
 error BalanceQueryForZeroAddress();
 error OwnerQueryForNonexistentToken(uint256 tokenId);
-error OperatorQueryForNonexistentToken(uint256 tokenId);
-error ApprovalToCurrentOwner(address owner);
-error ApproveCallerIsNotOwnerNorApprovedForAll(address caller);
-error ApprovedQueryForNonexistentToken(uint256 tokenId);
-error TransferCallerIsNotOwnerNorApproved(address caller);
 error TransferToNonERC721ReceiverImplementer(address to);
 error MintToTheZeroAddress();
 error TokenIsAlreadyMinted(uint256 tokenId);
-error TransferOfTokenThatIsNotOwn(uint256 tokenId);
 error TransferToTheZeroAddress();
-error ApproveToCaller();
 error MethodNotAllowed();
 
-contract ERC721Warper is Warper, IERC721Warper {
+/**
+ * @title Warper for the ERC721 token contract
+ */
+contract ERC721Warper is IERC721Warper, Warper {
     using ERC165Checker for address;
     using Address for address;
-
-    bytes4 internal constant _ERC721METADATA_INTERFACE_ID = type(IERC721Metadata).interfaceId;
 
     /**
      * @dev Mapping from token ID to owner address
@@ -126,6 +120,8 @@ contract ERC721Warper is Warper, IERC721Warper {
 
     /**
      * @inheritdoc IERC721
+     *
+     * @dev Need to fulfill all the requirements of `_transfer()`
      */
     function transferFrom(
         address from,
@@ -137,6 +133,8 @@ contract ERC721Warper is Warper, IERC721Warper {
 
     /**
      * @inheritdoc IERC721
+     *
+     * @dev Need to fulfill all the requirements of `_transfer()`
      */
     function safeTransferFrom(
         address from,
@@ -148,6 +146,8 @@ contract ERC721Warper is Warper, IERC721Warper {
 
     /**
      * @inheritdoc IERC721
+     *
+     * @dev Need to fulfill all the requirements of `_transfer()`
      */
     function safeTransferFrom(
         address from,
@@ -162,8 +162,8 @@ contract ERC721Warper is Warper, IERC721Warper {
      * @dev Validates the original NFT.
      */
     function _validateOriginal(address original) internal override {
-        if (!original.supportsInterface(_ERC721METADATA_INTERFACE_ID)) {
-            revert InvalidOriginalTokenInterface(original, _ERC721METADATA_INTERFACE_ID);
+        if (!original.supportsInterface(type(IERC721Metadata).interfaceId)) {
+            revert InvalidOriginalTokenInterface(original, type(IERC721Metadata).interfaceId);
         }
         super._validateOriginal(original);
     }
@@ -179,6 +179,7 @@ contract ERC721Warper is Warper, IERC721Warper {
      *
      * Requirements:
      *
+     * - Needs to fulfill all the requirements of `_transfer()`
      * - `from` cannot be the zero address.
      * - `to` cannot be the zero address.
      * - `tokenId` token must exist and be owned by `from`.
@@ -215,6 +216,7 @@ contract ERC721Warper is Warper, IERC721Warper {
      *
      * Requirements:
      *
+     * - needs to pass validation of `_beforeTokenTransfer()`.
      * - `tokenId` must not exist.
      * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
      *
@@ -224,7 +226,7 @@ contract ERC721Warper is Warper, IERC721Warper {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public onlyMetahub {
+    ) public {
         if (to == address(0)) revert MintToTheZeroAddress();
         if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
 
@@ -241,12 +243,11 @@ contract ERC721Warper is Warper, IERC721Warper {
 
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
-     *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
      *
      * Requirements:
      *
      * - `to` cannot be the zero address.
-     * - `tokenId` token must be owned by `from`.
+     * - needs to pass validation of `_beforeTokenTransfer()`.
      *
      * Emits a {Transfer} event.
      */
@@ -296,6 +297,10 @@ contract ERC721Warper is Warper, IERC721Warper {
     }
 
     /**
+     * @dev ONLY THE METAHUB CAN CALL THIS METHOD.
+     *      This validates every single transfer that the warper can perform.
+     *      Metahub can be the only source of transfers, so it can properly synchronise
+     *      the rental agreement ownership.
      * @dev Hook that is called before any token transfer. This includes minting
      * and burning.
      *
@@ -307,7 +312,6 @@ contract ERC721Warper is Warper, IERC721Warper {
      * - When `to` is zero, ``from``'s `tokenId` will be burned.
      * - `from` and `to` are never both zero.
      *
-     * @dev Only the metahub is allowed to call this method
      */
     function _beforeTokenTransfer(
         address from,
