@@ -85,6 +85,11 @@ error AssetClassIsAlreadyRegistered(bytes4 assetClass);
 // todo: docs, wording
 error AssetIsLocked();
 
+/**
+ * @dev Thrown if warpers interface is not compatible with the AssetController
+ */
+error InvalidWarperInterface();
+
 contract Metahub is
     IMetahub,
     Initializable,
@@ -450,8 +455,11 @@ contract Metahub is
 
         IAssetController controller = _assetClasses[assetClass].controller;
 
-        // todo: ensure warper compatibility with the current generation of asset controller.
-        // controller.isCompatibleWarper(warper);
+        // Ensure warper compatibility with the current generation of asset controller.
+        if (!controller.isCompatibleWarper(IWarper(warper))) {
+            revert InvalidWarperInterface();
+        }
+
         //todo: check warper count against limits to prevent uncapped enumeration.
 
         // Create warper main registration record.

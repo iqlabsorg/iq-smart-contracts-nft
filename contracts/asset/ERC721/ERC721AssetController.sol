@@ -5,13 +5,22 @@ import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "../../Errors.sol";
 import "../IAssetController.sol";
 import "./IERC721AssetVault.sol";
+import "../../warper/IWarper.sol";
 
 /**
  * @dev Thrown when the asset transfer value is invalid for ERC721 token standard.
  */
 error InvalidERC721TransferValue(uint256 value);
 
+/**
+ * @title Asset controller for the ERC721 tokens
+ */
 contract ERC721AssetController is IAssetController {
+    /**
+     * @notice The supported Warpers interface
+     */
+    bytes4 public constant SUPPORTED_WARPER_INTERFACE = type(IWarper).interfaceId;
+
     /**
      * @inheritdoc IAssetController
      */
@@ -45,6 +54,13 @@ contract ERC721AssetController is IAssetController {
     function getToken(Assets.Asset memory asset) external pure returns (address) {
         (address token, ) = _decodeAssetId(asset.id);
         return token;
+    }
+
+    /**
+     * @inheritdoc IAssetController
+     */
+    function isCompatibleWarper(IWarper warper) external view returns (bool) {
+        return warper.supportsInterface(SUPPORTED_WARPER_INTERFACE);
     }
 
     /**

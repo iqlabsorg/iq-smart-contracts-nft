@@ -4,6 +4,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "./Assets.sol";
 import "./IAssetTransferExecutor.sol";
+import "../warper/IWarper.sol";
 
 interface IAssetController is IAssetTransferExecutor {
     /**
@@ -36,4 +37,11 @@ interface IAssetController is IAssetTransferExecutor {
      * @return Token contract address.
      */
     function getToken(Assets.Asset memory asset) external pure returns (address);
+
+    /**
+     * @dev Validates that the warper interface is supported by the current AssetController
+     * @param warper warper whose interface we must validate
+     * @return bool - `true` if warper is supported
+     */
+    function isCompatibleWarper(IWarper warper) external view returns (bool);
 }
