@@ -75,12 +75,13 @@ contract ERC721Warper is Warper, IERC721Warper {
         // Special rent-sate handling
         {
             address metahubAddress = _metahub();
-            IMetahub.WarperRentalStatus rentalStatus = IMetahub(metahubAddress).getWarperRentalStatus(
+            IRentingManager.WarperRentalStatus rentalStatus = IMetahub(metahubAddress).getWarperRentalStatus(
                 address(this),
                 tokenId
             );
-            if (rentalStatus == IMetahub.WarperRentalStatus.NOT_MINTED) revert OwnerQueryForNonexistentToken(tokenId);
-            if (rentalStatus == IMetahub.WarperRentalStatus.MINTED) return metahubAddress;
+            if (rentalStatus == IRentingManager.WarperRentalStatus.NOT_MINTED)
+                revert OwnerQueryForNonexistentToken(tokenId);
+            if (rentalStatus == IRentingManager.WarperRentalStatus.MINTED) return metahubAddress;
         }
 
         // `rentalStatus` is now WarperRentalStatus.RENTED

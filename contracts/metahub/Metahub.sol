@@ -44,21 +44,17 @@ error WarperIsAlreadyRegistered(address warper);
 error UnsupportedAsset(address asset);
 
 /**
+ * @dev Thrown when the asset class is not registered or deprecated.
+ * @param assetClass Asset class ID.
+ */
+error UnsupportedAssetClass(bytes4 assetClass);
+
+/**
  * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
  * @param actual Metahub address returned by warper.
  * @param required Required metahub address.
  */
 error WarperHasIncorrectMetahubReference(address actual, address required);
-
-/**
- * @dev Thrown when there is no controller registered for the provided asset class.
- */
-error NoControllerForAssetClass(bytes4 assetClass);
-
-/**
- * @dev Thrown when the is no vault registered for the provided asset class.
- */
-error NoVaultForAssetClass(bytes4 assetClass);
 
 /**
  * @dev Thrown when the `listingId` is invalid or the asset has been delisted.
@@ -80,8 +76,14 @@ error ListingIsPaused();
  */
 error ListingIsNotPaused();
 
+/**
+ * @dev Thrown upon attempting to register an asset class twice.
+ * @param assetClass Duplicate asset class ID.
+ */
+error AssetClassIsAlreadyRegistered(bytes4 assetClass);
+
 // todo: docs, wording
-error AssetIsRented();
+error AssetIsLocked();
 
 contract Metahub is
     IMetahub,
@@ -157,6 +159,14 @@ contract Metahub is
     }
 
     /**
+     * @dev Modifier to make sure the function is called for the asset of the supported class.
+     */
+    modifier onlySupportedAssetClass(Assets.Asset calldata asset) {
+        _checkAssetClassSupport(asset.id.class);
+        _;
+    }
+
+    /**
      * @custom:oz-upgrades-unsafe-allow constructor
      */
     constructor() initializer {}
@@ -174,19 +184,30 @@ contract Metahub is
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IAssetClassManager
+     */
+    function registerAssetClass(bytes4 assetClass, AssetClassConfig calldata config) external onlyOwner {
+        if (_isRegisteredAssetClass(assetClass)) {
+            revert AssetClassIsAlreadyRegistered(assetClass);
+        }
+        _assetClasses[assetClass] = config;
+        //todo: emit AssetClassRegistered
+    }
+
+    /**
+     * @inheritdoc IAssetClassManager
      */
     function setAssetClassVault(bytes4 assetClass, address vault) external onlyOwner {
         bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
         if (vaultAssetClass != assetClass) {
             revert AssetClassMismatch(vaultAssetClass, assetClass);
         }
-        emit AssetClassVaultChanged(assetClass, address(_assetClassVaults[assetClass]), vault);
-        _assetClassVaults[assetClass] = IAssetVault(vault);
+        emit AssetClassVaultChanged(assetClass, address(_assetClasses[assetClass].vault), vault);
+        _assetClasses[assetClass].vault = IAssetVault(vault);
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IAssetClassManager
      */
     function setAssetClassController(bytes4 assetClass, address controller) external onlyOwner {
         bytes4 controllerAssetClass = IAssetController(controller).assetClass();
@@ -194,27 +215,19 @@ contract Metahub is
             revert AssetClassMismatch(controllerAssetClass, assetClass);
         }
 
-        emit AssetClassControllerChanged(assetClass, address(_assetClassControllers[assetClass]), controller);
-        _assetClassControllers[assetClass] = IAssetController(controller);
+        emit AssetClassControllerChanged(assetClass, address(_assetClasses[assetClass].controller), controller);
+        _assetClasses[assetClass].controller = IAssetController(controller);
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IAssetClassManager
      */
-    function removeAssetClassController(bytes4 assetClass) external onlyOwner {
-        delete _assetClassControllers[assetClass];
-        //todo: emit AssetClassControllerRemoved(assetClass, controller)
+    function assetClassConfig(bytes4 assetClass) external view returns (AssetClassConfig memory) {
+        return _assetClasses[assetClass];
     }
 
     /**
-     * @inheritdoc IMetahub
-     */
-    function assetClassController(bytes4 assetClass) external view returns (address) {
-        return address(_assetClassControllers[assetClass]);
-    }
-
-    /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IUniverseManager
      */
     function createUniverse(string calldata name) external returns (uint256) {
         uint256 tokenId = _universeToken.mint(_msgSender(), name);
@@ -224,7 +237,7 @@ contract Metahub is
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IWarperManager
      */
     function deployWarper(
         uint256 universeId,
@@ -235,7 +248,7 @@ contract Metahub is
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IWarperManager
      */
     function deployWarperWithData(
         uint256 universeId,
@@ -252,20 +265,22 @@ contract Metahub is
     /**
      * @inheritdoc IListingManager
      */
-    function listAsset(ListingParams calldata params) external returns (uint256) {
-        // The asset must be supported by at least one warper.
-        address token = _requireAssetClassController(params.asset.id.class).getToken(params.asset);
-        if (_assetWarpers[token].length() == 0) {
-            // todo: read asset config 'supported' flag
-            revert UnsupportedAsset(token);
-        }
+    function listAsset(ListingParams calldata params) external onlySupportedAssetClass(params.asset) returns (uint256) {
+        // Extract token address from asset struct and check whether the asset is supported.
+        address token = _assetClasses[params.asset.id.class].controller.getToken(params.asset);
+        _checkAssetSupport(token);
 
         // Transfer asset to the vault. Asset transfer is performed via delegate call to the corresponding asset controller.
         // This approach allows to keep all token approvals on the Metahub account and utilize controller asset specific transfer logic.
-        address controller = address(_assetVaults[token]);
-        address vault = address(_assetVaults[token]);
-        controller.functionDelegateCall(
-            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, params.asset, _msgSender(), vault)
+        IAssetController controller = _assets[token].controller;
+        IAssetVault vault = _assets[token].vault;
+        address(controller).functionDelegateCall(
+            abi.encodeWithSelector(
+                IAssetController.transferAssetToVault.selector,
+                params.asset,
+                _msgSender(),
+                address(vault)
+            )
         );
 
         // Generate new listing ID.
@@ -299,7 +314,7 @@ contract Metahub is
     function delistAsset(uint256 listingId) external whenListed(listingId) onlyLister(listingId) {
         Listing storage listing = _listings[listingId];
         listing.delisted = true;
-        emit AssetDelisted(listingId, listing.lister, listing.unlocksAt);
+        emit AssetDelisted(listingId, listing.lister, listing.lockedTill);
     }
 
     /**
@@ -308,17 +323,16 @@ contract Metahub is
     function withdrawAsset(uint256 listingId) external onlyLister(listingId) {
         Listing memory listing = _listings[listingId];
         // Check whether the asset can be returned to the owner.
-        if (block.timestamp < listing.unlocksAt) {
-            revert AssetIsRented();
+        if (block.timestamp < listing.lockedTill) {
+            revert AssetIsLocked();
         }
-
-        IAssetVault vault = _assetVaults[listing.token];
-        IAssetController controller = _assetControllers[listing.token];
 
         // Delete listing record.
         delete _listings[listingId];
 
         // Transfer asset from the vault to the original owner.
+        IAssetController controller = _assets[listing.token].controller;
+        IAssetVault vault = _assets[listing.token].vault;
         address(controller).functionDelegateCall(
             abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, listing.asset, address(vault))
         );
@@ -360,28 +374,28 @@ contract Metahub is
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IWarperManager
      */
     function warperPresetFactory() external view returns (address) {
         return address(_warperPresetFactory);
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IWarperManager
      */
     function universeWarpers(uint256 universeId) external view returns (address[] memory) {
-        return _universeWarpers[universeId].values();
+        return _universes[universeId].warpers.values();
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IWarperManager
      */
     function assetWarpers(address original) external view returns (address[] memory) {
-        return _assetWarpers[original].values();
+        return _assets[original].warpers.values();
     }
 
     /**
-     * @inheritdoc IMetahub
+     * @inheritdoc IWarperManager
      */
     function isWarperAdmin(address warper, address account) external view onlyRegisteredWarper(warper) returns (bool) {
         // Universe owner is the default admin for all presets.
@@ -419,6 +433,10 @@ contract Metahub is
      * @param warper The warper address.
      */
     function _registerWarper(uint256 universeId, address warper) internal returns (address) {
+        // Check that warper asset class is supported.
+        bytes4 assetClass = IWarper(warper).__assetClass();
+        _checkAssetClassSupport(assetClass);
+
         // Check that warper is not already registered.
         if (_warpers[warper].universeId != 0) {
             revert WarperIsAlreadyRegistered(warper);
@@ -430,38 +448,28 @@ contract Metahub is
             revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
         }
 
-        // Check that controller is registered for the warper asset class.
-        bytes4 assetClass = IWarper(warper).__assetClass();
-        IAssetController controller = _requireAssetClassController(assetClass);
+        IAssetController controller = _assetClasses[assetClass].controller;
 
         // todo: ensure warper compatibility with the current generation of asset controller.
         // controller.isCompatibleWarper(warper);
         //todo: check warper count against limits to prevent uncapped enumeration.
 
-        IAssetVault vault = _requireAssetClassVault(assetClass);
-
         // Create warper main registration record.
         // Associate warper with the universe and current asset class controller,
         // to maintain backward compatibility in case of controller generation upgrade.
         // The warper is disabled by default.
-        _warpers[warper] = Warper(false, universeId, controller);
+        _warpers[warper] = WarperData(false, universeId, controller);
 
         // Associate the warper with the universe.
-        _universeWarpers[universeId].add(warper);
+        _universes[universeId].warpers.add(warper);
 
         // Associate the original asset with the the warper with.
         address original = IWarper(warper).__original();
-        _assetWarpers[original].add(warper);
+        _assets[original].warpers.add(warper);
 
-        // When the original asset is seen for the first time, associate it with the vault (based on class).
-        if (address(_assetVaults[original]) == address(0)) {
-            // todo: merge into structure?
-            _assetVaults[original] = vault;
-        }
-
-        if (address(_assetControllers[original]) == address(0)) {
-            // todo: merge into structure?
-            _assetControllers[original] = controller;
+        // Register the original asset if it is seen for the first time.
+        if (!_isRegisteredAsset(original)) {
+            _registerAsset(original, _assetClasses[assetClass].vault, controller);
         }
 
         emit WarperRegistered(universeId, original, warper);
@@ -479,25 +487,62 @@ contract Metahub is
     }
 
     /**
-     * @dev Returns controller address for specific asset class.
-     * @param assetClass Asset class ID.
+     * @dev Checks asset support by address.
+     * @param asset Asset address.
      */
-    function _requireAssetClassController(bytes4 assetClass) internal view returns (IAssetController controller) {
-        controller = _assetClassControllers[assetClass];
-        if (address(controller) == address(0)) {
-            revert NoControllerForAssetClass(assetClass);
-        }
+    function _isSupportedAsset(address asset) internal view returns (bool) {
+        // The supported asset should have at least one warper.
+        return _assets[asset].warpers.length() > 0;
     }
 
     /**
-     * @dev Returns vault address for specific asset class.
+     * @dev Throws if asset is not supported.
+     * @param asset Asset address.
+     */
+    function _checkAssetSupport(address asset) internal view {
+        if (!_isSupportedAsset(asset)) revert UnsupportedAsset(asset);
+    }
+
+    /**
+     * @dev Checks asset registration by address.
+     * @param asset Asset address.
+     */
+    function _isRegisteredAsset(address asset) internal view returns (bool) {
+        // The registered asset must have controller.
+        return address(_assets[asset].controller) != address(0);
+    }
+
+    /**
+     * @dev Registers new asset.
+     * @param asset Asset address.
+     * @param vault Asset vault.
+     * @param controller Asset controller.
+     */
+    function _registerAsset(
+        address asset,
+        IAssetVault vault,
+        IAssetController controller
+    ) internal {
+        _assets[asset].vault = vault;
+        _assets[asset].controller = controller;
+        // todo: emit event AssetRegistered(asset);
+    }
+
+    /**
+     * @dev Checks asset class support.
      * @param assetClass Asset class ID.
      */
-    function _requireAssetClassVault(bytes4 assetClass) internal view returns (IAssetVault vault) {
-        vault = _assetClassVaults[assetClass];
-        if (address(vault) == address(0)) {
-            revert NoVaultForAssetClass(assetClass);
-        }
+    function _isRegisteredAssetClass(bytes4 assetClass) internal view returns (bool) {
+        // The registered asset must have controller.
+        return address(_assetClasses[assetClass].controller) != address(0);
+    }
+
+    /**
+     * @dev Throws if asset class is not supported.
+     * @param assetClass Asset class ID.
+     */
+    function _checkAssetClassSupport(bytes4 assetClass) internal view {
+        if (!_isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
     }
 
     //todo implement the real implementation here

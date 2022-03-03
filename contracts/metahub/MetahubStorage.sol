@@ -12,15 +12,35 @@ import "../asset/IAssetVault.sol";
 
 abstract contract MetahubStorage {
     /**
-     * @dev Registered warper entry.
+     * @dev Registered warper data.
      * @param enabled True if the warper is enabled and operational.
      * @param universeId Warper universe ID.
      * @param controller Warper asset controller.
      */
-    struct Warper {
+    struct WarperData {
         bool enabled; //todo: must affect renting
         uint256 universeId;
         IAssetController controller;
+    }
+
+    /**
+     * @dev Original asset data.
+     * @param controller Asset controller.
+     * @param vault Asset vault.
+     * @param warpers Set of warper addresses registered for the asset.
+     */
+    struct AssetData {
+        IAssetController controller;
+        IAssetVault vault;
+        EnumerableSetUpgradeable.AddressSet warpers;
+    }
+
+    /**
+     * @dev Universe data.
+     * @param warpers Set of warper addresses registered by the universe.
+     */
+    struct UniverseData {
+        EnumerableSetUpgradeable.AddressSet warpers;
     }
 
     /**
@@ -29,9 +49,19 @@ abstract contract MetahubStorage {
     IWarperPresetFactory internal _warperPresetFactory;
 
     /**
+     * @dev Mapping from warper address to the warper entry.
+     */
+    mapping(address => WarperData) internal _warpers;
+
+    /**
      * @dev Universe NFT contract.
      */
     IUniverseToken internal _universeToken;
+
+    /**
+     * @dev Mapping from universe ID to the universe entry.
+     */
+    mapping(uint256 => UniverseData) internal _universes;
 
     /**
      * @dev Listing ID tracker (incremental counter).
@@ -39,43 +69,17 @@ abstract contract MetahubStorage {
     CountersUpgradeable.Counter internal _listingIdTracker;
 
     /**
-     * @dev Mapping from incremental listing ID to the Listing entry.
+     * @dev Mapping from listing ID to the listing details.
      */
     mapping(uint256 => IListingManager.Listing) internal _listings;
 
     /**
-     * @dev Mapping from asset class to the asset vault address.
+     * @dev Mapping from asset class ID to the asset class configuration.
      */
-    mapping(bytes4 => IAssetVault) internal _assetClassVaults;
+    mapping(bytes4 => IAssetClassManager.AssetClassConfig) internal _assetClasses;
 
     /**
-     * @dev Mapping from asset address to the vault where this asset is stored.
+     * @dev Mapping from asset address to the asset details.
      */
-    mapping(address => IAssetVault) internal _assetVaults;
-
-    /**
-     * @dev Mapping from asset class to the asset controller address.
-     */
-    mapping(bytes4 => IAssetController) internal _assetClassControllers;
-
-    /**
-     * @dev Mapping from asset address to the controller which is responsible for asset handling.
-     */
-    mapping(address => IAssetController) internal _assetControllers;
-
-    /**
-     * @dev Registered warpers.
-     * @dev Mapping from warper address to the warper entry.
-     */
-    mapping(address => Warper) internal _warpers;
-
-    /**
-     * @dev Mapping from universe token ID to the set of warper addresses.
-     */
-    mapping(uint256 => EnumerableSetUpgradeable.AddressSet) internal _universeWarpers;
-
-    /**
-     * @dev Mapping from original asset address to the set of warper addresses.
-     */
-    mapping(address => EnumerableSetUpgradeable.AddressSet) internal _assetWarpers;
+    mapping(address => AssetData) internal _assets;
 }

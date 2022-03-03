@@ -68,18 +68,17 @@ interface IListingManager {
      * @param asset Listed asset structure.
      * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
      * @param baseRate Asset renting base rate (base tokens per second).
-     * @param unlocksAt The earliest possible time when the asset can be returned to the owner.
+     * @param lockedTill The earliest possible time when the asset can be returned to the owner.
      * @param delisted Indicates whether the asset is delisted.
      * @param paused Indicates whether the listing is paused.
      */
     struct Listing {
-        //todo: delete when withdraws
         address lister;
         address token;
         Assets.Asset asset;
         uint32 maxLockPeriod;
         uint112 baseRate; // todo: move to strategy data
-        uint32 unlocksAt; // todo: restricts original asset withdrawals
+        uint32 lockedTill;
         bool delisted; // todo: restricts new rentals
         bool paused; // todo: restricts new rentals
     }
