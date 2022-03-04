@@ -16,6 +16,8 @@ import {
   AssetsMock,
   ERC721AssetVault,
   Warper,
+  ERC721AssetController,
+  IAssetController,
 } from '../../typechain';
 
 declare module 'mocha' {
@@ -32,6 +34,7 @@ export interface Contracts {
   universeToken: UniverseToken;
   warperPresetFactory: WarperPresetFactory;
   assetVault: ERC721AssetVault;
+  assetController: IAssetController;
   presets: {
     agnosticWarper: Warper;
     core: ERC721Warper;

@@ -21,6 +21,10 @@ import {
   AssetsMock__factory,
   ERC721AssetVault,
   ERC721AssetVault__factory,
+  ERC721AssetController__factory,
+  ERC721AssetController,
+  ERC721Warper,
+  Warper,
 } from '../../typechain';
 import { warperPresetId } from './types';
 
@@ -182,4 +186,34 @@ export async function unitFixtureERC721AssetsVault(): Promise<UnitFixtureERC721A
 type UnitFixtureERC721AssetsVault = {
   vault: ERC721AssetVault;
   asset: ERC721Mock;
+};
+
+export async function unitFixtureERC721AssetsController(): Promise<UnitFixtureERC721AssetsController> {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+  const nftCreator = await ethers.getNamedSigner('nftCreator');
+
+  // Deploy original asset mock.
+  const oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
+
+  // Fake MetaHub
+  const metahub = await smock.fake<Metahub>(Metahub__factory);
+
+  // Deploy preset.
+  const erc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
+  await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
+
+  const erc721AssetController = await new ERC721AssetController__factory(deployer).deploy();
+
+  return {
+    originalNft: oNFT,
+    erc721AssetController,
+    warper: erc721Warper as unknown as Warper,
+  };
+}
+
+type UnitFixtureERC721AssetsController = {
+  erc721AssetController: ERC721AssetController;
+  warper: Warper;
+  originalNft: ERC721Mock;
 };
