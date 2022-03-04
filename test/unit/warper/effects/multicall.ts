@@ -11,7 +11,7 @@ export function shouldBehaveLikeMulticall(): void {
     let tokenOwner: SignerWithAddress;
 
     beforeEach(function () {
-      warper = this.contracts.presets.agnosticWarper;
+      warper = this.contracts.presets.warper;
       originalAsset = this.mocks.assets.erc721;
 
       [tokenOwner] = this.signers.unnamed;

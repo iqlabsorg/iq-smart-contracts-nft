@@ -5,7 +5,7 @@ import { ERC721Warper, Metahub } from '../../../../../typechain';
 import { AddressZero } from '../../../../shared/types';
 
 export function shouldBehaveLikeBalanceOf(): void {
-  let warper: ERC721Warper;
+  let erc721Warper: ERC721Warper;
   let metahub: FakeContract<Metahub>;
 
   let nftTokenOwner: SignerWithAddress;
@@ -13,7 +13,7 @@ export function shouldBehaveLikeBalanceOf(): void {
   beforeEach(function () {
     nftTokenOwner = this.signers.unnamed[0];
     metahub = this.mocks.metahub;
-    warper = this.contracts.presets.core;
+    erc721Warper = this.contracts.presets.erc721Warper;
   });
 
   describe('balanceOf', () => {
@@ -24,7 +24,7 @@ export function shouldBehaveLikeBalanceOf(): void {
       });
 
       it('returns the amount of tokens owned by the given address', async () => {
-        await expect(warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(activeRentalCount);
+        await expect(erc721Warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(activeRentalCount);
       });
     });
 
@@ -35,13 +35,13 @@ export function shouldBehaveLikeBalanceOf(): void {
       });
 
       it('returns 0', async () => {
-        await expect(warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(activeRentalCount);
+        await expect(erc721Warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(activeRentalCount);
       });
     });
 
     context('when querying the zero address', () => {
       it('throws', async () => {
-        await expect(warper.balanceOf(AddressZero)).to.be.revertedWith('BalanceQueryForZeroAddress');
+        await expect(erc721Warper.balanceOf(AddressZero)).to.be.revertedWith('BalanceQueryForZeroAddress');
       });
     });
   });

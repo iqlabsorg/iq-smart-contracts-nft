@@ -10,7 +10,7 @@ export function shouldBehaveLikeGetMetahub(): void {
     let metahub: FakeContract<Metahub>;
 
     beforeEach(function () {
-      warper = this.contracts.presets.core;
+      warper = this.contracts.presets.erc721Warper;
       metahub = this.mocks.metahub;
     });
 

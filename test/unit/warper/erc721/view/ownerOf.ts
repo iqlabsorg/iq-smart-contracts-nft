@@ -6,7 +6,7 @@ import { WarperRentalStatus } from '../../../../shared/utils';
 
 export function shouldBehaveLikeOwnerOf(): void {
   const mintedTokenId = 445566;
-  let warper: ERC721Warper;
+  let erc721Warper: ERC721Warper;
   let metahub: FakeContract<Metahub>;
 
   let nftTokenOwner: SignerWithAddress;
@@ -14,9 +14,9 @@ export function shouldBehaveLikeOwnerOf(): void {
   beforeEach(async function () {
     nftTokenOwner = this.signers.unnamed[0];
     metahub = this.mocks.metahub;
-    warper = this.contracts.presets.core;
+    erc721Warper = this.contracts.presets.erc721Warper;
 
-    await warper.connect(metahub.wallet).mint(nftTokenOwner.address, mintedTokenId, '0x');
+    await erc721Warper.connect(metahub.wallet).mint(nftTokenOwner.address, mintedTokenId, '0x');
   });
 
   describe('ownerOf', () => {
@@ -26,7 +26,7 @@ export function shouldBehaveLikeOwnerOf(): void {
       });
 
       it('reverts', async () => {
-        await expect(warper.ownerOf(mintedTokenId)).to.be.revertedWith(
+        await expect(erc721Warper.ownerOf(mintedTokenId)).to.be.revertedWith(
           `OwnerQueryForNonexistentToken(${mintedTokenId})`,
         );
       });
@@ -38,7 +38,7 @@ export function shouldBehaveLikeOwnerOf(): void {
       });
 
       it('returns metahub address', async () => {
-        await expect(warper.ownerOf(mintedTokenId)).to.eventually.equal(metahub.address);
+        await expect(erc721Warper.ownerOf(mintedTokenId)).to.eventually.equal(metahub.address);
       });
     });
 
@@ -48,7 +48,7 @@ export function shouldBehaveLikeOwnerOf(): void {
       });
 
       it('returns the current owner of the token', async () => {
-        await expect(warper.ownerOf(mintedTokenId)).to.eventually.equal(nftTokenOwner.address);
+        await expect(erc721Warper.ownerOf(mintedTokenId)).to.eventually.equal(nftTokenOwner.address);
       });
     });
   });

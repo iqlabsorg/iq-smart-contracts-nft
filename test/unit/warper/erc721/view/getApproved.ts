@@ -7,7 +7,7 @@ import { WarperRentalStatus } from '../../../../shared/utils';
 
 export function shouldBehaveLikeGetApproved(): void {
   describe('getApproved', function () {
-    let warper: ERC721Warper;
+    let erc721Warper: ERC721Warper;
     let metahub: FakeContract<Metahub>;
 
     let assetOwner: SignerWithAddress;
@@ -18,17 +18,17 @@ export function shouldBehaveLikeGetApproved(): void {
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
-      warper = this.contracts.presets.core;
+      erc721Warper = this.contracts.presets.erc721Warper;
 
       assetOwner = this.signers.named['assetOwner'];
       approved = this.signers.named['operator'];
 
-      await warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
+      await erc721Warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
     context('when token is not minted', () => {
       it('reverts', async () => {
-        await expect(warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWith(
+        await expect(erc721Warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWith(
           `ApprovedQueryForNonexistentToken(${nonExistentTokenId})`,
         );
       });
@@ -36,18 +36,20 @@ export function shouldBehaveLikeGetApproved(): void {
 
     context('when token has been minted ', () => {
       it('should return the zero address', async () => {
-        await expect(warper.connect(assetOwner).getApproved(mintedTokenId)).to.eventually.be.equal(AddressZero);
+        await expect(erc721Warper.connect(assetOwner).getApproved(mintedTokenId)).to.eventually.be.equal(AddressZero);
       });
 
       context('when account has been approved', () => {
         beforeEach(async () => {
           metahub.getWarperRentalStatus.returns(WarperRentalStatus.RENTED);
 
-          await warper.connect(assetOwner).approve(approved.address, mintedTokenId);
+          await erc721Warper.connect(assetOwner).approve(approved.address, mintedTokenId);
         });
 
         it('returns approved account', async () => {
-          await expect(warper.connect(assetOwner).getApproved(mintedTokenId)).to.eventually.equal(approved.address);
+          await expect(erc721Warper.connect(assetOwner).getApproved(mintedTokenId)).to.eventually.equal(
+            approved.address,
+          );
         });
       });
     });

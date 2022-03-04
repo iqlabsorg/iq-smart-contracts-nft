@@ -36,9 +36,9 @@ export interface Contracts {
   assetVault: ERC721AssetVault;
   assetController: IAssetController;
   presets: {
-    agnosticWarper: Warper;
-    core: ERC721Warper;
-    genericPreset: IWarperPreset;
+    warper: Warper;
+    erc721Warper: ERC721Warper;
+    warperPreset: IWarperPreset;
     erc721Configurable: ERC721PresetConfigurable;
   };
 }
