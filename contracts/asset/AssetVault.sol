@@ -16,11 +16,6 @@ error AssetNotFound();
 error VaultIsInRecoveryMode();
 
 /**
- * @dev Thrown when there is an attempt to revoke default admin role.
- */
-error CannotRevokeDefaultAdminRole();
-
-/**
  * @dev Thrown when the asset return is not allowed, due to the vault state or the caller permissions.
  */
 error AssetReturnIsNotAllowed();
@@ -139,14 +134,5 @@ abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
      */
     function isRecovery() public view returns (bool) {
         return _recovery;
-    }
-
-    /**
-     * @inheritdoc AccessControl
-     * @dev Prevent revoking default admin role.
-     */
-    function _revokeRole(bytes32 role, address account) internal override {
-        if (role == DEFAULT_ADMIN_ROLE) revert CannotRevokeDefaultAdminRole();
-        super._revokeRole(role, account);
     }
 }
