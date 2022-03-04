@@ -7,7 +7,7 @@ export function shouldBehaveLikeGetOriginal(): void {
     let originalNft: ERC721Mock;
 
     beforeEach(function () {
-      warper = this.contracts.presets.erc721Warper;
+      warper = this.contracts.erc721Warper;
       originalNft = this.mocks.assets.erc721;
     });
 

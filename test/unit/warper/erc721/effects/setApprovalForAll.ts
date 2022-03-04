@@ -9,7 +9,7 @@ export function shouldBehaveLikeSetApprovalForAl(): void {
     let operator: SignerWithAddress;
 
     beforeEach(function () {
-      warper = this.contracts.presets.erc721Warper;
+      warper = this.contracts.erc721Warper;
       assetOwner = this.signers.named['assetOwner'];
       operator = this.signers.named['operator'];
     });

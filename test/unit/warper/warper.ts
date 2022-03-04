@@ -13,9 +13,9 @@ export function unitTestWarpers(): void {
       this.mocks.assets.erc20 = erc20Token;
       this.mocks.metahub = metahub;
       this.contracts.presets.erc721Configurable = erc721Warper;
-      this.contracts.presets.erc721Warper = erc721Warper as unknown as ERC721Warper;
-      this.contracts.presets.warperPreset = uninitializedErc721Warper as unknown as IWarperPreset;
-      this.contracts.presets.warper = erc721Warper as unknown as Warper;
+      this.contracts.erc721Warper = erc721Warper as unknown as ERC721Warper;
+      this.contracts.warperPreset = uninitializedErc721Warper as unknown as IWarperPreset;
+      this.contracts.warper = erc721Warper as unknown as Warper;
     });
 
     // shouldBehaveLikeERC721(); // todo: turn back on once warpers tests have been fixed

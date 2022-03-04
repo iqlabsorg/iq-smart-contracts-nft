@@ -9,7 +9,7 @@ export function shouldBehaveLikeIsCompatibleWarper(): void {
 
     beforeEach(function () {
       notWarper = this.mocks.assets.erc721 as unknown as ERC721;
-      warper = this.contracts.presets.warper;
+      warper = this.contracts.warper;
       assetController = this.contracts.assetController;
     });
 

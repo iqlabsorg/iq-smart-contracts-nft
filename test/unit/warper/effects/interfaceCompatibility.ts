@@ -9,7 +9,7 @@ export function shouldBehaveLikeRejectERC20TokenInterface(): void {
     let randomERC20: ERC20;
 
     beforeEach(function () {
-      warper = this.contracts.presets.warperPreset as unknown as IWarperPreset;
+      warper = this.contracts.warperPreset as unknown as IWarperPreset;
       randomERC20 = this.mocks.assets.erc20 as unknown as ERC20;
     });
 

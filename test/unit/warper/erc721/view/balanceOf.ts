@@ -13,7 +13,7 @@ export function shouldBehaveLikeBalanceOf(): void {
   beforeEach(function () {
     nftTokenOwner = this.signers.unnamed[0];
     metahub = this.mocks.metahub;
-    erc721Warper = this.contracts.presets.erc721Warper;
+    erc721Warper = this.contracts.erc721Warper;
   });
 
   describe('balanceOf', () => {

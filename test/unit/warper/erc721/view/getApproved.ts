@@ -18,7 +18,7 @@ export function shouldBehaveLikeGetApproved(): void {
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
-      erc721Warper = this.contracts.presets.erc721Warper;
+      erc721Warper = this.contracts.erc721Warper;
 
       assetOwner = this.signers.named['assetOwner'];
       approved = this.signers.named['operator'];

@@ -14,7 +14,7 @@ export function shouldBehaveLikeOwnerOf(): void {
   beforeEach(async function () {
     nftTokenOwner = this.signers.unnamed[0];
     metahub = this.mocks.metahub;
-    erc721Warper = this.contracts.presets.erc721Warper;
+    erc721Warper = this.contracts.erc721Warper;
 
     await erc721Warper.connect(metahub.wallet).mint(nftTokenOwner.address, mintedTokenId, '0x');
   });

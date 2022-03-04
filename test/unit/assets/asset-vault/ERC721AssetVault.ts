@@ -5,7 +5,7 @@ export function unitTestERC721AssetVault(): void {
   describe('ERC721AssetVault', function () {
     beforeEach(async function () {
       const { vault, asset } = await this.loadFixture(unitFixtureERC721AssetsVault);
-      this.contracts.assetVault = vault;
+      this.contracts.erc721assetVault = vault;
       this.mocks.assets.erc721 = asset;
     });
 

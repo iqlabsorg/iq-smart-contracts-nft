@@ -15,7 +15,7 @@ export function shouldBehaveOnERC721Received(): void {
 
     [assetOwner] = this.signers.unnamed;
     asset = this.mocks.assets.erc721;
-    vault = this.contracts.assetVault;
+    vault = this.contracts.erc721assetVault;
 
     await asset.mint(assetOwner.address, mintedTokenId);
     await asset.connect(assetOwner).setApprovalForAll(operator.address, true);

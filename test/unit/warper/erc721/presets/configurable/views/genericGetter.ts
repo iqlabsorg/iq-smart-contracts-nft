@@ -7,7 +7,7 @@ export function shouldBehaveLikeGetter({ param, expectedValue }: { param: string
   describe(param, function () {
     let warper: Contract;
     beforeEach(function () {
-      warper = this.contracts.presets.erc721Warper;
+      warper = this.contracts.erc721Warper;
     });
 
     it('returns correct default value', async () => {

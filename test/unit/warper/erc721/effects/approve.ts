@@ -16,7 +16,7 @@ export function shouldBehaveLikeApprove(): void {
     let stranger1: SignerWithAddress;
 
     beforeEach(async function () {
-      warper = this.contracts.presets.erc721Warper;
+      warper = this.contracts.erc721Warper;
       assetOwner = this.signers.named['assetOwner'];
       approved = this.signers.named['operator'];
 

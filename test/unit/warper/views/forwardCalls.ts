@@ -9,7 +9,7 @@ export function shouldBehaveLikeAbleToForwardCalls(): void {
     let deployer: SignerWithAddress;
 
     beforeEach(function () {
-      warper = this.contracts.presets.erc721Warper;
+      warper = this.contracts.erc721Warper;
       originalNft = this.mocks.assets.erc721;
 
       deployer = this.signers.named['deployer'];

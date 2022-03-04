@@ -16,7 +16,6 @@ import {
   AssetsMock,
   ERC721AssetVault,
   Warper,
-  ERC721AssetController,
   IAssetController,
 } from '../../typechain';
 
@@ -33,12 +32,12 @@ export interface Contracts {
   metahub: Metahub;
   universeToken: UniverseToken;
   warperPresetFactory: WarperPresetFactory;
-  assetVault: ERC721AssetVault;
+  erc721assetVault: ERC721AssetVault;
   assetController: IAssetController;
+  warper: Warper;
+  erc721Warper: ERC721Warper;
+  warperPreset: IWarperPreset;
   presets: {
-    warper: Warper;
-    erc721Warper: ERC721Warper;
-    warperPreset: IWarperPreset;
     erc721Configurable: ERC721PresetConfigurable;
   };
 }

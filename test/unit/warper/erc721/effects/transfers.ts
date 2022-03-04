@@ -21,7 +21,7 @@ export function shouldBehaveTransfer(): void {
     const RECEIVER_MAGIC_VALUE = '0x150b7a02';
 
     beforeEach(async function () {
-      warper = this.contracts.presets.erc721Warper;
+      warper = this.contracts.erc721Warper;
       assetOwner = this.signers.named['assetOwner'];
       deployer = this.signers.named['deployer'];
 

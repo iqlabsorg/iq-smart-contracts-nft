@@ -8,7 +8,7 @@ export function unitTestAssetController(): void {
       const { originalNft, erc721AssetController, warper } = await this.loadFixture(unitFixtureERC721AssetsController);
 
       this.mocks.assets.erc721 = originalNft;
-      this.contracts.presets.warper = warper as unknown as Warper;
+      this.contracts.warper = warper as unknown as Warper;
       this.contracts.assetController = erc721AssetController as unknown as IAssetController;
     });
 
