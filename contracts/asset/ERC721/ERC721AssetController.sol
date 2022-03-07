@@ -84,11 +84,6 @@ contract ERC721AssetController is IAssetController {
         address to,
         bytes memory data
     ) internal virtual {
-        // Ensure correct asset class.
-        if (asset.id.class != Assets.ERC721) {
-            revert AssetClassMismatch(asset.id.class, Assets.ERC721);
-        }
-
         // Ensure correct value, must be 1 for NFT.
         if (asset.value != 1) {
             revert InvalidERC721TransferValue(asset.value);
@@ -108,6 +103,10 @@ contract ERC721AssetController is IAssetController {
      * @return tokenId Token ID.
      */
     function _decodeAssetId(Assets.AssetId memory id) internal pure virtual returns (address token, uint256 tokenId) {
+        // Ensure correct asset class.
+        if (id.class != Assets.ERC721) {
+            revert AssetClassMismatch(id.class, Assets.ERC721);
+        }
         return abi.decode(id.data, (address, uint256));
     }
 }
