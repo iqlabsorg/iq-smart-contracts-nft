@@ -57,7 +57,7 @@ abstract contract MetahubStorage {
     /**
      * @dev ACL contract.
      */
-    IACL internal _acl_;
+    IACL internal _aclContract;
 
     /**
      * @dev Listing ID tracker (incremental counter).

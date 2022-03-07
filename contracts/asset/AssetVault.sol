@@ -47,10 +47,8 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
 
     /**
      * @dev ACL contract.
-     * @dev using underscores on both sides to not clash with the
-     *      internal `_acl` function.
      */
-    IACL private _acl_;
+    IACL private _aclContract;
 
     /**
      * @dev Constructor.
@@ -64,7 +62,7 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
         _metahub = metahub;
 
         // todo validate interface
-        _acl_ = IACL(acl);
+        _aclContract = IACL(acl);
     }
 
     /**
@@ -131,6 +129,6 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
      * @inheritdoc AccessControlled
      */
     function _acl() internal view override returns (IACL) {
-        return _acl_;
+        return _aclContract;
     }
 }
