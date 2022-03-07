@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 import "./Roles.sol";
 import "./IACL.sol";
@@ -9,12 +9,12 @@ import "./IACL.sol";
 /**
  * @title Modifier provider for contracts that want to interact with the ACL contract.
  */
-abstract contract AccessControlled {
+abstract contract AccessControlled is Context {
     /**
      * @dev Modifier to make a function callable by the admin account.
      */
     modifier onlyAdmin() {
-        _acl().checkRole(Roles.ADMIN, msg.sender);
+        _acl().checkRole(Roles.ADMIN, _msgSender());
         _;
     }
 
@@ -22,7 +22,7 @@ abstract contract AccessControlled {
      * @dev Modifier to make a function callable by a supervisor account.
      */
     modifier onlySupervisor() {
-        _acl().checkRole(Roles.SUPERVISOR, msg.sender);
+        _acl().checkRole(Roles.SUPERVISOR, _msgSender());
         _;
     }
 
