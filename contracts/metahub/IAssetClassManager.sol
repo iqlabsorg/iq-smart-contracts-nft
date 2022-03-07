@@ -4,7 +4,6 @@ pragma solidity ^0.8.11;
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
 
-//todo: event AssetClassRegistered
 interface IAssetClassManager {
     /**
      * @dev Asset class configuration.
@@ -15,6 +14,14 @@ interface IAssetClassManager {
         IAssetController controller;
         IAssetVault vault;
     }
+
+    /**
+     * @dev Emitted when the asset class controller is registered.
+     * @param assetClass Asset class ID.
+     * @param controller Controller address.
+     * @param vault Vault address.
+     */
+    event AssetClassRegistered(bytes4 indexed assetClass, address indexed controller, address indexed vault);
 
     /**
      * @dev Emitted when the asset class controller is changed.

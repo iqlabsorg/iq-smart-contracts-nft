@@ -206,8 +206,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (_isRegisteredAssetClass(assetClass)) {
             revert AssetClassIsAlreadyRegistered(assetClass);
         }
+
+        emit AssetClassRegistered(assetClass, address(config.controller), address(config.vault));
         _assetClasses[assetClass] = config;
-        //todo: emit AssetClassRegistered
     }
 
     /**
@@ -218,6 +219,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (vaultAssetClass != assetClass) {
             revert AssetClassMismatch(vaultAssetClass, assetClass);
         }
+
         emit AssetClassVaultChanged(assetClass, address(_assetClasses[assetClass].vault), vault);
         _assetClasses[assetClass].vault = IAssetVault(vault);
     }
