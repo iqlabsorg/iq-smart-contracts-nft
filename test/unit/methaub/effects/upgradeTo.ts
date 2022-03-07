@@ -6,12 +6,14 @@ import { Metahub, MetahubV2Mock, MetahubV2Mock__factory, ACL, ACL__factory } fro
 export function shouldBehaveLikeUpgradeTo(): void {
   describe('upgradeTo', function () {
     let metahub: Metahub;
+    let acl: ACL;
 
     let deployer: SignerWithAddress;
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
       metahub = this.contracts.metahub;
+      acl = this.contracts.acl;
 
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
@@ -19,8 +21,7 @@ export function shouldBehaveLikeUpgradeTo(): void {
 
     describe('Upgradeability', () => {
       it('forbids unauthorized upgrade', async () => {
-        const acl = new ACL__factory(deployer).attach(await metahub.getAcl());
-        const admin = await acl.DEFAULT_ADMIN_ROLE();
+        const admin = await acl.adminRole();
 
         await expect(
           upgrades.upgradeProxy(metahub, new MetahubV2Mock__factory(stranger), { unsafeAllow: ['delegatecall'] }),

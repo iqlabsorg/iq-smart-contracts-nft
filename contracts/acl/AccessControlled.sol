@@ -3,18 +3,18 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-import "./IACLSubscriber.sol";
+import "./Roles.sol";
+import "./IACL.sol";
 
 /**
  * @title Modifier provider for contracts that want to interact with the ACL contract.
  */
-abstract contract ACLSubscriber is IACLSubscriber {
+abstract contract AccessControlled {
     /**
      * @dev Modifier to make a function callable by the admin account.
      */
     modifier onlyAdmin() {
-        ACL acl = this.getAcl();
-        acl.checkRole(acl.DEFAULT_ADMIN_ROLE(), msg.sender);
+        _acl().checkRole(Roles.ADMIN, msg.sender);
         _;
     }
 
@@ -22,8 +22,12 @@ abstract contract ACLSubscriber is IACLSubscriber {
      * @dev Modifier to make a function callable by a supervisor account.
      */
     modifier onlySupervisor() {
-        ACL acl = this.getAcl();
-        acl.checkRole(acl.SUPERVISOR_ROLE(), msg.sender);
+        _acl().checkRole(Roles.SUPERVISOR, msg.sender);
         _;
     }
+
+    /**
+     * @dev return the IACL address
+     */
+    function _acl() internal virtual returns (IACL);
 }

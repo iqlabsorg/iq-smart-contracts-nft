@@ -4,19 +4,19 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 import "./IACL.sol";
+import "./Roles.sol";
 
 /**
  * @title Access Control List contract
  */
 contract ACL is IACL, AccessControlEnumerable {
-    /**
-     * @dev Supervisor controls the vault pause mode.
-     */
-    bytes32 public constant SUPERVISOR_ROLE = keccak256("SUPERVISOR_ROLE");
+    error RolesContractIncorrectlyConfigured();
 
     constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(SUPERVISOR_ROLE, msg.sender);
+        if (Roles.ADMIN != DEFAULT_ADMIN_ROLE) revert RolesContractIncorrectlyConfigured();
+
+        _grantRole(Roles.ADMIN, msg.sender);
+        _grantRole(Roles.SUPERVISOR, msg.sender);
     }
 
     /**
@@ -24,5 +24,19 @@ contract ACL is IACL, AccessControlEnumerable {
      */
     function checkRole(bytes32 role, address account) external view {
         _checkRole(role, account);
+    }
+
+    /**
+     * @inheritdoc IACL
+     */
+    function adminRole() external pure override returns (bytes32) {
+        return Roles.ADMIN;
+    }
+
+    /**
+     * @inheritdoc IACL
+     */
+    function supervisorRole() external pure override returns (bytes32) {
+        return Roles.SUPERVISOR;
     }
 }

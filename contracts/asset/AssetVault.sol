@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "../acl/ACLSubscriber.sol";
+import "../acl/AccessControlled.sol";
 import "./IAssetVault.sol";
 
 /**
@@ -34,7 +34,7 @@ error AssetDepositIsNotAllowed();
  * Warning: All tokens transferred to the vault contract directly (not by Metahub contract) will be lost forever!!!
  *
  */
-abstract contract AssetVault is IAssetVault, ACLSubscriber, Pausable {
+abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
     /**
      * @dev Vault recovery mode state.
      */
@@ -46,9 +46,11 @@ abstract contract AssetVault is IAssetVault, ACLSubscriber, Pausable {
     address private _metahub;
 
     /**
-     * @dev ACL address.
+     * @dev ACL contract.
+     * @dev using underscores on both sides to not clash with the
+     *      internal `_acl` function.
      */
-    ACL private _acl;
+    IACL private _acl_;
 
     /**
      * @dev Constructor.
@@ -62,7 +64,7 @@ abstract contract AssetVault is IAssetVault, ACLSubscriber, Pausable {
         _metahub = metahub;
 
         // todo validate interface
-        _acl = ACL(acl);
+        _acl_ = IACL(acl);
     }
 
     /**
@@ -126,9 +128,9 @@ abstract contract AssetVault is IAssetVault, ACLSubscriber, Pausable {
     }
 
     /**
-     * @inheritdoc IACLSubscriber
+     * @inheritdoc AccessControlled
      */
-    function getAcl() public view returns (ACL) {
-        return _acl;
+    function _acl() internal view override returns (IACL) {
+        return _acl_;
     }
 }

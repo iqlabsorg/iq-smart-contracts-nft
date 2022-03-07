@@ -13,4 +13,16 @@ interface IACL is IAccessControlEnumerable {
      * @param account the address to check the role for.
      */
     function checkRole(bytes32 role, address account) external view;
+
+    /**
+     * @notice Get the admin role describing bytes
+     * return role bytes
+     */
+    function adminRole() external pure returns (bytes32);
+
+    /**
+     * @notice Get the supervisor role describing bytes
+     * return role bytes
+     */
+    function supervisorRole() external pure returns (bytes32);
 }

@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../acl/ACLSubscriber.sol";
+import "../acl/AccessControlled.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
 import "../warper/IWarper.sol";
@@ -91,7 +91,7 @@ error AssetIsLocked();
  */
 error InvalidWarperInterface();
 
-contract Metahub is IMetahub, Initializable, UUPSUpgradeable, ACLSubscriber, MetahubStorage {
+contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
     using Address for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
@@ -185,7 +185,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, ACLSubscriber, Met
         // todo perform interface checks?
         _warperPresetFactory = IWarperPresetFactory(warperPresetFactory);
         _universeToken = IUniverseToken(universeToken);
-        _acl = ACL(acl);
+        _acl_ = IACL(acl);
     }
 
     /**
@@ -408,10 +408,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, ACLSubscriber, Met
     }
 
     /**
-     * @inheritdoc IACLSubscriber
+     * @inheritdoc AccessControlled
      */
-    function getAcl() public view returns (ACL) {
-        return _acl;
+    function _acl() internal view override returns (IACL) {
+        return _acl_;
     }
 
     /**

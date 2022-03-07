@@ -9,7 +9,7 @@ import "../warper/IWarper.sol";
 import "../universe/IUniverseToken.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
-import "../acl/ACL.sol";
+import "../acl/IACL.sol";
 
 abstract contract MetahubStorage {
     /**
@@ -56,10 +56,8 @@ abstract contract MetahubStorage {
 
     /**
      * @dev ACL contract.
-     * @dev We're not using an interface here, because then we "hide" the
-            public variable `DEFAULT_ADMIN_ROLE` that OZs AccessControl contract exposes.
      */
-    ACL internal _acl;
+    IACL internal _acl_;
 
     /**
      * @dev Listing ID tracker (incremental counter).
