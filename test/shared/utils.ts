@@ -11,6 +11,10 @@ export const AssetClass = {
   ERC1155: solidityId('ERC1155'),
 };
 
+export const ListingStrategy = {
+  FIXED_PRICE: solidityId('FIXED_PRICE'),
+};
+
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
 export async function wait(txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> {
@@ -87,6 +91,17 @@ export async function deployWarper(metahub: Metahub, ...params: Parameters<Metah
  */
 export function makeERC721Asset(token: string, tokenId: BigNumberish, value: BigNumberish = 1) {
   return makeAsset(AssetClass.ERC721, defaultAbiCoder.encode(['address', 'uint256'], [token, tokenId]), value);
+}
+
+/**
+ * Creates Fixed Price listing strategy params structure.
+ * @param baseRate
+ */
+export function makeFixedPriceStrategy(baseRate: BigNumberish) {
+  return {
+    id: ListingStrategy.FIXED_PRICE,
+    data: defaultAbiCoder.encode(['uint256'], [baseRate]),
+  };
 }
 
 /**

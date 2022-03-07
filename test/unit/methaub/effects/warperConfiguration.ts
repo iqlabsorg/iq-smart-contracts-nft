@@ -1,7 +1,13 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { AssetClass, createUniverse, deployWarper, makeERC721Asset } from '../../../shared/utils';
+import {
+  AssetClass,
+  createUniverse,
+  deployWarper,
+  makeERC721Asset,
+  makeFixedPriceStrategy,
+} from '../../../shared/utils';
 import {
   ERC721AssetController,
   ERC721AssetController__factory,
@@ -89,16 +95,18 @@ export function shouldBehaveWarperAndUniverseConfiguration(): void {
           beforeEach(async () => {
             const erc721Controller = await new ERC721AssetController__factory(deployer).deploy();
             erc721Vault = await new ERC721AssetVaultMock__factory(deployer).deploy();
-            await metahub.setAssetClassController(AssetClass.ERC721, erc721Controller.address);
-            await metahub.setAssetClassVault(AssetClass.ERC721, erc721Vault.address);
+
+            await metahub.registerAssetClass(AssetClass.ERC721, {
+              controller: erc721Controller.address,
+              vault: erc721Vault.address,
+            });
           });
 
           it.skip('prevents listing asset without registered warper', async () => {
             const params = {
               asset: makeERC721Asset('0x2B328CCD2d38ACBF7103b059a8EB94171C68f745', 1), // unregistered asset
-              assetId: 1,
+              strategy: makeFixedPriceStrategy(100),
               maxLockPeriod: 86400,
-              baseRate: 100,
             };
 
             await expect(metahub.listAsset(params)).to.revertedWithError('AssetHasNoWarpers', params.asset);
@@ -107,8 +115,8 @@ export function shouldBehaveWarperAndUniverseConfiguration(): void {
           it.skip('emits correct events', async () => {
             const params = {
               asset: makeERC721Asset(originalAsset.address, 1),
+              strategy: makeFixedPriceStrategy(100),
               maxLockPeriod: 86400,
-              baseRate: 100,
             };
 
             await expect(metahub.listAsset(params)).to.emit(metahub, 'AssetListed').withArgs(params.asset, 1);
@@ -118,8 +126,8 @@ export function shouldBehaveWarperAndUniverseConfiguration(): void {
             await originalAsset.connect(nftCreator).approve(metahub.address, 1);
             const params = {
               asset: makeERC721Asset(originalAsset.address, 1),
+              strategy: makeFixedPriceStrategy(100),
               maxLockPeriod: 86400,
-              baseRate: 100,
             };
 
             await metahub.connect(nftCreator).listAsset(params);

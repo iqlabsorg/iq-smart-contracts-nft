@@ -19,6 +19,7 @@ abstract contract MetahubStorage {
      * @param controller Warper asset controller.
      */
     struct WarperData {
+        // todo: move to IWarperManager for accessor
         bool enabled; //todo: must affect renting
         uint256 universeId;
         IAssetController controller;
@@ -83,6 +84,11 @@ abstract contract MetahubStorage {
      * @dev Mapping from asset class ID to the asset class configuration.
      */
     mapping(bytes4 => IAssetClassManager.AssetClassConfig) internal _assetClasses;
+
+    /**
+     * @dev Mapping from listing strategy ID to the listing strategy configuration.
+     */
+    mapping(bytes4 => IListingManager.ListingStrategyConfig) internal _listingStrategies;
 
     /**
      * @dev Mapping from asset address to the asset details.

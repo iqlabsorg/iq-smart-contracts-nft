@@ -17,6 +17,7 @@ import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../universe/IUniverseToken.sol";
+import "../listing/IListingController.sol";
 import "../Errors.sol";
 import "./IMetahub.sol";
 import "./MetahubStorage.sol";
@@ -91,6 +92,23 @@ error AssetIsLocked();
  */
 error InvalidWarperInterface();
 
+/**
+ * @dev Thrown upon attempting to register a listing strategy twice.
+ * @param strategyId Duplicate listing strategy ID.
+ */
+error ListingStrategyIsAlreadyRegistered(bytes4 strategyId);
+
+/**
+ * @dev Thrown when listing controller is dos not implement the required interface.
+ */
+error InvalidListingControllerInterface();
+
+/**
+ * @dev Thrown when the listing strategy is not registered or deprecated.
+ * @param strategyId Unsupported listing strategy ID.
+ */
+error UnsupportedListingStrategy(bytes4 strategyId);
+
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
     using Address for address;
     using ERC165CheckerUpgradeable for address;
@@ -102,7 +120,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
-        if (msg.sender != _universeOwner(universeId)) {
+        if (_msgSender() != _universeOwner(universeId)) {
             revert CallerIsNotUniverseOwner();
         }
         _;
@@ -112,7 +130,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make sure the function is called for registered warper.
      */
     modifier onlyRegisteredWarper(address warper) {
-        if (_warpers[warper].universeId == 0) {
+        if (!_isRegisteredWarper(warper)) {
             revert WarperIsNotRegistered(warper);
         }
         _;
@@ -122,7 +140,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make a function callable only by the asset lister (original owner).
      */
     modifier onlyLister(uint256 listingId) {
-        if (msg.sender != _listings[listingId].lister) {
+        if (_msgSender() != _listings[listingId].lister) {
             revert CallerIsNotAssetLister();
         }
         _;
@@ -132,7 +150,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make sure the function is called for the listed asset.
      */
     modifier whenListed(uint256 listingId) {
-        if (_listings[listingId].lister == address(0) || _listings[listingId].delisted) {
+        if (!_isRegisteredListing(listingId) || _listings[listingId].delisted) {
             revert NotListed(listingId);
         }
         _;
@@ -155,14 +173,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (_listings[listingId].paused) {
             revert ListingIsPaused();
         }
-        _;
-    }
-
-    /**
-     * @dev Modifier to make sure the function is called for the asset of the supported class.
-     */
-    modifier onlySupportedAssetClass(Assets.Asset calldata asset) {
-        _checkAssetClassSupport(asset.id.class);
         _;
     }
 
@@ -235,7 +245,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IUniverseManager
      */
     function createUniverse(string calldata name) external returns (uint256) {
-        uint256 tokenId = _universeToken.mint(msg.sender, name);
+        uint256 tokenId = _universeToken.mint(_msgSender(), name);
         emit UniverseCreated(tokenId, _universeToken.universeName(tokenId));
 
         return tokenId;
@@ -270,7 +280,43 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IListingManager
      */
-    function listAsset(ListingParams calldata params) external onlySupportedAssetClass(params.asset) returns (uint256) {
+    function registerListingStrategy(bytes4 strategyId, ListingStrategyConfig calldata config) external onlyAdmin {
+        _checkValidListingController(config.controller);
+        if (_isRegisteredListingStrategy(strategyId)) {
+            revert ListingStrategyIsAlreadyRegistered(strategyId);
+        }
+
+        _listingStrategies[strategyId] = config;
+        //todo: event
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function setListingController(bytes4 strategyId, address controller) external onlySupervisor {
+        _checkValidListingController(controller);
+        _listingStrategies[strategyId].controller = controller;
+        //todo: event
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function listingStrategy(bytes4 strategyId) external view returns (ListingStrategyConfig memory) {
+        _checkListingStrategySupport(strategyId);
+        return _listingStrategies[strategyId];
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function listAsset(ListingParams calldata params) external returns (uint256) {
+        // Check that listing asset class is supported.
+        _checkAssetClassSupport(params.asset.id.class);
+
+        // Check that listing strategy is supported.
+        _checkListingStrategySupport(params.strategy.id);
+
         // Extract token address from asset struct and check whether the asset is supported.
         address token = _assetClasses[params.asset.id.class].controller.getToken(params.asset);
         _checkAssetSupport(token);
@@ -283,7 +329,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             abi.encodeWithSelector(
                 IAssetController.transferAssetToVault.selector,
                 params.asset,
-                msg.sender,
+                _msgSender(),
                 address(vault)
             )
         );
@@ -297,18 +343,18 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         // Store new listing record.
         Listing memory listing = Listing(
-            msg.sender,
+            _msgSender(),
             token,
             params.asset,
+            params.strategy,
             params.maxLockPeriod,
-            params.baseRate,
             0,
             false,
             false
         );
         _listings[listingId] = listing;
 
-        emit AssetListed(listingId, listing.lister, listing.asset, listing.maxLockPeriod, listing.baseRate);
+        emit AssetListed(listingId, listing.lister, listing.asset, listing.strategy, listing.maxLockPeriod);
 
         return listingId;
     }
@@ -450,7 +496,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         _checkAssetClassSupport(assetClass);
 
         // Check that warper is not already registered.
-        if (_warpers[warper].universeId != 0) {
+        if (_isRegisteredWarper(warper)) {
             revert WarperIsAlreadyRegistered(warper);
         }
 
@@ -528,6 +574,22 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
+     * @dev Checks listing registration by ID.
+     * @param listingId Listing ID.
+     */
+    function _isRegisteredListing(uint256 listingId) internal view returns (bool) {
+        return _listings[listingId].lister != address(0);
+    }
+
+    /**
+     * @dev Checks warper registration by address.
+     * @param warper Warper address.
+     */
+    function _isRegisteredWarper(address warper) internal view returns (bool) {
+        return _warpers[warper].universeId != 0;
+    }
+
+    /**
      * @dev Registers new asset.
      * @param asset Asset address.
      * @param vault Asset vault.
@@ -558,6 +620,32 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function _checkAssetClassSupport(bytes4 assetClass) internal view {
         if (!_isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
+    }
+
+    /**
+     * @dev Throws if listing strategy is not supported.
+     * @param strategyId Listing strategy ID.
+     */
+    function _checkListingStrategySupport(bytes4 strategyId) internal view {
+        if (!_isRegisteredListingStrategy(strategyId)) revert UnsupportedListingStrategy(strategyId);
+    }
+
+    /**
+     * @dev Throws if provided address is not a valid listing controller.
+     * @param controller Listing controller address.
+     */
+    function _checkValidListingController(address controller) internal view {
+        if (!controller.supportsInterface(type(IListingController).interfaceId)) {
+            revert InvalidListingControllerInterface();
+        }
+    }
+
+    /**
+     * @dev Checks listing strategy registration by ID.
+     * @param strategyId Listing strategy ID.
+     */
+    function _isRegisteredListingStrategy(bytes4 strategyId) internal view returns (bool) {
+        return _listingStrategies[strategyId].controller != address(0);
     }
 
     //todo implement the real implementation here

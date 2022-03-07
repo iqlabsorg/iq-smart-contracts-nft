@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "../listing/ListingStrategy.sol";
 import "../asset/Assets.sol";
 import "../asset/IAssetController.sol";
 
@@ -10,15 +11,15 @@ interface IListingManager {
      * @param listingId Listing ID.
      * @param lister Lister account address.
      * @param asset Listing asset.
+     * @param strategy Listing strategy parameters.
      * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
-     * @param baseRate Listing base rate.
      */
     event AssetListed(
         uint256 indexed listingId,
         address indexed lister,
         Assets.Asset asset,
-        uint32 maxLockPeriod,
-        uint112 baseRate
+        ListingStrategy.Params strategy,
+        uint32 maxLockPeriod
     );
 
     /**
@@ -52,13 +53,13 @@ interface IListingManager {
     /**
      * @dev Listing request parameters.
      * @param asset Asset to be listed.
+     * @param strategy Listing strategy parameters.
      * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
-     * @param baseRate Asset renting base rate (base tokens per second).
      */
     struct ListingParams {
         Assets.Asset asset;
+        ListingStrategy.Params strategy;
         uint32 maxLockPeriod;
-        uint112 baseRate;
     }
 
     /**
@@ -66,8 +67,8 @@ interface IListingManager {
      * @param lister Lister account address.
      * @param token Listed asset contract address.
      * @param asset Listed asset structure.
+     * @param strategy Listing strategy parameters.
      * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
-     * @param baseRate Asset renting base rate (base tokens per second).
      * @param lockedTill The earliest possible time when the asset can be returned to the owner.
      * @param delisted Indicates whether the asset is delisted.
      * @param paused Indicates whether the listing is paused.
@@ -76,12 +77,41 @@ interface IListingManager {
         address lister;
         address token;
         Assets.Asset asset;
+        ListingStrategy.Params strategy;
         uint32 maxLockPeriod;
-        uint112 baseRate; // todo: move to strategy data
         uint32 lockedTill;
         bool delisted; // todo: restricts new rentals
         bool paused; // todo: restricts new rentals
     }
+
+    /**
+     * @dev Listing strategy configuration.
+     * @param controller Listing controller address.
+     */
+    struct ListingStrategyConfig {
+        address controller;
+    }
+
+    /**
+     * @dev Registers new listing strategy.
+     * @param strategyId Listing strategy ID.
+     * @param config Listing strategy configuration.
+     */
+    function registerListingStrategy(bytes4 strategyId, ListingStrategyConfig calldata config) external;
+
+    /**
+     * @dev Sets listing strategy controller.
+     * @param strategyId Listing strategy ID.
+     * @param controller Listing controller address.
+     */
+    function setListingController(bytes4 strategyId, address controller) external;
+
+    /**
+     * @dev Returns listing strategy configuration.
+     * @param strategyId Listing strategy ID.
+     * @return Listing strategy config.
+     */
+    function listingStrategy(bytes4 strategyId) external view returns (ListingStrategyConfig memory);
 
     /**
      * @dev Performs new asset listing.
