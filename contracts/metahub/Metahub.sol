@@ -411,7 +411,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         external
         whenListed(listingId)
         onlyLister(listingId)
-        whenListingNotPaused(listingId)
+        whenListingPaused(listingId)
     {
         _listings[listingId].paused = false;
         emit ListingUnpaused(listingId);
