@@ -9,6 +9,7 @@ import "../warper/IWarper.sol";
 import "../universe/IUniverseToken.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
+import "../acl/ACL.sol";
 
 abstract contract MetahubStorage {
     /**
@@ -49,24 +50,31 @@ abstract contract MetahubStorage {
     IWarperPresetFactory internal _warperPresetFactory;
 
     /**
-     * @dev Mapping from warper address to the warper entry.
-     */
-    mapping(address => WarperData) internal _warpers;
-
-    /**
      * @dev Universe NFT contract.
      */
     IUniverseToken internal _universeToken;
 
     /**
-     * @dev Mapping from universe ID to the universe entry.
+     * @dev ACL contract.
+     * @dev We're not using an interface here, because then we "hide" the
+            public variable `DEFAULT_ADMIN_ROLE` that OZs AccessControl contract exposes.
      */
-    mapping(uint256 => UniverseData) internal _universes;
+    ACL internal _acl;
 
     /**
      * @dev Listing ID tracker (incremental counter).
      */
     CountersUpgradeable.Counter internal _listingIdTracker;
+
+    /**
+     * @dev Mapping from warper address to the warper entry.
+     */
+    mapping(address => WarperData) internal _warpers;
+
+    /**
+     * @dev Mapping from universe ID to the universe entry.
+     */
+    mapping(uint256 => UniverseData) internal _universes;
 
     /**
      * @dev Mapping from listing ID to the listing details.

@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.11;
+
+import "@openzeppelin/contracts/access/IAccessControlEnumerable.sol";
+
+/**
+ * @title Access Control List contract interface.
+ */
+interface IACL is IAccessControlEnumerable {
+    /**
+     * @notice revert if the `account` does not have the specified role.
+     * @param role the role specifier.
+     * @param account the address to check the role for.
+     */
+    function checkRole(bytes32 role, address account) external view;
+}

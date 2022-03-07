@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "../acl/ACLSubscriber.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
 import "../warper/IWarper.sol";
@@ -90,13 +91,7 @@ error AssetIsLocked();
  */
 error InvalidWarperInterface();
 
-contract Metahub is
-    IMetahub,
-    Initializable,
-    UUPSUpgradeable,
-    OwnableUpgradeable, // todo: replace with custom implementation (2-step owner change)
-    MetahubStorage
-{
+contract Metahub is IMetahub, Initializable, UUPSUpgradeable, ACLSubscriber, MetahubStorage {
     using Address for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
@@ -107,7 +102,7 @@ contract Metahub is
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
-        if (_msgSender() != _universeOwner(universeId)) {
+        if (msg.sender != _universeOwner(universeId)) {
             revert CallerIsNotUniverseOwner();
         }
         _;
@@ -127,7 +122,7 @@ contract Metahub is
      * @dev Modifier to make a function callable only by the asset lister (original owner).
      */
     modifier onlyLister(uint256 listingId) {
-        if (_msgSender() != _listings[listingId].lister) {
+        if (msg.sender != _listings[listingId].lister) {
             revert CallerIsNotAssetLister();
         }
         _;
@@ -180,18 +175,23 @@ contract Metahub is
      * @dev Metahub initializer.
      * @param warperPresetFactory Warper preset factory address.
      */
-    function initialize(address warperPresetFactory, address universeToken) external initializer {
+    function initialize(
+        address warperPresetFactory,
+        address universeToken,
+        address acl
+    ) external initializer {
         __UUPSUpgradeable_init();
-        __Ownable_init();
 
+        // todo perform interface checks?
         _warperPresetFactory = IWarperPresetFactory(warperPresetFactory);
         _universeToken = IUniverseToken(universeToken);
+        _acl = ACL(acl);
     }
 
     /**
      * @inheritdoc IAssetClassManager
      */
-    function registerAssetClass(bytes4 assetClass, AssetClassConfig calldata config) external onlyOwner {
+    function registerAssetClass(bytes4 assetClass, AssetClassConfig calldata config) external onlyAdmin {
         if (_isRegisteredAssetClass(assetClass)) {
             revert AssetClassIsAlreadyRegistered(assetClass);
         }
@@ -202,7 +202,7 @@ contract Metahub is
     /**
      * @inheritdoc IAssetClassManager
      */
-    function setAssetClassVault(bytes4 assetClass, address vault) external onlyOwner {
+    function setAssetClassVault(bytes4 assetClass, address vault) external onlyAdmin {
         bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
         if (vaultAssetClass != assetClass) {
             revert AssetClassMismatch(vaultAssetClass, assetClass);
@@ -214,7 +214,7 @@ contract Metahub is
     /**
      * @inheritdoc IAssetClassManager
      */
-    function setAssetClassController(bytes4 assetClass, address controller) external onlyOwner {
+    function setAssetClassController(bytes4 assetClass, address controller) external onlyAdmin {
         bytes4 controllerAssetClass = IAssetController(controller).assetClass();
         if (controllerAssetClass != assetClass) {
             revert AssetClassMismatch(controllerAssetClass, assetClass);
@@ -235,7 +235,7 @@ contract Metahub is
      * @inheritdoc IUniverseManager
      */
     function createUniverse(string calldata name) external returns (uint256) {
-        uint256 tokenId = _universeToken.mint(_msgSender(), name);
+        uint256 tokenId = _universeToken.mint(msg.sender, name);
         emit UniverseCreated(tokenId, _universeToken.universeName(tokenId));
 
         return tokenId;
@@ -283,7 +283,7 @@ contract Metahub is
             abi.encodeWithSelector(
                 IAssetController.transferAssetToVault.selector,
                 params.asset,
-                _msgSender(),
+                msg.sender,
                 address(vault)
             )
         );
@@ -297,7 +297,7 @@ contract Metahub is
 
         // Store new listing record.
         Listing memory listing = Listing(
-            _msgSender(),
+            msg.sender,
             token,
             params.asset,
             params.maxLockPeriod,
@@ -408,9 +408,16 @@ contract Metahub is
     }
 
     /**
+     * @inheritdoc IACLSubscriber
+     */
+    function getAcl() public view returns (ACL) {
+        return _acl;
+    }
+
+    /**
      * @dev Checks whether the caller is authorized to upgrade the Metahub implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 
     /**
      * @dev Constructs warper initialization payload and

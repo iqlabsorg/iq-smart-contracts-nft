@@ -23,8 +23,9 @@ contract ERC721AssetVault is IERC721AssetVault, AssetVault {
     /**
      * @dev Constructor.
      * @param operator First operator account.
+     * @param acl ACL contract address
      */
-    constructor(address operator) AssetVault(operator) {}
+    constructor(address operator, address acl) AssetVault(operator, acl) {}
 
     /**
      * @inheritdoc IERC721Receiver

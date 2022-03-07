@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { upgrades } from 'hardhat';
-import { Metahub, MetahubV2Mock, MetahubV2Mock__factory } from '../../../../typechain';
+import { Metahub, MetahubV2Mock, MetahubV2Mock__factory, ACL, ACL__factory } from '../../../../typechain';
 
 export function shouldBehaveLikeUpgradeTo(): void {
   describe('upgradeTo', function () {
@@ -19,9 +19,12 @@ export function shouldBehaveLikeUpgradeTo(): void {
 
     describe('Upgradeability', () => {
       it('forbids unauthorized upgrade', async () => {
+        const acl = new ACL__factory(deployer).attach(await metahub.getAcl());
+        const admin = await acl.DEFAULT_ADMIN_ROLE();
+
         await expect(
           upgrades.upgradeProxy(metahub, new MetahubV2Mock__factory(stranger), { unsafeAllow: ['delegatecall'] }),
-        ).to.be.revertedWith('Ownable: caller is not the owner');
+        ).to.be.revertedWith(`AccessControl: account ${stranger.address.toLowerCase()} is missing role ${admin}`);
       });
 
       it('allows owner to upgrade', async () => {

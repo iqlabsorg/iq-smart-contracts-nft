@@ -27,6 +27,8 @@ import {
   Warper,
 } from '../../typechain';
 import { warperPresetId } from './types';
+import { ACL__factory } from '../../typechain/factories/ACL__factory';
+import { ACL } from '../../typechain/ACL';
 
 export async function unitFixtureERC721WarperConfigurable(): Promise<UnitFixtureERC721WarperConfigurable> {
   // Resolve primary roles
@@ -83,6 +85,9 @@ export async function unitFixtureMetahub(): Promise<UnitFixtureMetahub> {
   const warperImpl = await new ERC721PresetConfigurable__factory(deployer).deploy();
   await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
 
+  // Deploy ACL
+  const acl = await new ACL__factory(deployer).deploy();
+
   // Deploy Metahub
   const metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [warperPresetFactory.address], {
     kind: 'uups',
@@ -94,13 +99,14 @@ export async function unitFixtureMetahub(): Promise<UnitFixtureMetahub> {
   const universeTokenFactory = new UniverseToken__factory(deployer);
   const universeToken = await universeTokenFactory.deploy(metahub.address);
   // Initialize Metahub.
-  await wait(metahub.initialize(warperPresetFactory.address, universeToken.address));
+  await wait(metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address));
 
   return {
     universeToken,
     originalAsset,
     warperPresetFactory,
     metahub,
+    acl,
   };
 }
 
@@ -109,6 +115,7 @@ type UnitFixtureMetahub = {
   originalAsset: ERC721Mock;
   warperPresetFactory: WarperPresetFactory;
   metahub: Metahub;
+  acl: ACL;
 };
 
 export async function unitFixtureWarperPresetFactory(): Promise<UnitFixtureWarperPresetFactory> {
@@ -177,15 +184,18 @@ export async function unitFixtureERC721AssetsVault(): Promise<UnitFixtureERC721A
   const deployer = await ethers.getNamedSigner('deployer');
   const operator = await ethers.getNamedSigner('operator');
 
-  const vault = await new ERC721AssetVault__factory(deployer).deploy(operator.address);
+  const acl = await new ACL__factory(deployer).deploy();
+
+  const vault = await new ERC721AssetVault__factory(deployer).deploy(operator.address, acl.address);
   const asset = await new ERC721Mock__factory(deployer).deploy('Test ERC721', 'ONFT');
 
-  return { vault, asset };
+  return { vault, asset, acl };
 }
 
 type UnitFixtureERC721AssetsVault = {
   vault: ERC721AssetVault;
   asset: ERC721Mock;
+  acl: ACL;
 };
 
 export async function unitFixtureERC721AssetsController(): Promise<UnitFixtureERC721AssetsController> {

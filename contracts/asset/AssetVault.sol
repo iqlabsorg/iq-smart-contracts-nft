@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "../acl/ACLSubscriber.sol";
 import "./IAssetVault.sol";
 
 /**
@@ -33,12 +34,7 @@ error AssetDepositIsNotAllowed();
  * Warning: All tokens transferred to the vault contract directly (not by Metahub contract) will be lost forever!!!
  *
  */
-abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
-    /**
-     * @dev Supervisor controls the vault pause mode.
-     */
-    bytes32 public constant SUPERVISOR_ROLE = keccak256("SUPERVISOR_ROLE");
-
+abstract contract AssetVault is IAssetVault, ACLSubscriber, Pausable {
     /**
      * @dev Vault recovery mode state.
      */
@@ -50,14 +46,23 @@ abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
     address private _metahub;
 
     /**
+     * @dev ACL address.
+     */
+    ACL private _acl;
+
+    /**
      * @dev Constructor.
      * @param metahub Metahub address.
+     * @param acl ACL address.
      */
-    constructor(address metahub) {
+    constructor(address metahub, address acl) {
         _recovery = false;
+
+        // todo validate interface
         _metahub = metahub;
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(SUPERVISOR_ROLE, msg.sender);
+
+        // todo validate interface
+        _acl = ACL(acl);
     }
 
     /**
@@ -74,22 +79,6 @@ abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
     modifier whenAssetReturnAllowed() {
         if ((_msgSender() == _metahub && !paused()) || _recovery) _;
         else revert AssetReturnIsNotAllowed();
-    }
-
-    /**
-     * @dev Modifier to make a function callable only by the vault administrator.
-     */
-    modifier onlyAdmin() {
-        _checkRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _;
-    }
-
-    /**
-     * @dev Modifier to make a function callable only by the vault supervisor.
-     */
-    modifier onlySupervisor() {
-        _checkRole(SUPERVISOR_ROLE, _msgSender());
-        _;
     }
 
     /**
@@ -134,5 +123,12 @@ abstract contract AssetVault is IAssetVault, AccessControl, Pausable {
      */
     function isRecovery() public view returns (bool) {
         return _recovery;
+    }
+
+    /**
+     * @inheritdoc IACLSubscriber
+     */
+    function getAcl() public view returns (ACL) {
+        return _acl;
     }
 }

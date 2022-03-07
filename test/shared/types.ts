@@ -18,6 +18,7 @@ import {
   Warper,
   IAssetController,
 } from '../../typechain';
+import { ACL } from '../../typechain/ACL';
 
 declare module 'mocha' {
   interface Context {
@@ -37,6 +38,7 @@ export interface Contracts {
   warper: Warper;
   erc721Warper: ERC721Warper;
   warperPreset: IWarperPreset;
+  acl: ACL;
   presets: {
     erc721Configurable: ERC721PresetConfigurable;
   };
