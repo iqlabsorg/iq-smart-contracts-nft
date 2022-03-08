@@ -17,7 +17,8 @@ import {
   ERC721Mock__factory,
   Metahub,
 } from '../../../../typechain';
-import { AddressZero, warperPresetId } from '../../../shared/types';
+import { AddressZero } from '../../../shared/types';
+import { warperPresetId } from '../Metahub';
 
 export function shouldBehaveWarperAndUniverseConfiguration(): void {
   describe('Warper & Universe configuration', function () {

@@ -1,7 +1,23 @@
-import { expect } from 'chai';
-import { formatBytes32String } from 'ethers/lib/utils';
-import { unitFixtureWarperPresetFactory } from '../../shared/fixtures';
+import { ethers } from 'hardhat';
+import { WarperPresetFactory__factory, WarperPresetMock__factory } from '../../../typechain';
 import { shouldBehaveWarperPresetFactory } from './WarperPresetFactory.behaviour';
+
+export async function unitFixtureWarperPresetFactory() {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+
+  const warperImplFactory = new WarperPresetMock__factory(deployer);
+  const warperImplMock1 = await warperImplFactory.deploy();
+  const warperImplMock2 = await warperImplFactory.deploy();
+
+  const warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
+
+  return {
+    warperImplMock1,
+    warperImplMock2,
+    warperPresetFactory,
+  };
+}
 
 export function unitTestWarperPresetFactory(): void {
   describe('WarperPresetFactory', function () {
@@ -16,11 +32,3 @@ export function unitTestWarperPresetFactory(): void {
     shouldBehaveWarperPresetFactory();
   });
 }
-
-export const presetId1 = formatBytes32String('ERC721Basic');
-export const presetId2 = formatBytes32String('ERC721Advanced');
-
-export const expectWarperPresetData = async (preset: unknown | Promise<unknown>, data: Record<string, unknown>) => {
-  const object = preset instanceof Promise ? await preset : preset;
-  expect({ ...object }).to.include(data);
-};

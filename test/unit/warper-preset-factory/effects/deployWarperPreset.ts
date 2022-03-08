@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { deployWarperPreset } from '../../../shared/utils';
 import { WarperPresetFactory, WarperPresetMock, WarperPresetMock__factory } from '../../../../typechain';
-import { presetId1, presetId2 } from '../WarperPresetFactory';
+import { presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
 export function shouldBehaveLikeDeployWarperPreset(): void {
   describe('deploy warper preset', function () {

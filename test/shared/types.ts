@@ -60,4 +60,3 @@ export interface Signers {
 }
 
 export const AddressZero = constants.AddressZero;
-export const warperPresetId = formatBytes32String('ERC721Basic');

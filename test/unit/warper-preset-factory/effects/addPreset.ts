@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { WarperPresetFactory, WarperPresetMock } from '../../../../typechain';
-import { expectWarperPresetData, presetId1, presetId2 } from '../WarperPresetFactory';
+import { expectWarperPresetData, presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
 export function shouldBehaveLikeAddingANewPreset(): void {
   describe('add a new preset', function () {

@@ -1,5 +1,64 @@
-import { unitFixtureMetahub } from '../../shared/fixtures';
+import { formatBytes32String } from 'ethers/lib/utils';
+import { ethers, upgrades } from 'hardhat';
+import {
+  ACL__factory,
+  ERC721Mock__factory,
+  ERC721PresetConfigurable__factory,
+  Metahub,
+  Metahub__factory,
+  UniverseToken__factory,
+  WarperPresetFactory__factory,
+} from '../../../typechain';
+import { wait } from '../../shared/utils';
+
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
+
+export async function unitFixtureMetahub() {
+  // Resolve primary roles
+  const deployer = await ethers.getNamedSigner('deployer');
+  const nftCreator = await ethers.getNamedSigner('nftCreator');
+
+  // Deploy original NFT
+  const erc721Factory = new ERC721Mock__factory(nftCreator);
+  const originalAsset = await erc721Factory.deploy('Test ERC721', 'ONFT');
+  await originalAsset.deployed();
+
+  // Mint some NFT to deployer
+  await originalAsset.mint(nftCreator.address, 1);
+  await originalAsset.mint(nftCreator.address, 2);
+
+  // Deploy warper preset factory
+  const warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
+
+  // Deploy and register warper preset
+  const warperImpl = await new ERC721PresetConfigurable__factory(deployer).deploy();
+  await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
+
+  // Deploy ACL
+  const acl = await new ACL__factory(deployer).deploy();
+
+  // Deploy Metahub
+  const metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [warperPresetFactory.address], {
+    kind: 'uups',
+    initializer: false,
+    unsafeAllow: ['delegatecall'],
+  })) as Metahub;
+
+  // Deploy Universe token.
+  const universeTokenFactory = new UniverseToken__factory(deployer);
+  const universeToken = await universeTokenFactory.deploy(metahub.address);
+  // Initialize Metahub.
+  await wait(metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address));
+
+  return {
+    universeToken,
+    originalAsset,
+    warperPresetFactory,
+    metahub,
+    acl,
+  };
+}
+export const warperPresetId = formatBytes32String('ERC721Basic');
 
 export function unitTestMetahub(): void {
   describe('Metahub', function () {

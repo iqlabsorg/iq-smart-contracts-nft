@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { WarperPresetFactory } from '../../../../typechain';
-import { expectWarperPresetData, presetId1, presetId2 } from '../WarperPresetFactory';
+import { expectWarperPresetData, presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
 export function shouldBehaveLikeDisablePreset(): void {
   describe('disable preset', function () {
