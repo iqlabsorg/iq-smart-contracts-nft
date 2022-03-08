@@ -12,6 +12,7 @@ import "../../metahub/IMetahub.sol";
 
 error BalanceQueryForZeroAddress();
 error OwnerQueryForNonexistentToken(uint256 tokenId);
+error OperatorQueryForNonexistentToken(uint256 tokenId);
 error TransferToNonERC721ReceiverImplementer(address to);
 error MintToTheZeroAddress();
 error TokenIsAlreadyMinted(uint256 tokenId);
@@ -256,6 +257,7 @@ contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId
     ) internal virtual {
+        if (!_exists(tokenId)) revert OperatorQueryForNonexistentToken(tokenId);
         if (to == address(0)) revert TransferToTheZeroAddress();
 
         _beforeTokenTransfer(from, to, tokenId);
