@@ -13,6 +13,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "compile:clean": "hardhat clean",
+    "coverage": "hardhat coverage",
     "dev": "hardhat node --watch",
     "format": "prettier --check '**/*.{ts,js,sol}'",
     "format:fix": "prettier --write '**/*.{ts,js,sol}'",
