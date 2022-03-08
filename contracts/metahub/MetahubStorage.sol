@@ -13,25 +13,12 @@ import "../acl/IACL.sol";
 
 abstract contract MetahubStorage {
     /**
-     * @dev Registered warper data.
-     * @param enabled True if the warper is enabled and operational.
-     * @param universeId Warper universe ID.
-     * @param controller Warper asset controller.
-     */
-    struct WarperData {
-        // todo: move to IWarperManager for accessor
-        bool enabled; //todo: must affect renting
-        uint256 universeId;
-        IAssetController controller;
-    }
-
-    /**
      * @dev Original asset data.
      * @param controller Asset controller.
      * @param vault Asset vault.
      * @param warpers Set of warper addresses registered for the asset.
      */
-    struct AssetData {
+    struct Asset {
         IAssetController controller;
         IAssetVault vault;
         EnumerableSetUpgradeable.AddressSet warpers;
@@ -41,7 +28,7 @@ abstract contract MetahubStorage {
      * @dev Universe data.
      * @param warpers Set of warper addresses registered by the universe.
      */
-    struct UniverseData {
+    struct Universe {
         EnumerableSetUpgradeable.AddressSet warpers;
     }
 
@@ -68,12 +55,12 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from warper address to the warper entry.
      */
-    mapping(address => WarperData) internal _warpers;
+    mapping(address => IWarperManager.Warper) internal _warpers;
 
     /**
      * @dev Mapping from universe ID to the universe entry.
      */
-    mapping(uint256 => UniverseData) internal _universes;
+    mapping(uint256 => Universe) internal _universes;
 
     /**
      * @dev Mapping from listing ID to the listing details.
@@ -93,5 +80,5 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from asset address to the asset details.
      */
-    mapping(address => AssetData) internal _assets;
+    mapping(address => Asset) internal _assets;
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "../asset/IAssetController.sol";
+
 interface IWarperManager {
     /**
      * @dev Emitted when a new warper is registered.
@@ -9,6 +11,18 @@ interface IWarperManager {
      * @param warper Warper address.
      */
     event WarperRegistered(uint256 indexed universeId, address indexed original, address indexed warper);
+
+    /**
+     * @dev Registered warper data.
+     * @param enabled True if the warper is enabled and operational.
+     * @param universeId Warper universe ID.
+     * @param controller Warper asset controller.
+     */
+    struct Warper {
+        bool enabled; //todo: must affect renting
+        uint256 universeId;
+        IAssetController controller;
+    }
 
     /**
      * @dev Deploys a preset warper identified by `presetId`.
@@ -64,4 +78,11 @@ interface IWarperManager {
      * @return True if the `account` is the admin of the `warper` and false otherwise.
      */
     function isWarperAdmin(address warper, address account) external view returns (bool);
+
+    /**
+     * @dev Returns registered warper details.
+     * @param warper Warper address.
+     * @return Warper details.
+     */
+    function warper(address warper) external view returns (Warper memory);
 }

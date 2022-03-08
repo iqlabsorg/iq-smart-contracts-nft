@@ -130,9 +130,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make sure the function is called for registered warper.
      */
     modifier onlyRegisteredWarper(address warper) {
-        if (!_isRegisteredWarper(warper)) {
-            revert WarperIsNotRegistered(warper);
-        }
+        _checkRegisteredWarper(warper);
         _;
     }
 
@@ -454,6 +452,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
+     * @inheritdoc IWarperManager
+     */
+    function warper(address warper) external view onlyRegisteredWarper(warper) returns (Warper memory) {
+        return _warpers[warper];
+    }
+
+    /**
      * @inheritdoc AccessControlled
      */
     function _acl() internal view override returns (IACL) {
@@ -519,7 +524,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // Associate warper with the universe and current asset class controller,
         // to maintain backward compatibility in case of controller generation upgrade.
         // The warper is disabled by default.
-        _warpers[warper] = WarperData(false, universeId, controller);
+        _warpers[warper] = Warper(false, universeId, controller);
 
         // Associate the warper with the universe.
         _universes[universeId].warpers.add(warper);
@@ -628,6 +633,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function _checkListingStrategySupport(bytes4 strategyId) internal view {
         if (!_isRegisteredListingStrategy(strategyId)) revert UnsupportedListingStrategy(strategyId);
+    }
+
+    /**
+     * @dev Throws if warper is not registered.
+     * @param warper Warper address.
+     */
+    function _checkRegisteredWarper(address warper) internal view {
+        if (!_isRegisteredWarper(warper)) revert WarperIsNotRegistered(warper);
     }
 
     /**
