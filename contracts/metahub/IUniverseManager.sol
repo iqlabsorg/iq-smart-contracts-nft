@@ -16,4 +16,19 @@ interface IUniverseManager {
      * @return Universe ID (universe token ID).
      */
     function createUniverse(string calldata name) external returns (uint256);
+
+    /**
+     * @dev Aggregate and return Universe data.
+     * @param universeId Universe-specific ID.
+     * @return name The name of the Universe contract.
+     * @return symbol The symbol of the Universe contract.
+     * @return universeName The name of the universe.
+     */
+    function universe(uint256 universeId)
+        external
+        returns (
+            string memory name,
+            string memory symbol,
+            string memory universeName
+        );
 }
