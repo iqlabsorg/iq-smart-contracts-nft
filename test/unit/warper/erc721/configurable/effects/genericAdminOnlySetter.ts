@@ -1,7 +1,7 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
 import { Contract } from 'ethers';
-import { Metahub } from '../../../../../../../typechain';
+import { Metahub } from '../../../../../../typechain';
 
 export function shouldBehaveLikeAdminOnlySetter<T>({
   getter,

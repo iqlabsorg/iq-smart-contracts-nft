@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper } from '../../../../../typechain';
+import { ERC721Warper } from '../../../../../../typechain';
 
 export function shouldBehaveLikeApprove(): void {
   describe('approve', function () {

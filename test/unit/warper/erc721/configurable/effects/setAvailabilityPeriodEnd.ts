@@ -1,6 +1,6 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
-import { ERC721WarperConfigurable, Metahub } from '../../../../../../../typechain';
+import { ERC721WarperConfigurable, Metahub } from '../../../../../../typechain';
 import { shouldBehaveLikeAdminOnlySetter } from './genericAdminOnlySetter';
 
 export function shouldBehaveLikeAvailabilityPeriodEnd(): void {

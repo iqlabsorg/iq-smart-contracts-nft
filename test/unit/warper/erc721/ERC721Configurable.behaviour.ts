@@ -1,8 +1,8 @@
-import { shouldBehaveLikeGetter } from './views/genericGetter';
-import { shouldBehaveLikeSetMinRentalPeriod } from './effects/setMinRentalPeriod';
-import { shouldBehaveLikeSetMaxRentalPeriod } from './effects/setMaxRentalPeriod';
-import { shouldBehaveLikeAvailabilityPeriodStart } from './effects/setAvailabilityPeriodStart';
-import { shouldBehaveLikeAvailabilityPeriodEnd } from './effects/setAvailabilityPeriodEnd';
+import { shouldBehaveLikeGetter } from './configurable/views/genericGetter';
+import { shouldBehaveLikeSetMinRentalPeriod } from './configurable/effects/setMinRentalPeriod';
+import { shouldBehaveLikeSetMaxRentalPeriod } from './configurable/effects/setMaxRentalPeriod';
+import { shouldBehaveLikeAvailabilityPeriodStart } from './configurable/effects/setAvailabilityPeriodStart';
+import { shouldBehaveLikeAvailabilityPeriodEnd } from './configurable/effects/setAvailabilityPeriodEnd';
 
 const MaxUint32 = 2 ** 32 - 1;
 

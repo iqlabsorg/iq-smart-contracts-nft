@@ -1,8 +1,8 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper, Metahub } from '../../../../../typechain';
-import { AddressZero } from '../../../../shared/types';
+import { ERC721Warper, Metahub } from '../../../../../../typechain';
+import { AddressZero } from '../../../../../shared/types';
 
 export function shouldBehaveLikeBalanceOf(): void {
   let erc721Warper: ERC721Warper;

@@ -1,10 +1,10 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
-import { ERC721WarperConfigurable, Metahub } from '../../../../../../../typechain';
+import { ERC721WarperConfigurable, Metahub } from '../../../../../../typechain';
 import { shouldBehaveLikeAdminOnlySetter } from './genericAdminOnlySetter';
 
-export function shouldBehaveLikeSetMaxRentalPeriod(): void {
-  describe('__setMaxRentalPeriod', function () {
+export function shouldBehaveLikeSetMinRentalPeriod(): void {
+  describe('__setMinRentalPeriod', function () {
     let warper: ERC721WarperConfigurable;
     let metahub: FakeContract<Metahub>;
     beforeEach(function () {
@@ -14,22 +14,22 @@ export function shouldBehaveLikeSetMaxRentalPeriod(): void {
       metahub.isWarperAdmin.returns(true);
     });
 
-    shouldBehaveLikeAdminOnlySetter({ setter: '__setMaxRentalPeriod', getter: '__maxRentalPeriod', value: 42 });
+    shouldBehaveLikeAdminOnlySetter({ setter: '__setMinRentalPeriod', getter: '__minRentalPeriod', value: 42 });
 
-    describe('Max period is lesser than min period', () => {
-      const newMinPeriod = 1000;
+    describe('Min period is greater than max period', () => {
+      const newMaxPeriod = 1000;
       beforeEach(async () => {
-        await warper.__setMinRentalPeriod(newMinPeriod);
+        await warper.__setMaxRentalPeriod(newMaxPeriod);
       });
 
       it('reverts', async () => {
-        await expect(warper.__setMaxRentalPeriod(newMinPeriod - 1)).to.be.revertedWith('InvalidMaxRentalPeriod');
+        await expect(warper.__setMinRentalPeriod(newMaxPeriod + 1)).to.be.revertedWith('InvalidMinRentalPeriod');
       });
     });
 
     describe('Both periods are equal', () => {
       it('succeeds', async () => {
-        await warper.__setMaxRentalPeriod(await warper.__minRentalPeriod());
+        await warper.__setMinRentalPeriod(await warper.__maxRentalPeriod());
       });
     });
   });

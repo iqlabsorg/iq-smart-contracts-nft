@@ -1,9 +1,7 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper, Metahub } from '../../../../../typechain';
-import { AddressZero } from '../../../../shared/types';
-import { WarperRentalStatus } from '../../../../shared/utils';
+import { ERC721Warper, Metahub } from '../../../../../../typechain';
 
 export function shouldBehaveLikeGetApproved(): void {
   describe('getApproved', function () {
@@ -11,7 +9,6 @@ export function shouldBehaveLikeGetApproved(): void {
     let metahub: FakeContract<Metahub>;
 
     let assetOwner: SignerWithAddress;
-    let approved: SignerWithAddress;
 
     const nonExistentTokenId = 42;
     const mintedTokenId = 4455666;
@@ -21,7 +18,6 @@ export function shouldBehaveLikeGetApproved(): void {
       erc721Warper = this.contracts.erc721Warper;
 
       assetOwner = this.signers.named['assetOwner'];
-      approved = this.signers.named['operator'];
 
       await erc721Warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
