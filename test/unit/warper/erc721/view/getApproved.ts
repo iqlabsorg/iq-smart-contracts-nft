@@ -29,28 +29,16 @@ export function shouldBehaveLikeGetApproved(): void {
     context('when token is not minted', () => {
       it('reverts', async () => {
         await expect(erc721Warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWith(
-          `ApprovedQueryForNonexistentToken(${nonExistentTokenId})`,
+          `MethodNotAllowed()`,
         );
       });
     });
 
-    context('when token has been minted ', () => {
-      it('should return the zero address', async () => {
-        await expect(erc721Warper.connect(assetOwner).getApproved(mintedTokenId)).to.eventually.be.equal(AddressZero);
-      });
-
-      context('when account has been approved', () => {
-        beforeEach(async () => {
-          metahub.getWarperRentalStatus.returns(WarperRentalStatus.RENTED);
-
-          await erc721Warper.connect(assetOwner).approve(approved.address, mintedTokenId);
-        });
-
-        it('returns approved account', async () => {
-          await expect(erc721Warper.connect(assetOwner).getApproved(mintedTokenId)).to.eventually.equal(
-            approved.address,
-          );
-        });
+    context('when token has been minted', () => {
+      it('reverts', async () => {
+        await expect(erc721Warper.connect(assetOwner).getApproved(mintedTokenId)).to.be.revertedWith(
+          `MethodNotAllowed()`,
+        );
       });
     });
   });

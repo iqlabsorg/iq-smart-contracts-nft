@@ -56,7 +56,7 @@ export function unitTestWarpers(): void {
     });
 
     shouldBehaveLikeWarper();
-    // shouldBehaveLikeERC721Warper(); // todo: turn back on once warpers tests have been fixed
+    shouldBehaveLikeERC721Warper();
     shouldBehaveLikeERC721Configurable();
   });
 }
