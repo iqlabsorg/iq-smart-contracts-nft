@@ -8,7 +8,7 @@ import { shouldBehaveLikeOwnerOf } from './view/ownerOf';
 /**
  * Core functionality tests of public ERC721 warper methods
  */
-export function shouldBehaveLikeERC721(): void {
+export function shouldBehaveLikeERC721Warper(): void {
   describe('View Functions', function () {
     shouldBehaveLikeGetApproved();
     shouldBehaveLikeOwnerOf();

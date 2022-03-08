@@ -11,7 +11,7 @@ import {
   Metahub__factory,
   Warper,
 } from '../../../typechain';
-import { shouldBehaveLikeERC721, shouldBehaveLikeERC721Configurable } from './erc721';
+import { shouldBehaveLikeERC721Warper, shouldBehaveLikeERC721Configurable } from './erc721';
 import { shouldBehaveLikeWarper } from './warper.behaviour';
 
 export async function unitFixtureERC721WarperConfigurable() {
@@ -55,8 +55,8 @@ export function unitTestWarpers(): void {
       this.contracts.warper = erc721Warper as unknown as Warper;
     });
 
-    // shouldBehaveLikeERC721(); // todo: turn back on once warpers tests have been fixed
     shouldBehaveLikeWarper();
+    // shouldBehaveLikeERC721Warper(); // todo: turn back on once warpers tests have been fixed
     shouldBehaveLikeERC721Configurable();
   });
 }
