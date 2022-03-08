@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../acl/AccessControlled.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
@@ -186,7 +187,8 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     function initialize(
         address warperPresetFactory,
         address universeToken,
-        address acl
+        address acl,
+        address baseToken
     ) external initializer {
         __UUPSUpgradeable_init();
 
@@ -194,6 +196,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         _warperPresetFactory = IWarperPresetFactory(warperPresetFactory);
         _universeToken = IUniverseToken(universeToken);
         _aclContract = IACL(acl);
+        _baseToken = IERC20(baseToken);
     }
 
     /**
@@ -456,6 +459,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function warper(address warper) external view onlyRegisteredWarper(warper) returns (Warper memory) {
         return _warpers[warper];
+    }
+
+    /**
+     * @inheritdoc IPricingManager
+     */
+    function baseToken() external view returns (address) {
+        return address(_baseToken);
     }
 
     /**

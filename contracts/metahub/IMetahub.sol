@@ -6,5 +6,13 @@ import "./IUniverseManager.sol";
 import "./IWarperManager.sol";
 import "./IListingManager.sol";
 import "./IRentingManager.sol";
+import "./IPricingManager.sol";
 
-interface IMetahub is IAssetClassManager, IUniverseManager, IWarperManager, IListingManager, IRentingManager {}
+interface IMetahub is
+    IAssetClassManager,
+    IUniverseManager,
+    IWarperManager,
+    IListingManager,
+    IRentingManager,
+    IPricingManager
+{}

@@ -1,6 +1,7 @@
 import { formatBytes32String } from 'ethers/lib/utils';
 import { ethers, upgrades } from 'hardhat';
 import {
+  ERC20Mock__factory,
   ACL__factory,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
@@ -38,17 +39,18 @@ export async function unitFixtureMetahub() {
   const acl = await new ACL__factory(deployer).deploy();
 
   // Deploy Metahub
-  const metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [warperPresetFactory.address], {
+  const metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [], {
     kind: 'uups',
     initializer: false,
     unsafeAllow: ['delegatecall'],
   })) as Metahub;
 
   // Deploy Universe token.
+  const baseToken = await new ERC20Mock__factory(nftCreator).deploy('Stablecoin', 'STBL', 18, 100_000_000);
   const universeTokenFactory = new UniverseToken__factory(deployer);
   const universeToken = await universeTokenFactory.deploy(metahub.address);
   // Initialize Metahub.
-  await wait(metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address));
+  await wait(metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address, baseToken.address));
 
   return {
     universeToken,

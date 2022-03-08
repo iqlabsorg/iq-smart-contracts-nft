@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IMetahub.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarper.sol";
@@ -46,6 +47,11 @@ abstract contract MetahubStorage {
      * @dev ACL contract.
      */
     IACL internal _aclContract;
+
+    /**
+     * @dev IERC20 contract. Used as the price denominator.
+     */
+    IERC20 internal _baseToken;
 
     /**
      * @dev Listing ID tracker (incremental counter).
