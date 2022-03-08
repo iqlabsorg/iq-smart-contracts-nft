@@ -1,19 +1,18 @@
-import { shouldBehaveLikeCreateUniverse } from './effects/createUniverse';
-import { shouldBehaveLikeUpgradeTo } from './effects/upgradeTo';
-import { shouldBehaveWarperAndUniverseConfiguration } from './effects/warperConfiguration';
-import { shouldBehaveGetWarperPresetFactory } from './view/getWarperPresetFactory';
+import { shouldBehaveLikeAssetClassManager } from './asset-class-manager/AssetClassManager.behaviour';
+import { shouldBehaveLikeListingManager } from './listing-manager/ListingManager.behaviour';
+import { shouldBehaveLikeRentingManager } from './renting-manager/RentingManager.behaviour';
+import { shouldBehaveLikeUniverseManager } from './universe-manager/UniverseManager.behaviour';
+import { shouldBehaveLikeUUPSUpgradeable } from './uups-upgradeable/UUPSUpgradeable.behaviour';
+import { shouldBehaveLikeWarperManager } from './warper-manager/WarperManager.behaviour';
 
 /**
  * Metahub tests
  */
 export function shouldBehaveLikeMetahub(): void {
-  describe('View Functions', function () {
-    shouldBehaveGetWarperPresetFactory();
-  });
-
-  describe('Effect Functions', function () {
-    shouldBehaveWarperAndUniverseConfiguration();
-    shouldBehaveLikeCreateUniverse();
-    shouldBehaveLikeUpgradeTo();
-  });
+  shouldBehaveLikeUUPSUpgradeable();
+  shouldBehaveLikeWarperManager();
+  shouldBehaveLikeUniverseManager();
+  shouldBehaveLikeRentingManager();
+  shouldBehaveLikeListingManager();
+  shouldBehaveLikeAssetClassManager();
 }

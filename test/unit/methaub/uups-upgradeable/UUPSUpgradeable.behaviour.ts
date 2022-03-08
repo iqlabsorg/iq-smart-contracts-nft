@@ -1,18 +1,18 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { upgrades } from 'hardhat';
-import { Metahub, MetahubV2Mock, MetahubV2Mock__factory, ACL, ACL__factory } from '../../../../typechain';
+import { MetahubV2Mock, MetahubV2Mock__factory, ACL, UUPSUpgradeable } from '../../../../typechain';
 
-export function shouldBehaveLikeUpgradeTo(): void {
+export function shouldBehaveLikeUUPSUpgradeable(): void {
   describe('upgradeTo', function () {
-    let metahub: Metahub;
+    let metahub: UUPSUpgradeable;
     let acl: ACL;
 
     let deployer: SignerWithAddress;
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
-      metahub = this.contracts.metahub;
+      metahub = this.contracts.metahub as unknown as UUPSUpgradeable;
       acl = this.contracts.acl;
 
       deployer = this.signers.named['deployer'];
@@ -34,7 +34,6 @@ export function shouldBehaveLikeUpgradeTo(): void {
         })) as MetahubV2Mock;
         expect(metahubV2.address).to.eq(metahub.address);
         await expect(metahubV2.version()).to.eventually.eq('V2');
-        await expect(metahubV2.warperPresetFactory()).to.eventually.eq(await metahub.warperPresetFactory());
       });
     });
   });
