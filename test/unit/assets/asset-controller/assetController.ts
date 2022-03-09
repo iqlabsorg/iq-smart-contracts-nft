@@ -10,7 +10,8 @@ import {
   Metahub__factory,
   Warper,
 } from '../../../../typechain';
-import { shouldBehaveAssetController } from './assetController.behaviour';
+import { shouldBehaveLikeIAssetTransferExecutor } from './asset-transfer-executer/assetTransferExecutor.behaviour';
+import { shouldBehaveLikeIAssetController } from './assetController.behaviour';
 
 export async function unitFixtureERC721AssetsController() {
   // Resolve primary roles
@@ -46,6 +47,7 @@ export function unitTestAssetController(): void {
       this.contracts.assetController = erc721AssetController as unknown as IAssetController;
     });
 
-    shouldBehaveAssetController();
+    shouldBehaveLikeIAssetController();
+    shouldBehaveLikeIAssetTransferExecutor();
   });
 }

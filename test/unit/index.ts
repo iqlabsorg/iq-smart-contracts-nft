@@ -3,7 +3,7 @@ import { unitTestMetahub } from './methaub/Metahub';
 import { unitTestWarperPresetFactory } from './warper-preset-factory/WarperPresetFactory';
 import { unitTestWarpers } from './warper/warper';
 import { unitTestUniverseToken } from './universe-token/UniverseToken';
-import { unitTestAssetController, unitTestAssetsLibrary, unitTestERC721AssetVault } from './assets';
+import { unitTestAssetController, unitTestAssetsLibrary, unitTestAssetVault } from './assets';
 
 baseContext('Unit Tests', function () {
   unitTestWarperPresetFactory();
@@ -11,6 +11,6 @@ baseContext('Unit Tests', function () {
   unitTestWarpers();
   unitTestUniverseToken();
   unitTestAssetsLibrary();
-  unitTestERC721AssetVault();
+  unitTestAssetVault();
   unitTestAssetController();
 });
