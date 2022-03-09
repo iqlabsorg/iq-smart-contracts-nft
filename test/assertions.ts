@@ -2,6 +2,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { TASK_TEST_SETUP_TEST_ENVIRONMENT } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
 import chai, { Assertion } from 'chai';
+import { BigNumber } from 'ethers';
 
 declare global {
   //eslint-disable-next-line @typescript-eslint/no-namespace
@@ -37,13 +38,35 @@ subtask(TASK_TEST_SETUP_TEST_ENVIRONMENT, async (): Promise<void> => {
 });
 
 Assertion.addMethod('equalStruct', function (expectedStruct: Record<string, any>) {
-  const obj = this._obj;
-  const cleanedUpStruct: Record<string, any> = {};
-  for (const key of Object.keys(obj)) {
+  const transmuteKey = (key: string, object: any) => {
     // the key is not a number (only match "stringy" keys)
     if (!/^\d+$/.test(key)) {
-      cleanedUpStruct[key] = obj[key];
+      if (typeof object[key] === 'object') {
+        // Special handling for different object classes
+        if (object[key] instanceof BigNumber) {
+          // BigNumbers don't get transmuted further, return them as-is
+          return object[key];
+        } else {
+          return transmuteObject(object[key]);
+        }
+      }
+      return object[key];
     }
-  }
+    return undefined;
+  };
+
+  const transmuteObject = (object: any) => {
+    const cleanedUpStruct: Record<string, any> = {};
+    for (const key of Object.keys(object)) {
+      const cleanedUpKey = transmuteKey(key, object);
+      if (cleanedUpKey !== undefined) {
+        cleanedUpStruct[key] = cleanedUpKey;
+      }
+    }
+
+    return cleanedUpStruct;
+  };
+
+  const cleanedUpStruct = transmuteObject(this._obj);
   return new Assertion(cleanedUpStruct).to.deep.equal(expectedStruct);
 });
