@@ -11,6 +11,8 @@ import 'hardhat-contract-sizer';
 
 // Enable tasks
 import './tasks';
+// Enable test assertions
+import './test/assertions';
 
 dotenv.config();
 
