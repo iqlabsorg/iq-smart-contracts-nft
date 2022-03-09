@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction } from 'ethers';
-import { Metahub, WarperPresetFactory } from '../../typechain';
-import { Assets } from '../../typechain/Metahub';
+import { IUniverseManager, IWarperManager, Metahub, WarperPresetFactory } from '../../typechain';
+import { Assets, WarperRegisteredEvent } from '../../typechain/Metahub';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 
@@ -50,8 +50,8 @@ export function solidityId(string: string): string {
  * @param params
  */
 export async function createUniverse(
-  metahub: Metahub,
-  ...params: Parameters<Metahub['createUniverse']>
+  metahub: IUniverseManager,
+  ...params: Parameters<IUniverseManager['createUniverse']>
 ): Promise<BigNumber> {
   const receipt = await wait(metahub.createUniverse(...params));
   const events = await metahub.queryFilter(metahub.filters.UniverseCreated(), receipt.blockHash);
@@ -77,7 +77,10 @@ export async function deployWarperPreset(
  * @param metahub
  * @param params
  */
-export async function deployWarper(metahub: Metahub, ...params: Parameters<Metahub['deployWarper']>): Promise<string> {
+export async function deployWarper(
+  metahub: IWarperManager,
+  ...params: Parameters<IWarperManager['deployWarper']>
+): Promise<string> {
   const receipt = await wait(metahub.deployWarper(...params));
   const events = await metahub.queryFilter(metahub.filters.WarperRegistered(), receipt.blockHash);
   return events[0].args.warper;
