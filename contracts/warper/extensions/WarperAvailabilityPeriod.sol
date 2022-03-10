@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../mechanics/IAvailabilityPeriodProviderMechanics.sol";
 import "../Warper.sol";
 import "./IWarperAvailabilityPeriod.sol";
 
@@ -15,7 +14,7 @@ error InvalidAvailabilityPeriodStart();
  */
 error InvalidAvailabilityPeriodEnd();
 
-abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, IAvailabilityPeriodProviderMechanics, Warper {
+abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, Warper {
     /**
      * @dev Warper availability period start.
      */

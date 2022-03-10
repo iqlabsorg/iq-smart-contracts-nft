@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../mechanics/IRentalPeriodProviderMechanics.sol";
 import "../Warper.sol";
 import "./IWarperAssetRentability.sol";
 
@@ -15,7 +14,7 @@ error InvalidMinRentalPeriod();
  */
 error InvalidMaxRentalPeriod();
 
-abstract contract WarperAssetRentability is IWarperAssetRentability, IRentalPeriodProviderMechanics, Warper {
+abstract contract WarperAssetRentability is IWarperAssetRentability, Warper {
     /**
      * @dev Warper min rental period.
      */
