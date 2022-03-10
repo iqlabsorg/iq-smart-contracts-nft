@@ -1,14 +1,14 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
-import { ERC721WarperConfigurable, Metahub } from '../../../../../../typechain';
+import { ERC721PresetConfigurable, Metahub } from '../../../../../../typechain';
 import { shouldBehaveLikeAdminOnlySetter } from './genericAdminOnlySetter';
 
 export function shouldBehaveLikeAvailabilityPeriodEnd(): void {
   describe('__setAvailabilityPeriodEnd', function () {
-    let warper: ERC721WarperConfigurable;
+    let warper: ERC721PresetConfigurable;
     let metahub: FakeContract<Metahub>;
     beforeEach(function () {
-      warper = this.contracts.presets.erc721Configurable as unknown as ERC721WarperConfigurable;
+      warper = this.contracts.presets.erc721Configurable as unknown as ERC721PresetConfigurable;
       metahub = this.mocks.metahub;
 
       metahub.isWarperAdmin.returns(true);
