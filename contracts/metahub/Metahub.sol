@@ -462,7 +462,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
-     * @inheritdoc IPricingManager
+     * @inheritdoc IMetahub
      */
     function baseToken() external view returns (address) {
         return address(_baseToken);

@@ -6,13 +6,11 @@ import "./IUniverseManager.sol";
 import "./IWarperManager.sol";
 import "./IListingManager.sol";
 import "./IRentingManager.sol";
-import "./IPricingManager.sol";
 
-interface IMetahub is
-    IAssetClassManager,
-    IUniverseManager,
-    IWarperManager,
-    IListingManager,
-    IRentingManager,
-    IPricingManager
-{}
+interface IMetahub is IAssetClassManager, IUniverseManager, IWarperManager, IListingManager, IRentingManager {
+    /**
+     * @dev Get the base token that's used for stable price denomination.
+     * @return The base token address
+     */
+    function baseToken() external view returns (address);
+}
