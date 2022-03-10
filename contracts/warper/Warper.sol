@@ -51,6 +51,13 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
     }
 
     /**
+     * @inheritdoc IWarper
+     */
+    function __supportedInterfaces(bytes4[] memory interfaceIds) public returns (bool[] memory) {
+        return address(this).getSupportedInterfaces(interfaceIds);
+    }
+
+    /**
      * @dev Returns the original NFT address.
      */
     function __original() external view returns (address) {

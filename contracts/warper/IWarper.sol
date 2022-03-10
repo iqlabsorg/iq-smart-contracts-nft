@@ -18,4 +18,10 @@ interface IWarper is IERC165 {
      * @dev Returns the warper asset class ID.
      */
     function __assetClass() external view returns (bytes4);
+
+    /**
+     * @dev Validates if a warper supports multiple interfaces at once.
+     * @return an array of `bool` flags in order as the `interfaceIds` were passed.
+     */
+    function __supportedInterfaces(bytes4[] memory interfaceIds) external returns (bool[] memory);
 }

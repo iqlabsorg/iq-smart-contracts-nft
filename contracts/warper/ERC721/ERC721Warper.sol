@@ -162,7 +162,7 @@ contract ERC721Warper is IERC721Warper, Warper {
     /**
      * @dev Validates the original NFT.
      */
-    function _validateOriginal(address original) internal override {
+    function _validateOriginal(address original) internal virtual override {
         if (!original.supportsInterface(type(IERC721Metadata).interfaceId)) {
             revert InvalidOriginalTokenInterface(original, type(IERC721Metadata).interfaceId);
         }
