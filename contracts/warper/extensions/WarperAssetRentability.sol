@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../Warper.sol";
 import "../utils/RentalPeriodStore.sol";
-import "../mechanics/IRentalPeriodStoreMechanics.sol";
 import "../mechanics/IRentalPeriodProviderMechanics.sol";
+import "../Warper.sol";
+import "./IWarperAssetRentability.sol";
 
 /**
  * @dev Thrown when the the min rental period is not strictly lesser than max rental period
@@ -17,8 +17,8 @@ error InvalidMinRentalPeriod();
 error InvalidMaxRentalPeriod();
 
 abstract contract WarperAssetRentability is
+    IWarperAssetRentability,
     IRentalPeriodProviderMechanics,
-    IRentalPeriodStoreMechanics,
     RentalPeriodStore,
     Warper
 {
@@ -32,13 +32,13 @@ abstract contract WarperAssetRentability is
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(Warper) returns (bool) {
         return
-            interfaceId == type(IRentalPeriodStoreMechanics).interfaceId ||
+            interfaceId == type(IWarperAssetRentability).interfaceId ||
             interfaceId == type(IRentalPeriodProviderMechanics).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
     /**
-     * @inheritdoc IRentalPeriodStoreMechanics
+     * @inheritdoc IWarperAssetRentability
      */
     function __setMinRentalPeriod(uint32 minRentalPeriod) external virtual onlyWarperAdmin {
         if (minRentalPeriod > _maxRentalPeriod()) revert InvalidMinRentalPeriod();
@@ -46,7 +46,7 @@ abstract contract WarperAssetRentability is
     }
 
     /**
-     * @inheritdoc IRentalPeriodStoreMechanics
+     * @inheritdoc IWarperAssetRentability
      */
     function __setMaxRentalPeriod(uint32 maxRentalPeriod) external virtual onlyWarperAdmin {
         if (_minRentalPeriod() > maxRentalPeriod) revert InvalidMaxRentalPeriod();
