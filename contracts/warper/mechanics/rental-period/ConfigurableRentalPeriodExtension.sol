@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../Warper.sol";
-import "./IWarperAssetRentability.sol";
+import "../../Warper.sol";
+import "./IConfigurableRentalPeriodExtension.sol";
 
-/**
- * @dev Thrown when the the min rental period is not strictly lesser than max rental period
- */
-error InvalidMinRentalPeriod();
+abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriodExtension, Warper {
+    /**
+     * @dev Thrown when the the min rental period is not strictly lesser than max rental period
+     */
+    error InvalidMinRentalPeriod();
 
-/**
- * @dev Thrown when the max rental period is not greater or equal than min rental period
- */
-error InvalidMaxRentalPeriod();
+    /**
+     * @dev Thrown when the max rental period is not greater or equal than min rental period
+     */
+    error InvalidMaxRentalPeriod();
 
-abstract contract WarperAssetRentability is IWarperAssetRentability, Warper {
     /**
      * @dev Warper min rental period.
      */
@@ -27,7 +27,10 @@ abstract contract WarperAssetRentability is IWarperAssetRentability, Warper {
     bytes32 private constant _MAX_RENTAL_PERIOD_SLOT =
         bytes32(uint256(keccak256("iq.warper.params.maxRentalPeriod")) - 1);
 
-    function _WarperAssetRentability_init() internal onlyInitializing {
+    /**
+     * @dev Extension initializer.
+     */
+    function _ConfigurableRentalPeriodExtension_init() internal onlyInitializing {
         // Store default values.
         _setMaxRentalPeriod(type(uint32).max);
     }
@@ -37,13 +40,13 @@ abstract contract WarperAssetRentability is IWarperAssetRentability, Warper {
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(Warper) returns (bool) {
         return
-            interfaceId == type(IWarperAssetRentability).interfaceId ||
-            interfaceId == type(IRentalPeriodProviderMechanics).interfaceId ||
+            interfaceId == type(IConfigurableRentalPeriodExtension).interfaceId ||
+            interfaceId == type(IRentalPeriodMechanics).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
     /**
-     * @inheritdoc IWarperAssetRentability
+     * @inheritdoc IConfigurableRentalPeriodExtension
      */
     function __setMinRentalPeriod(uint32 minRentalPeriod) external virtual onlyWarperAdmin {
         if (minRentalPeriod > _maxRentalPeriod()) revert InvalidMinRentalPeriod();
@@ -51,7 +54,7 @@ abstract contract WarperAssetRentability is IWarperAssetRentability, Warper {
     }
 
     /**
-     * @inheritdoc IWarperAssetRentability
+     * @inheritdoc IConfigurableRentalPeriodExtension
      */
     function __setMaxRentalPeriod(uint32 maxRentalPeriod) external virtual onlyWarperAdmin {
         if (_minRentalPeriod() > maxRentalPeriod) revert InvalidMaxRentalPeriod();
@@ -59,14 +62,14 @@ abstract contract WarperAssetRentability is IWarperAssetRentability, Warper {
     }
 
     /**
-     * @inheritdoc IRentalPeriodProviderMechanics
+     * @inheritdoc IRentalPeriodMechanics
      */
     function __minRentalPeriod() external view virtual returns (uint32) {
         return _minRentalPeriod();
     }
 
     /**
-     * @inheritdoc IRentalPeriodProviderMechanics
+     * @inheritdoc IRentalPeriodMechanics
      */
     function __maxRentalPeriod() external view virtual override returns (uint32) {
         return _maxRentalPeriod();

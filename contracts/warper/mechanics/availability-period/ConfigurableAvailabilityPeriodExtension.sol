@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../Warper.sol";
-import "./IWarperAvailabilityPeriod.sol";
+import "../../Warper.sol";
+import "./IConfigurableAvailabilityPeriodExtension.sol";
 
-/**
- * @dev Thrown when the availability period start time is not strictly lesser than the end time
- */
-error InvalidAvailabilityPeriodStart();
+abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvailabilityPeriodExtension, Warper {
+    /**
+     * @dev Thrown when the availability period start time is not strictly lesser than the end time
+     */
+    error InvalidAvailabilityPeriodStart();
 
-/**
- * @dev Thrown when the availability period end time is not greater or equal than the start time
- */
-error InvalidAvailabilityPeriodEnd();
+    /**
+     * @dev Thrown when the availability period end time is not greater or equal than the start time
+     */
+    error InvalidAvailabilityPeriodEnd();
 
-abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, Warper {
     /**
      * @dev Warper availability period start.
      */
@@ -27,7 +27,10 @@ abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, Warper 
     bytes32 private constant _AVAILABILITY_PERIOD_END_SLOT =
         bytes32(uint256(keccak256("iq.warper.params.availabilityPeriodEnd")) - 1);
 
-    function _WarperAvailabilityPeriod_init() internal onlyInitializing {
+    /**
+     * Extension initializer.
+     */
+    function _ConfigurableAvailabilityPeriodExtension_init() internal onlyInitializing {
         // Store default values.
         _setAvailabilityPeriodEnd(type(uint32).max);
     }
@@ -37,13 +40,13 @@ abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, Warper 
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(Warper) returns (bool) {
         return
-            interfaceId == type(IWarperAvailabilityPeriod).interfaceId ||
-            interfaceId == type(IAvailabilityPeriodProviderMechanics).interfaceId ||
+            interfaceId == type(IConfigurableAvailabilityPeriodExtension).interfaceId ||
+            interfaceId == type(IAvailabilityPeriodMechanics).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
     /**
-     * @inheritdoc IWarperAvailabilityPeriod
+     * @inheritdoc IConfigurableAvailabilityPeriodExtension
      */
     function __setAvailabilityPeriodStart(uint32 availabilityPeriodStart) external virtual onlyWarperAdmin {
         if (availabilityPeriodStart >= _availabilityPeriodEnd()) revert InvalidAvailabilityPeriodStart();
@@ -51,7 +54,7 @@ abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, Warper 
     }
 
     /**
-     * @inheritdoc IWarperAvailabilityPeriod
+     * @inheritdoc IConfigurableAvailabilityPeriodExtension
      */
     function __setAvailabilityPeriodEnd(uint32 availabilityPeriodEnd) external virtual onlyWarperAdmin {
         if (_availabilityPeriodStart() >= availabilityPeriodEnd) revert InvalidAvailabilityPeriodEnd();
@@ -59,14 +62,14 @@ abstract contract WarperAvailabilityPeriod is IWarperAvailabilityPeriod, Warper 
     }
 
     /**
-     * @inheritdoc IAvailabilityPeriodProviderMechanics
+     * @inheritdoc IAvailabilityPeriodMechanics
      */
     function __availabilityPeriodStart() external view virtual returns (uint32) {
         return _availabilityPeriodStart();
     }
 
     /**
-     * @inheritdoc IAvailabilityPeriodProviderMechanics
+     * @inheritdoc IAvailabilityPeriodMechanics
      */
     function __availabilityPeriodEnd() external view virtual returns (uint32) {
         return _availabilityPeriodEnd();

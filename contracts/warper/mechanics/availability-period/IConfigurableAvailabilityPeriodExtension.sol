@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../mechanics/IAvailabilityPeriodProviderMechanics.sol";
+import "./IAvailabilityPeriodMechanics.sol";
 
-interface IWarperAvailabilityPeriod is IAvailabilityPeriodProviderMechanics {
+interface IConfigurableAvailabilityPeriodExtension is IAvailabilityPeriodMechanics {
     /**
      * @dev Sets warper availability period starting time.
      * @param availabilityPeriodStart Unix timestamp after which the warper is rentable.

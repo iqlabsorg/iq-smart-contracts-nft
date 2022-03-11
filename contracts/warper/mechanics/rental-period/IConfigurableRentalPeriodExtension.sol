@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../mechanics/IRentalPeriodProviderMechanics.sol";
+import "./IRentalPeriodMechanics.sol";
 
-interface IWarperAssetRentability is IRentalPeriodProviderMechanics {
+interface IConfigurableRentalPeriodExtension is IRentalPeriodMechanics {
     /**
      * @dev Sets warper min rental period.
      * @param minRentalPeriod New min rental period value.
