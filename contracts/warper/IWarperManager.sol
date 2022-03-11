@@ -19,9 +19,9 @@ interface IWarperManager {
      * @param controller Warper asset controller.
      */
     struct Warper {
-        bool enabled; //todo: must affect renting
         uint256 universeId;
         IAssetController controller;
+        bool enabled; //todo: must affect renting
     }
 
     /**

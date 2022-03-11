@@ -2,6 +2,8 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "./Listings.sol";
+import "../renting/Rentings.sol";
 
 interface IListingController is IERC165 {
     /**
@@ -10,5 +12,9 @@ interface IListingController is IERC165 {
      */
     function strategyId() external pure returns (bytes4);
 
-    //todo: add rental estimation functions
+    //todo: docs
+    function calculateListerFee(Listings.Params calldata listingParams, Rentings.Params calldata rentingParams)
+        external
+        view
+        returns (uint256);
 }

@@ -4,8 +4,8 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "../../Errors.sol";
 import "../IAssetController.sol";
-import "./IERC721AssetVault.sol";
-import "../../warper/ERC721/IERC721Warper.sol";
+import "../Assets.sol";
+import "./ERC721AssetVault.sol";
 
 /**
  * @dev Thrown when the asset transfer value is invalid for ERC721 token standard.
@@ -16,11 +16,6 @@ error InvalidERC721TransferValue(uint256 value);
  * @title Asset controller for the ERC721 tokens
  */
 contract ERC721AssetController is IAssetController {
-    /**
-     * @notice The supported Warpers interface
-     */
-    bytes4 public constant SUPPORTED_WARPER_INTERFACE = type(IERC721Warper).interfaceId;
-
     /**
      * @inheritdoc IAssetController
      */
@@ -36,6 +31,7 @@ contract ERC721AssetController is IAssetController {
         address assetOwner,
         address vault
     ) external {
+        //todo: check vault interface
         _transferAsset(asset, assetOwner, vault, "");
     }
 
@@ -58,13 +54,6 @@ contract ERC721AssetController is IAssetController {
 
     /**
      * @inheritdoc IAssetController
-     */
-    function isCompatibleWarper(IWarper warper) external view returns (bool) {
-        return warper.supportsInterface(SUPPORTED_WARPER_INTERFACE);
-    }
-
-    /**
-     * @inheritdoc IAssetTransferExecutor
      */
     function transfer(
         Assets.Asset memory asset,

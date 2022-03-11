@@ -22,6 +22,7 @@ import "../listing/IListingController.sol";
 import "../Errors.sol";
 import "./IMetahub.sol";
 import "./MetahubStorage.sol";
+import "../warper/IWarperController.sol";
 
 /**
  * @dev Thrown when the message sender doesn't match the universe owner.
@@ -149,9 +150,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make sure the function is called for the listed asset.
      */
     modifier whenListed(uint256 listingId) {
-        if (!_isRegisteredListing(listingId) || _listings[listingId].delisted) {
-            revert NotListed(listingId);
-        }
+        _checkListed(listingId);
         _;
     }
 
@@ -199,6 +198,37 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         _baseToken = IERC20(baseToken);
     }
 
+    function estimateRentalFee(Rentings.Params calldata rentingParams)
+        external
+        view
+        returns (
+            uint256 listerBaseFee,
+            uint256 listerPremium,
+            uint256 universeBaseFee,
+            uint256 universePremium,
+            uint256 protocolFee,
+            uint256 total
+        )
+    {
+        _checkListed(rentingParams.listingId);
+
+        //todo: check is warper is available
+        Warper memory warper = _warpers[rentingParams.warper]; // todo: storage?
+
+        //        warper.controller.
+
+        // todo: check if warper rentable for the specific asset and terms. (IRentingController.checkIsRentableAsset)
+        Listing storage listing = _listings[rentingParams.listingId];
+        Listings.Params memory listingParams = listing.params;
+        IListingController listingController = _listingStrategies[listingParams.strategy].controller;
+
+        uint256 listerFee = listingController.calculateListerFee(listingParams, rentingParams);
+
+        // todo: calculate universeFee
+        // todo: calculate protocolFee
+        // todo: calculate warper premiums
+    }
+
     /**
      * @inheritdoc IAssetClassManager
      */
@@ -234,7 +264,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         }
 
         emit AssetClassControllerChanged(assetClass, address(_assetClasses[assetClass].controller), controller);
-        _assetClasses[assetClass].controller = IAssetController(controller);
+        _assetClasses[assetClass].controller = controller;
     }
 
     /**
@@ -300,7 +330,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function registerListingStrategy(bytes4 strategyId, ListingStrategyConfig calldata config) external onlyAdmin {
-        _checkValidListingController(config.controller);
+        _checkValidListingController(address(config.controller));
         if (_isRegisteredListingStrategy(strategyId)) {
             revert ListingStrategyIsAlreadyRegistered(strategyId);
         }
@@ -314,7 +344,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function setListingController(bytes4 strategyId, address controller) external onlySupervisor {
         _checkValidListingController(controller);
-        _listingStrategies[strategyId].controller = controller;
+        _listingStrategies[strategyId].controller = IListingController(controller);
         //todo: event
     }
 
@@ -329,15 +359,19 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IListingManager
      */
-    function listAsset(ListingParams calldata params) external returns (uint256) {
+    function listAsset(
+        Assets.Asset calldata asset,
+        Listings.Params calldata params,
+        uint32 maxLockPeriod
+    ) external returns (uint256) {
         // Check that listing asset class is supported.
-        _checkAssetClassSupport(params.asset.id.class);
+        _checkAssetClassSupport(asset.id.class);
 
         // Check that listing strategy is supported.
-        _checkListingStrategySupport(params.strategy.id);
+        _checkListingStrategySupport(params.strategy);
 
         // Extract token address from asset struct and check whether the asset is supported.
-        address token = _assetClasses[params.asset.id.class].controller.getToken(params.asset);
+        address token = IAssetController(_assetClasses[asset.id.class].controller).getToken(asset);
         _checkAssetSupport(token);
 
         // Transfer asset to the vault. Asset transfer is performed via delegate call to the corresponding asset controller.
@@ -345,12 +379,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         IAssetController controller = _assets[token].controller;
         IAssetVault vault = _assets[token].vault;
         address(controller).functionDelegateCall(
-            abi.encodeWithSelector(
-                IAssetController.transferAssetToVault.selector,
-                params.asset,
-                _msgSender(),
-                address(vault)
-            )
+            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, _msgSender(), address(vault))
         );
 
         // Generate new listing ID.
@@ -361,19 +390,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         assert(_listings[listingId].lister == address(0));
 
         // Store new listing record.
-        Listing memory listing = Listing(
-            _msgSender(),
-            token,
-            params.asset,
-            params.strategy,
-            params.maxLockPeriod,
-            0,
-            false,
-            false
-        );
+        Listing memory listing = Listing(_msgSender(), token, asset, params, maxLockPeriod, 0, false, false);
         _listings[listingId] = listing;
 
-        emit AssetListed(listingId, listing.lister, listing.asset, listing.strategy, listing.maxLockPeriod);
+        emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
 
         return listingId;
     }
@@ -539,7 +559,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
         }
 
-        IAssetController controller = _assetClasses[assetClass].controller;
+        IWarperController controller = IWarperController(_assetClasses[assetClass].controller);
 
         // Ensure warper compatibility with the current generation of asset controller.
         if (!controller.isCompatibleWarper(IWarper(warper))) {
@@ -552,7 +572,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // Associate warper with the universe and current asset class controller,
         // to maintain backward compatibility in case of controller generation upgrade.
         // The warper is disabled by default.
-        _warpers[warper] = Warper(false, universeId, controller);
+        _warpers[warper] = Warper(universeId, controller, false);
 
         // Associate the warper with the universe.
         _universes[universeId].warpers.add(warper);
@@ -682,11 +702,21 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
+     * @dev Throws if listing is not registered or has been already delisted.
+     * @param listingId Listing ID.
+     */
+    function _checkListed(uint256 listingId) internal view {
+        if (!_isRegisteredListing(listingId) || _listings[listingId].delisted) {
+            revert NotListed(listingId);
+        }
+    }
+
+    /**
      * @dev Checks listing strategy registration by ID.
      * @param strategyId Listing strategy ID.
      */
     function _isRegisteredListingStrategy(bytes4 strategyId) internal view returns (bool) {
-        return _listingStrategies[strategyId].controller != address(0);
+        return address(_listingStrategies[strategyId].controller) != address(0);
     }
 
     //todo implement the real implementation here

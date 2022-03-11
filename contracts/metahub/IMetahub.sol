@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "./IAssetClassManager.sol";
-import "./IUniverseManager.sol";
-import "./IWarperManager.sol";
-import "./IListingManager.sol";
-import "./IRentingManager.sol";
+import "../asset/IAssetClassManager.sol";
+import "../universe/IUniverseManager.sol";
+import "../warper/IWarperManager.sol";
+import "../listing/IListingManager.sol";
+import "../renting/IRentingManager.sol";
 
 interface IMetahub is IAssetClassManager, IUniverseManager, IWarperManager, IListingManager, IRentingManager {
     /**

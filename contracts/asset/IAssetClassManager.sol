@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "../asset/IAssetController.sol";
-import "../asset/IAssetVault.sol";
+import "./IAssetController.sol";
+import "./IAssetVault.sol";
 
 interface IAssetClassManager {
     /**
@@ -11,7 +11,7 @@ interface IAssetClassManager {
      * @param vault Asset class vault.
      */
     struct AssetClassConfig {
-        IAssetController controller;
+        address controller;
         IAssetVault vault;
     }
 

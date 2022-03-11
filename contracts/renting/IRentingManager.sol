@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "./Rentings.sol";
+
 interface IRentingManager {
     enum WarperRentalStatus {
         NOT_MINTED,
@@ -23,4 +25,19 @@ interface IRentingManager {
      * @return The warpers rental state.
      */
     function getWarperRentalStatus(address warper, uint256 tokenId) external view returns (WarperRentalStatus);
+
+    //todo: docs
+    function estimateRentalFee(Rentings.Params calldata rentingParams)
+        external
+        view
+        returns (
+            uint256 listerBaseFee,
+            uint256 listerPremium,
+            uint256 universeBaseFee,
+            uint256 universePremium,
+            uint256 protocolFee,
+            uint256 total
+        );
+
+    //    function rent(Renting.Params calldata rentingParams); // todo: validate msgSender is renter and add slippage protection
 }
