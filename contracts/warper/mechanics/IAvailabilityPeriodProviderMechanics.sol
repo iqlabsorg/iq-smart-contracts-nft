@@ -2,11 +2,6 @@
 pragma solidity ^0.8.11;
 
 interface IAvailabilityPeriodProviderMechanics {
-    struct AvailabilityPeriodParams {
-        uint32 availabilityPeriodStart;
-        uint32 availabilityPeriodEnd;
-    }
-
     /**
      * @dev Returns warper availability period starting time.
      * @return Unix timestamp after which the warper is rentable.
