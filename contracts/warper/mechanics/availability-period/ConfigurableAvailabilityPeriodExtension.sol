@@ -88,7 +88,7 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
     }
 
     /**
-     * @dev Stores warper availability period starting time.
+     * @dev Stores warper availability period.
      */
     function _setAvailabilityPeriods(uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd) internal {
         StorageSlot.getBytes32Slot(_AVAILABILITY_PERIOD_SLOT).value = bytes32(
@@ -97,7 +97,7 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
     }
 
     /**
-     * @dev Returns warper availability period starting time.
+     * @dev Returns warper availability period.
      */
     function _availabilityPeriods()
         internal
