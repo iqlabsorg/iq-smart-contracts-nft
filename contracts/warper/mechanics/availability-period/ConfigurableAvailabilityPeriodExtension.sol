@@ -16,23 +16,17 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
     error InvalidAvailabilityPeriodEnd();
 
     /**
-     * @dev Warper availability period start.
+     * @dev Warper availability period.
      */
-    bytes32 private constant _AVAILABILITY_PERIOD_START_SLOT =
-        bytes32(uint256(keccak256("iq.warper.params.availabilityPeriodStart")) - 1);
-
-    /**
-     * @dev Warper availability period end.
-     */
-    bytes32 private constant _AVAILABILITY_PERIOD_END_SLOT =
-        bytes32(uint256(keccak256("iq.warper.params.availabilityPeriodEnd")) - 1);
+    bytes32 private constant _AVAILABILITY_PERIOD_SLOT =
+        bytes32(uint256(keccak256("iq.warper.params.availabilityPeriod")) - 1);
 
     /**
      * Extension initializer.
      */
     function _ConfigurableAvailabilityPeriodExtension_init() internal onlyInitializing {
         // Store default values.
-        _setAvailabilityPeriodEnd(type(uint32).max);
+        _setAvailabilityPeriods(0, type(uint32).max);
     }
 
     /**
@@ -49,30 +43,36 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
      * @inheritdoc IConfigurableAvailabilityPeriodExtension
      */
     function __setAvailabilityPeriodStart(uint32 availabilityPeriodStart) external virtual onlyWarperAdmin {
-        if (availabilityPeriodStart >= _availabilityPeriodEnd()) revert InvalidAvailabilityPeriodStart();
-        _setAvailabilityPeriodStart(availabilityPeriodStart);
+        (, uint32 availabilityPeriodEnd) = _availabilityPeriods();
+        if (availabilityPeriodStart >= availabilityPeriodEnd) revert InvalidAvailabilityPeriodStart();
+
+        _setAvailabilityPeriods(availabilityPeriodStart, availabilityPeriodEnd);
     }
 
     /**
      * @inheritdoc IConfigurableAvailabilityPeriodExtension
      */
     function __setAvailabilityPeriodEnd(uint32 availabilityPeriodEnd) external virtual onlyWarperAdmin {
-        if (_availabilityPeriodStart() >= availabilityPeriodEnd) revert InvalidAvailabilityPeriodEnd();
-        _setAvailabilityPeriodEnd(availabilityPeriodEnd);
+        (uint32 availabilityPeriodStart, ) = _availabilityPeriods();
+        if (availabilityPeriodStart >= availabilityPeriodEnd) revert InvalidAvailabilityPeriodEnd();
+
+        _setAvailabilityPeriods(availabilityPeriodStart, availabilityPeriodEnd);
     }
 
     /**
      * @inheritdoc IAvailabilityPeriodMechanics
      */
     function __availabilityPeriodStart() external view virtual returns (uint32) {
-        return _availabilityPeriodStart();
+        (uint32 availabilityPeriodStart, ) = _availabilityPeriods();
+        return availabilityPeriodStart;
     }
 
     /**
      * @inheritdoc IAvailabilityPeriodMechanics
      */
     function __availabilityPeriodEnd() external view virtual returns (uint32) {
-        return _availabilityPeriodEnd();
+        (, uint32 availabilityPeriodEnd) = _availabilityPeriods();
+        return availabilityPeriodEnd;
     }
 
     /**
@@ -84,35 +84,27 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
         virtual
         returns (uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd)
     {
-        availabilityPeriodStart = _availabilityPeriodStart();
-        availabilityPeriodEnd = _availabilityPeriodEnd();
+        (availabilityPeriodStart, availabilityPeriodEnd) = _availabilityPeriods();
     }
 
     /**
      * @dev Stores warper availability period starting time.
      */
-    function _setAvailabilityPeriodStart(uint32 availabilityPeriodStart) internal {
-        StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_START_SLOT).value = uint256(availabilityPeriodStart);
-    }
-
-    /**
-     * @dev Stores warper availability period ending time.
-     */
-    function _setAvailabilityPeriodEnd(uint32 availabilityPeriodEnd) internal {
-        StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_END_SLOT).value = uint256(availabilityPeriodEnd);
+    function _setAvailabilityPeriods(uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd) internal {
+        StorageSlot.getBytes32Slot(_AVAILABILITY_PERIOD_SLOT).value = bytes32(
+            abi.encodePacked(availabilityPeriodStart, availabilityPeriodEnd)
+        );
     }
 
     /**
      * @dev Returns warper availability period starting time.
      */
-    function _availabilityPeriodStart() internal view returns (uint32) {
-        return uint32(StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_START_SLOT).value);
-    }
-
-    /**
-     * @dev Returns warper availability period ending time.
-     */
-    function _availabilityPeriodEnd() internal view returns (uint32) {
-        return uint32(StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_END_SLOT).value);
+    function _availabilityPeriods()
+        internal
+        view
+        returns (uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd)
+    {
+        bytes memory slot = abi.encodePacked(StorageSlot.getBytes32Slot(_AVAILABILITY_PERIOD_SLOT).value);
+        (availabilityPeriodStart, availabilityPeriodEnd) = abi.decode(slot, (uint32, uint32));
     }
 }
