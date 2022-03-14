@@ -16,16 +16,10 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
     error InvalidMaxRentalPeriod();
 
     /**
-     * @dev Warper min rental period.
+     * @dev Warper rental period.
+     * @dev It contains both - the min and max values (uint32) - in a concatenated form.
      */
-    bytes32 private constant _MIN_RENTAL_PERIOD_SLOT =
-        bytes32(uint256(keccak256("iq.warper.params.minRentalPeriod")) - 1);
-
-    /**
-     * @dev Warper max rental period.
-     */
-    bytes32 private constant _MAX_RENTAL_PERIOD_SLOT =
-        bytes32(uint256(keccak256("iq.warper.params.maxRentalPeriod")) - 1);
+    bytes32 private constant _RENTAL_PERIOD_SLOT = bytes32(uint256(keccak256("iq.warper.params.rentalPeriod")) - 1);
 
     /**
      * @dev Extension initializer.
@@ -49,7 +43,8 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      * @inheritdoc IConfigurableRentalPeriodExtension
      */
     function __setMinRentalPeriod(uint32 minRentalPeriod) external virtual onlyWarperAdmin {
-        if (minRentalPeriod > _maxRentalPeriod()) revert InvalidMinRentalPeriod();
+        (, uint32 maxRentalPeriod) = _rentalPeriods();
+        if (minRentalPeriod > maxRentalPeriod) revert InvalidMinRentalPeriod();
         _setMinRentalPeriod(minRentalPeriod);
     }
 
@@ -57,7 +52,8 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      * @inheritdoc IConfigurableRentalPeriodExtension
      */
     function __setMaxRentalPeriod(uint32 maxRentalPeriod) external virtual onlyWarperAdmin {
-        if (_minRentalPeriod() > maxRentalPeriod) revert InvalidMaxRentalPeriod();
+        (uint32 minRentalPeriod, ) = _rentalPeriods();
+        if (minRentalPeriod > maxRentalPeriod) revert InvalidMaxRentalPeriod();
         _setMaxRentalPeriod(maxRentalPeriod);
     }
 
@@ -65,49 +61,51 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      * @inheritdoc IRentalPeriodMechanics
      */
     function __minRentalPeriod() external view virtual returns (uint32) {
-        return _minRentalPeriod();
+        (uint32 minRentalPeriod, ) = _rentalPeriods();
+        return minRentalPeriod;
     }
 
     /**
      * @inheritdoc IRentalPeriodMechanics
      */
     function __maxRentalPeriod() external view virtual override returns (uint32) {
-        return _maxRentalPeriod();
+        (, uint32 maxRentalPeriod) = _rentalPeriods();
+        return maxRentalPeriod;
     }
 
     /**
      * @inheritdoc IRentalPeriodMechanics
      */
     function __rentalPeriodRange() external view returns (uint32 minRentalPeriod, uint32 maxRentalPeriod) {
-        minRentalPeriod = _minRentalPeriod();
-        maxRentalPeriod = _maxRentalPeriod();
+        (minRentalPeriod, maxRentalPeriod) = _rentalPeriods();
     }
 
     /**
      * @dev Stores warper minimal rental period.
      */
     function _setMinRentalPeriod(uint32 minRentalPeriod) internal {
-        StorageSlot.getUint256Slot(_MIN_RENTAL_PERIOD_SLOT).value = uint256(minRentalPeriod);
+        (, uint32 maxRentalPeriod) = _rentalPeriods();
+        StorageSlot.getBytes32Slot(_RENTAL_PERIOD_SLOT).value = bytes32(
+            abi.encodePacked(minRentalPeriod, maxRentalPeriod)
+        );
     }
 
     /**
      * @dev Stores warper maximal rental period.
      */
     function _setMaxRentalPeriod(uint32 maxRentalPeriod) internal {
-        StorageSlot.getUint256Slot(_MAX_RENTAL_PERIOD_SLOT).value = uint256(maxRentalPeriod);
+        (uint32 minRentalPeriod, ) = _rentalPeriods();
+        StorageSlot.getBytes32Slot(_RENTAL_PERIOD_SLOT).value = bytes32(
+            abi.encodePacked(minRentalPeriod, maxRentalPeriod)
+        );
     }
 
     /**
-     * @dev Returns warper minimal rental period.
+     * @dev Returns warper minimal rental periods.
      */
-    function _minRentalPeriod() internal view returns (uint32) {
-        return uint32(StorageSlot.getUint256Slot(_MIN_RENTAL_PERIOD_SLOT).value);
-    }
-
-    /**
-     * @dev Returns warper maximal rental period.
-     */
-    function _maxRentalPeriod() internal view returns (uint32) {
-        return uint32(StorageSlot.getUint256Slot(_MAX_RENTAL_PERIOD_SLOT).value);
+    function _rentalPeriods() internal view returns (uint32 minRentalPeriod, uint32 maxRentalPeriod) {
+        bytes32 slot = StorageSlot.getBytes32Slot(_RENTAL_PERIOD_SLOT).value;
+        bytes memory slotAsBytes = abi.encodePacked(slot);
+        (minRentalPeriod, maxRentalPeriod) = abi.decode(slotAsBytes, (uint32, uint32));
     }
 }
