@@ -8,6 +8,49 @@ import "./Listings.sol";
 
 interface IListingManager {
     /**
+     * @dev Thrown when the `listingId` is invalid or the asset has been delisted.
+     */
+    error NotListed(uint256 listingId);
+
+    /**
+     * @dev Thrown when the message sender doesn't match the asset lister address.
+     */
+    error CallerIsNotAssetLister();
+
+    /**
+     * @dev Thrown when the operation is not allowed due to the listing being paused.
+     */
+    error ListingIsPaused();
+
+    /**
+     * @dev Thrown when the operation is not allowed due to the listing not being paused.
+     */
+    error ListingIsNotPaused();
+
+    /**
+     * @dev Thrown when the original asset cannot be withdrawn because of active rentals
+     * or other activity that requires asset to stay in the vault.
+     */
+    error AssetIsLocked();
+
+    /**
+     * @dev Thrown upon attempting to register a listing strategy twice.
+     * @param strategyId Duplicate listing strategy ID.
+     */
+    error ListingStrategyIsAlreadyRegistered(bytes4 strategyId);
+
+    /**
+     * @dev Thrown when listing controller is dos not implement the required interface.
+     */
+    error InvalidListingControllerInterface();
+
+    /**
+     * @dev Thrown when the listing strategy is not registered or deprecated.
+     * @param strategyId Unsupported listing strategy ID.
+     */
+    error UnsupportedListingStrategy(bytes4 strategyId);
+
+    /**
      * @dev Emitted when a new asset is listed for renting.
      * @param listingId Listing ID.
      * @param lister Lister account address.

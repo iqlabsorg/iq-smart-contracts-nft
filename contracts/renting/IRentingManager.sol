@@ -4,6 +4,11 @@ pragma solidity ^0.8.11;
 import "./Rentings.sol";
 
 interface IRentingManager {
+    /**
+     * @dev Thrown when the warper cannot be used for rending.
+     */
+    error WarperIsDisabled();
+
     enum WarperRentalStatus {
         NOT_MINTED,
         MINTED,

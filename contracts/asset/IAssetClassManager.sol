@@ -6,6 +6,18 @@ import "./IAssetVault.sol";
 
 interface IAssetClassManager {
     /**
+     * @dev Thrown when the asset class is not registered or deprecated.
+     * @param assetClass Asset class ID.
+     */
+    error UnsupportedAssetClass(bytes4 assetClass);
+
+    /**
+     * @dev Thrown upon attempting to register an asset class twice.
+     * @param assetClass Duplicate asset class ID.
+     */
+    error AssetClassIsAlreadyRegistered(bytes4 assetClass);
+
+    /**
      * @dev Asset class configuration.
      * @param controller Asset class controller.
      * @param vault Asset class vault.

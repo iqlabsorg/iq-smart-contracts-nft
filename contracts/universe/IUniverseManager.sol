@@ -4,6 +4,11 @@ pragma solidity ^0.8.11;
 // todo: add universe accessor?  universe(uint256 universeId) external returns (name, symbol, universeName)
 interface IUniverseManager {
     /**
+     * @dev Thrown when the message sender doesn't match the universe owner.
+     */
+    error CallerIsNotUniverseOwner();
+
+    /**
      * @dev Emitted when a universe is created.
      * @param universeId Universe ID.
      * @param name Universe name.
