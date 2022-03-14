@@ -69,8 +69,8 @@ interface IListingManager {
         Listings.Params params;
         uint32 maxLockPeriod;
         uint32 lockedTill;
-        bool delisted; // todo: restricts new rentals
-        bool paused; // todo: restricts new rentals
+        bool delisted;
+        bool paused;
     }
 
     /**

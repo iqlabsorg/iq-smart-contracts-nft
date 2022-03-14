@@ -14,6 +14,22 @@ import "../acl/IACL.sol";
 
 abstract contract MetahubStorage {
     /**
+     * @dev Protocol configuration.
+     * @param acl ACL contract.
+     * @param warperPresetFactory Warper preset factory contract.
+     * @param universeToken Universe NFT contract.
+     * @param baseToken ERC20 contract. Used as the price denominator.
+     * @param rentalFeePercent The fixed part of the total rental fee paid to protocol.
+     */
+    struct ProtocolConfig {
+        IACL acl;
+        IWarperPresetFactory warperPresetFactory;
+        IUniverseToken universeToken;
+        IERC20 baseToken;
+        uint16 rentalFeePercent;
+    }
+
+    /**
      * @dev Original asset data.
      * @param controller Asset controller.
      * @param vault Asset vault.
@@ -27,31 +43,16 @@ abstract contract MetahubStorage {
 
     /**
      * @dev Universe data.
+     * @param rentalFeePercent The fixed part of the total rental fee paid to universe.
      * @param warpers Set of warper addresses registered by the universe.
      */
     struct Universe {
+        uint16 rentalFeePercent;
         EnumerableSetUpgradeable.AddressSet warpers;
     }
 
-    /**
-     * @dev Warper preset factory contract.
-     */
-    IWarperPresetFactory internal _warperPresetFactory;
-
-    /**
-     * @dev Universe NFT contract.
-     */
-    IUniverseToken internal _universeToken;
-
-    /**
-     * @dev ACL contract.
-     */
-    IACL internal _aclContract;
-
-    /**
-     * @dev IERC20 contract. Used as the price denominator.
-     */
-    IERC20 internal _baseToken;
+    /// STORAGE ///
+    ProtocolConfig internal _protocol;
 
     /**
      * @dev Listing ID tracker (incremental counter).

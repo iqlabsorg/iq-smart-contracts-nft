@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "../asset/IAssetController.sol";
+import "./IWarperController.sol";
 
 interface IWarperManager {
     /**
@@ -20,7 +21,7 @@ interface IWarperManager {
      */
     struct Warper {
         uint256 universeId;
-        IAssetController controller;
+        IWarperController controller;
         bool enabled; //todo: must affect renting
     }
 

@@ -50,7 +50,9 @@ export async function unitFixtureMetahub() {
   const universeTokenFactory = new UniverseToken__factory(deployer);
   const universeToken = await universeTokenFactory.deploy(metahub.address);
   // Initialize Metahub.
-  await wait(metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address, baseToken.address));
+  await wait(
+    metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address, baseToken.address, 100),
+  );
 
   return {
     universeToken,

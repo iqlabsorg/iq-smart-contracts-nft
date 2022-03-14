@@ -42,6 +42,11 @@ error WarperIsNotRegistered(address warper);
 error WarperIsAlreadyRegistered(address warper);
 
 /**
+ * @dev Thrown when the warper cannot be used for rending.
+ */
+error WarperIsDisabled();
+
+/**
  * @dev Thrown when there are no registered warpers for a particular asset.
  * @param asset Asset address.
  */
@@ -86,11 +91,14 @@ error ListingIsNotPaused();
  */
 error AssetClassIsAlreadyRegistered(bytes4 assetClass);
 
-// todo: docs, wording
+/**
+ * @dev Thrown when the original asset cannot be withdrawn because of active rentals
+ * or other activity that requires asset to stay in the vault.
+ */
 error AssetIsLocked();
 
 /**
- * @dev Thrown if warpers interface is not compatible with the AssetController
+ * @dev Thrown if warpers interface is not compatible with the AssetController.
  */
 error InvalidWarperInterface();
 
@@ -179,7 +187,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     constructor() initializer {}
 
-    /**
+    /** // todo: docs
      * @dev Metahub initializer.
      * @param warperPresetFactory Warper preset factory address.
      */
@@ -187,17 +195,24 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         address warperPresetFactory,
         address universeToken,
         address acl,
-        address baseToken
+        address baseToken,
+        uint16 rentalFeePercent
     ) external initializer {
         __UUPSUpgradeable_init();
 
         // todo perform interface checks?
-        _warperPresetFactory = IWarperPresetFactory(warperPresetFactory);
-        _universeToken = IUniverseToken(universeToken);
-        _aclContract = IACL(acl);
-        _baseToken = IERC20(baseToken);
+        _protocol = ProtocolConfig(
+            IACL(acl),
+            IWarperPresetFactory(warperPresetFactory),
+            IUniverseToken(universeToken),
+            IERC20(baseToken),
+            rentalFeePercent
+        );
     }
 
+    /**
+     * @inheritdoc IRentingManager
+     */
     function estimateRentalFee(Rentings.Params calldata rentingParams)
         external
         view
@@ -210,23 +225,48 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             uint256 total
         )
     {
+        // Check if asset listing is active.
         _checkListed(rentingParams.listingId);
 
-        //todo: check is warper is available
-        Warper memory warper = _warpers[rentingParams.warper]; // todo: storage?
-
-        //        warper.controller.
-
-        // todo: check if warper rentable for the specific asset and terms. (IRentingController.checkIsRentableAsset)
+        // Find selected listing.
         Listing storage listing = _listings[rentingParams.listingId];
+
+        // Check whether listing is not paused.
+        if (listing.paused) revert ListingIsPaused();
+
+        // Find selected warper.
+        Warper memory warper = _warpers[rentingParams.warper];
+
+        // Check whether the warper is enabled.
+        if (!warper.enabled) revert WarperIsDisabled();
+
+        // Check if the renting request can be fulfilled by selected warper.
+        Assets.Asset memory asset = listing.asset;
+        warper.controller.validateRentingRequest(asset, rentingParams);
+
+        // Resolve listing controller to calculate lister fee based on selected listing strategy.
         Listings.Params memory listingParams = listing.params;
         IListingController listingController = _listingStrategies[listingParams.strategy].controller;
 
-        uint256 listerFee = listingController.calculateListerFee(listingParams, rentingParams);
+        // Calculate base lister fee.
+        listerBaseFee = listingController.calculateListerFee(listingParams, rentingParams);
 
-        // todo: calculate universeFee
-        // todo: calculate protocolFee
-        // todo: calculate warper premiums
+        // Calculate universe fee.
+        universeBaseFee = (listerBaseFee * _universes[warper.universeId].rentalFeePercent) / 10_000;
+
+        // Calculate protocol fee.
+        protocolFee = (listerBaseFee * _protocol.rentalFeePercent) / 10_000;
+
+        // Calculate warper premiums.
+        (universePremium, listerPremium) = warper.controller.calculatePremiums(
+            asset,
+            rentingParams,
+            universeBaseFee,
+            listerBaseFee
+        );
+
+        // Calculate TOTAL rental fee that will be paid by renter.
+        total = listerBaseFee + listerPremium + universeBaseFee + universePremium + protocolFee;
     }
 
     /**
@@ -278,8 +318,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IUniverseManager
      */
     function createUniverse(string calldata name) external returns (uint256) {
-        uint256 tokenId = _universeToken.mint(_msgSender(), name);
-        emit UniverseCreated(tokenId, _universeToken.universeName(tokenId));
+        IUniverseToken universeToken = _protocol.universeToken;
+        uint256 tokenId = universeToken.mint(_msgSender(), name);
+        emit UniverseCreated(tokenId, universeToken.universeName(tokenId));
 
         return tokenId;
     }
@@ -295,9 +336,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             string memory universeName
         )
     {
-        name = _universeToken.name();
-        symbol = _universeToken.symbol();
-        universeName = _universeToken.universeName(universeId);
+        IUniverseToken universeToken = _protocol.universeToken;
+        name = universeToken.name();
+        symbol = universeToken.symbol();
+        universeName = universeToken.universeName(universeId);
     }
 
     /**
@@ -467,7 +509,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function warperPresetFactory() external view returns (address) {
-        return address(_warperPresetFactory);
+        return address(_protocol.warperPresetFactory);
     }
 
     /**
@@ -503,14 +545,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IMetahub
      */
     function baseToken() external view returns (address) {
-        return address(_baseToken);
+        return address(_protocol.baseToken);
     }
 
     /**
      * @inheritdoc AccessControlled
      */
     function _acl() internal view override returns (IACL) {
-        return _aclContract;
+        return _protocol.acl;
     }
 
     /**
@@ -535,7 +577,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         );
 
         // Deploy new warper instance from preset via warper preset factory.
-        return _warperPresetFactory.deployPreset(presetId, initCall);
+        return _protocol.warperPresetFactory.deployPreset(presetId, initCall);
     }
 
     /**
@@ -597,7 +639,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @return Universe owner.
      */
     function _universeOwner(uint256 universeId) internal view returns (address) {
-        return IERC721Upgradeable(address(_universeToken)).ownerOf(universeId);
+        return IERC721Upgradeable(address(_protocol.universeToken)).ownerOf(universeId);
     }
 
     /**
