@@ -21,6 +21,11 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
     bytes32 private constant _AVAILABILITY_PERIOD_SLOT =
         bytes32(uint256(keccak256("iq.warper.params.availabilityPeriod")) - 1);
 
+    uint256 private constant MAX_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000;
+    uint256 private constant MIN_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF;
+    uint256 private constant MAX_PERIOD_BITSHIFT = 0;
+    uint256 private constant MIN_PERIOD_BITSHIFT = 32;
+
     /**
      * Extension initializer.
      */
@@ -91,9 +96,10 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
      * @dev Stores warper availability period.
      */
     function _setAvailabilityPeriods(uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd) internal {
-        StorageSlot.getBytes32Slot(_AVAILABILITY_PERIOD_SLOT).value = bytes32(
-            abi.encodePacked(availabilityPeriodStart, availabilityPeriodEnd)
-        );
+        uint256 data = (0 & MAX_PERIOD_MASK) | (uint256(availabilityPeriodEnd) << MAX_PERIOD_BITSHIFT);
+        data = (data & MIN_PERIOD_MASK) | (uint256(availabilityPeriodStart) << MIN_PERIOD_BITSHIFT);
+
+        StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_SLOT).value = data;
     }
 
     /**
@@ -104,7 +110,8 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
         view
         returns (uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd)
     {
-        bytes memory slot = abi.encodePacked(StorageSlot.getBytes32Slot(_AVAILABILITY_PERIOD_SLOT).value);
-        (availabilityPeriodStart, availabilityPeriodEnd) = abi.decode(slot, (uint32, uint32));
+        uint256 slot32 = StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_SLOT).value;
+        availabilityPeriodStart = uint32((slot32 & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
+        availabilityPeriodEnd = uint32((slot32 & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
     }
 }

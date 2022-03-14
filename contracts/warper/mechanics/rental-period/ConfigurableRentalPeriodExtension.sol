@@ -21,6 +21,11 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      */
     bytes32 private constant _RENTAL_PERIOD_SLOT = bytes32(uint256(keccak256("iq.warper.params.rentalPeriod")) - 1);
 
+    uint256 private constant MAX_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000;
+    uint256 private constant MIN_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF;
+    uint256 private constant MAX_PERIOD_BITSHIFT = 0;
+    uint256 private constant MIN_PERIOD_BITSHIFT = 32;
+
     /**
      * @dev Extension initializer.
      */
@@ -86,17 +91,18 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      * @dev Stores warper rental period.
      */
     function _setRentalPeriods(uint32 minRentalPeriod, uint32 maxRentalPeriod) internal {
-        StorageSlot.getBytes32Slot(_RENTAL_PERIOD_SLOT).value = bytes32(
-            abi.encodePacked(minRentalPeriod, maxRentalPeriod)
-        );
+        uint256 data = (0 & MAX_PERIOD_MASK) | (uint256(maxRentalPeriod) << MAX_PERIOD_BITSHIFT);
+        data = (data & MIN_PERIOD_MASK) | (uint256(minRentalPeriod) << MIN_PERIOD_BITSHIFT);
+
+        StorageSlot.getUint256Slot(_RENTAL_PERIOD_SLOT).value = data;
     }
 
     /**
      * @dev Returns warper rental periods.
      */
     function _rentalPeriods() internal view returns (uint32 minRentalPeriod, uint32 maxRentalPeriod) {
-        bytes32 slot = StorageSlot.getBytes32Slot(_RENTAL_PERIOD_SLOT).value;
-        bytes memory slotAsBytes = abi.encodePacked(slot);
-        (minRentalPeriod, maxRentalPeriod) = abi.decode(slotAsBytes, (uint32, uint32));
+        uint256 slot32 = StorageSlot.getUint256Slot(_RENTAL_PERIOD_SLOT).value;
+        minRentalPeriod = uint32((slot32 & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
+        maxRentalPeriod = uint32((slot32 & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
     }
 }
