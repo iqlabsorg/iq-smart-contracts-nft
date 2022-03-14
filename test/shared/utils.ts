@@ -102,7 +102,7 @@ export function makeERC721Asset(token: string, tokenId: BigNumberish, value: Big
  */
 export function makeFixedPriceStrategy(baseRate: BigNumberish) {
   return {
-    id: ListingStrategy.FIXED_PRICE,
+    strategy: ListingStrategy.FIXED_PRICE,
     data: defaultAbiCoder.encode(['uint256'], [baseRate]),
   };
 }

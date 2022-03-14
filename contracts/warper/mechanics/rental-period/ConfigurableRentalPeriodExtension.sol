@@ -76,6 +76,14 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
     }
 
     /**
+     * @inheritdoc IRentalPeriodMechanics
+     */
+    function __rentalPeriodRange() external view returns (uint32 minRentalPeriod, uint32 maxRentalPeriod) {
+        minRentalPeriod = _minRentalPeriod();
+        maxRentalPeriod = _maxRentalPeriod();
+    }
+
+    /**
      * @dev Stores warper minimal rental period.
      */
     function _setMinRentalPeriod(uint32 minRentalPeriod) internal {

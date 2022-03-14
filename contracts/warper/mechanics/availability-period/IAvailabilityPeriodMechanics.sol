@@ -13,4 +13,14 @@ interface IAvailabilityPeriodMechanics {
      * @return Unix timestamp after which the warper is NOT rentable.
      */
     function __availabilityPeriodEnd() external view returns (uint32);
+
+    /**
+     * @dev Returns warper availability period.
+     * @return availabilityPeriodStart Unix timestamp after which the warper is rentable.
+     * @return availabilityPeriodEnd Unix timestamp after which the warper is NOT rentable.
+     */
+    function __availabilityPeriodRange()
+        external
+        view
+        returns (uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd);
 }

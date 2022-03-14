@@ -53,7 +53,7 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
     /**
      * @inheritdoc IWarper
      */
-    function __supportedInterfaces(bytes4[] memory interfaceIds) public returns (bool[] memory) {
+    function __supportedInterfaces(bytes4[] memory interfaceIds) external view returns (bool[] memory) {
         return address(this).getSupportedInterfaces(interfaceIds);
     }
 

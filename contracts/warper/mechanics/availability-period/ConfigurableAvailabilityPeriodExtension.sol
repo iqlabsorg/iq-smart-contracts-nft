@@ -76,6 +76,19 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
     }
 
     /**
+     * @inheritdoc IAvailabilityPeriodMechanics
+     */
+    function __availabilityPeriodRange()
+        external
+        view
+        virtual
+        returns (uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd)
+    {
+        availabilityPeriodStart = _availabilityPeriodStart();
+        availabilityPeriodEnd = _availabilityPeriodEnd();
+    }
+
+    /**
      * @dev Stores warper availability period starting time.
      */
     function _setAvailabilityPeriodStart(uint32 availabilityPeriodStart) internal {

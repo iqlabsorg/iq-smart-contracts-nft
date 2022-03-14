@@ -8,6 +8,7 @@ import {
   ERC721AssetVaultMock__factory,
   ERC721Mock,
   IListingManager,
+  Metahub,
 } from '../../../../typechain';
 import { AssetClass, makeERC721Asset, makeFixedPriceStrategy } from '../../../shared/utils';
 
@@ -43,34 +44,33 @@ export function shouldBehaveLikeListingManager(): void {
 
     describe('listAsset', function () {
       it.skip('prevents listing asset without registered warper', async () => {
-        const params = {
-          asset: makeERC721Asset('0x2B328CCD2d38ACBF7103b059a8EB94171C68f745', 1), // unregistered asset
-          strategy: makeFixedPriceStrategy(100),
-          maxLockPeriod: 86400,
-        };
+        const asset = makeERC721Asset('0x2B328CCD2d38ACBF7103b059a8EB94171C68f745', 1); // unregistered asset
+        const params = makeFixedPriceStrategy(100);
+        const maxLockPeriod = 86400;
 
-        await expect(metahub.listAsset(params)).to.eventually.revertedWithError('AssetHasNoWarpers', params.asset);
+        await expect(metahub.listAsset(asset, params, maxLockPeriod)).to.eventually.revertedWithError(
+          'AssetHasNoWarpers',
+          asset,
+        );
       });
 
       it.skip('emits correct events', async () => {
-        const params = {
-          asset: makeERC721Asset(originalAsset.address, 1),
-          strategy: makeFixedPriceStrategy(100),
-          maxLockPeriod: 86400,
-        };
+        const asset = makeERC721Asset(originalAsset.address, 1);
+        const params = makeFixedPriceStrategy(100);
+        const maxLockPeriod = 86400;
 
-        await expect(metahub.listAsset(params)).to.emit(metahub, 'AssetListed').withArgs(params.asset, 1);
+        await expect(metahub.listAsset(asset, params, maxLockPeriod))
+          .to.emit(metahub, 'AssetListed')
+          .withArgs(asset, 1);
       });
 
       it.skip('puts listed asset into vault', async () => {
         await originalAsset.connect(nftCreator).approve(metahub.address, 1);
-        const params = {
-          asset: makeERC721Asset(originalAsset.address, 1),
-          strategy: makeFixedPriceStrategy(100),
-          maxLockPeriod: 86400,
-        };
+        const asset = makeERC721Asset(originalAsset.address, 1);
+        const params = makeFixedPriceStrategy(100);
+        const maxLockPeriod = 86400;
 
-        await metahub.connect(nftCreator).listAsset(params);
+        await metahub.connect(nftCreator).listAsset(asset, params, maxLockPeriod);
 
         await expect(originalAsset.ownerOf(1)).to.eventually.eq(erc721Vault.address);
       });

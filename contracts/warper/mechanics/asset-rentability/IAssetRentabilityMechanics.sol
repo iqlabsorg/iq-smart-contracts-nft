@@ -14,5 +14,5 @@ interface IAssetRentabilityMechanics {
         address renter,
         uint256 tokenId,
         uint256 amount
-    ) external returns (bool isRentable, string memory errorMessage);
+    ) external view returns (bool isRentable, string memory errorMessage);
 }

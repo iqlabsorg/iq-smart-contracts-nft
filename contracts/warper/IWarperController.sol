@@ -7,6 +7,9 @@ import "../asset/IAssetController.sol";
 import "./IWarper.sol";
 
 interface IWarperController is IAssetController {
+    //todo: docs
+    error AssetIsNotRentable(string reason);
+
     /**
      * @dev Validates that the warper interface is supported by the current WarperController.
      * @param warper Warper whose interface we must validate.

@@ -30,18 +30,19 @@ export function shouldBehaveLikeIAssetController(): void {
       it('todo');
     });
 
-    describe('isCompatibleWarper', function () {
-      describe('Item implements Warper interface', () => {
-        it('returns true', async () => {
-          await expect(assetController.isCompatibleWarper(warper.address)).to.eventually.equal(true);
-        });
-      });
-
-      describe('Item does not implement Warper interface', () => {
-        it('returns false', async () => {
-          await expect(assetController.isCompatibleWarper(notWarper.address)).to.eventually.equal(false);
-        });
-      });
-    });
+    //todo: move to WarperController test
+    //describe('isCompatibleWarper', function () {
+    //  describe('Item implements Warper interface', () => {
+    //    it('returns true', async () => {
+    //      await expect(assetController.isCompatibleWarper(warper.address)).to.eventually.equal(true);
+    //    });
+    //  });
+    //
+    //  describe('Item does not implement Warper interface', () => {
+    //    it('returns false', async () => {
+    //      await expect(assetController.isCompatibleWarper(notWarper.address)).to.eventually.equal(false);
+    //    });
+    //  });
+    //});
   });
 }
