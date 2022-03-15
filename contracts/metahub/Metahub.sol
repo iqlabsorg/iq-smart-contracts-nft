@@ -149,7 +149,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
     /**
      * @dev Performs new rental registration.
-     * @param rentingParams Renting parameters.
+     * @param params Renting parameters.
      * @return New rental ID.
      */
     function _registerRental(Rentings.Params calldata params) internal returns (uint256) {
@@ -692,7 +692,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         IListingController listingController = _listingStrategies[listingParams.strategy].controller;
 
         // Calculate base lister fee.
-        listerBaseFee = listingController.calculateListerFee(listingParams, rentingParams);
+        listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
 
         // Calculate universe fee.
         universeBaseFee = (listerBaseFee * _universes[warper.universeId].rentalFeePercent) / 10_000;

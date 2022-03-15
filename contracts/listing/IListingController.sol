@@ -12,8 +12,13 @@ interface IListingController is IERC165 {
      */
     function strategyId() external pure returns (bytes4);
 
-    //todo: docs
-    function calculateListerFee(Listings.Params calldata listingParams, Rentings.Params calldata rentingParams)
+    /**
+     * @dev Calculates rental fee based on renting params and implemented listing strategy.
+     * @param listingParams Listing strategy params.
+     * @param rentingParams Renting params.
+     * @return Rental fee.
+     */
+    function calculateRentalFee(Listings.Params calldata listingParams, Rentings.Params calldata rentingParams)
         external
         view
         returns (uint256);

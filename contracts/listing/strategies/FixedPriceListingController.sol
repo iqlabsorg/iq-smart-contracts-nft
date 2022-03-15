@@ -9,14 +9,14 @@ contract FixedPriceListingController is ListingController {
     /**
      * @inheritdoc IListingController
      */
-    function strategyId() external pure returns (bytes4) {
+    function strategyId() public pure returns (bytes4) {
         return Listings.FIXED_PRICE;
     }
 
     /**
      * @inheritdoc IListingController
      */
-    function calculateListerFee(Listings.Params calldata strategyParams, Rentings.Params calldata rentingParams)
+    function calculateRentalFee(Listings.Params calldata strategyParams, Rentings.Params calldata rentingParams)
         external
         view
         returns (uint256)
@@ -31,10 +31,15 @@ contract FixedPriceListingController is ListingController {
      * @return baseRate Asset renting base rate (base tokens per second).
      */
     function _decodeStrategyParams(Listings.Params memory params) internal pure virtual returns (uint256 baseRate) {
-        // Ensure correct strategy ID.
-        if (params.strategy != Listings.FIXED_PRICE) {
-            revert ListingStrategyMismatch(params.strategy, Listings.FIXED_PRICE);
-        }
+        _checkStrategy(params.strategy);
         return abi.decode(params.data, (uint256));
+    }
+
+    /**
+     * @dev Throws if strategy is not compatible.
+     * @param checkedStrategyId Strategy ID.
+     */
+    function _checkStrategy(bytes4 checkedStrategyId) internal pure {
+        if (checkedStrategyId != strategyId()) revert ListingStrategyMismatch(checkedStrategyId, strategyId());
     }
 }
