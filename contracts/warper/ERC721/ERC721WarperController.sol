@@ -35,6 +35,7 @@ contract ERC721WarperController is IWarperController, ERC721AssetController {
      * @inheritdoc IWarperController
      */
     function validateRentingParams(Assets.Asset calldata asset, Rentings.Params calldata rentingParams) external view {
+        _checkAssetClass(asset.id.class);
         address warper = rentingParams.warper;
 
         // Analyse warper functionality by checking the supported mechanics.

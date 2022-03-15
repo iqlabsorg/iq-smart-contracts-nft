@@ -17,7 +17,12 @@ interface IWarperController is IAssetController {
      */
     function isCompatibleWarper(IWarper warper) external view returns (bool);
 
-    // todo: docs
+    /**
+     * @dev Validates renting params taking into account various warper mechanics.
+     * Throws an error if the specified asset cannot be rented with particular renting parameters.
+     * @param asset Asset being rented.
+     * @param rentingParams Renting parameters.
+     */
     function validateRentingParams(Assets.Asset calldata asset, Rentings.Params calldata rentingParams) external view;
 
     // todo: docs

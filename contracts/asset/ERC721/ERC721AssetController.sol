@@ -19,7 +19,7 @@ contract ERC721AssetController is IAssetController {
     /**
      * @inheritdoc IAssetController
      */
-    function assetClass() external pure returns (bytes4) {
+    function assetClass() public pure returns (bytes4) {
         return Assets.ERC721;
     }
 
@@ -92,10 +92,15 @@ contract ERC721AssetController is IAssetController {
      * @return tokenId Token ID.
      */
     function _decodeAssetId(Assets.AssetId memory id) internal pure virtual returns (address token, uint256 tokenId) {
-        // Ensure correct asset class.
-        if (id.class != Assets.ERC721) {
-            revert AssetClassMismatch(id.class, Assets.ERC721);
-        }
+        _checkAssetClass(id.class);
         return abi.decode(id.data, (address, uint256));
+    }
+
+    /**
+     * @dev Throws if asset class is not compatible.
+     * @param checkedAssetClass Asset class ID.
+     */
+    function _checkAssetClass(bytes4 checkedAssetClass) internal pure {
+        if (checkedAssetClass != assetClass()) revert AssetClassMismatch(checkedAssetClass, assetClass());
     }
 }
