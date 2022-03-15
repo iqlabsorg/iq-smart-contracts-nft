@@ -101,8 +101,8 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      * @dev Returns warper rental periods.
      */
     function _rentalPeriods() internal view returns (uint32 minRentalPeriod, uint32 maxRentalPeriod) {
-        uint256 slot32 = StorageSlot.getUint256Slot(_RENTAL_PERIOD_SLOT).value;
-        minRentalPeriod = uint32((slot32 & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
-        maxRentalPeriod = uint32((slot32 & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
+        uint256 data = StorageSlot.getUint256Slot(_RENTAL_PERIOD_SLOT).value;
+        minRentalPeriod = uint32((data & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
+        maxRentalPeriod = uint32((data & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
     }
 }

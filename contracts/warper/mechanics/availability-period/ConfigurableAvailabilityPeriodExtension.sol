@@ -110,8 +110,8 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
         view
         returns (uint32 availabilityPeriodStart, uint32 availabilityPeriodEnd)
     {
-        uint256 slot32 = StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_SLOT).value;
-        availabilityPeriodStart = uint32((slot32 & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
-        availabilityPeriodEnd = uint32((slot32 & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
+        uint256 data = StorageSlot.getUint256Slot(_AVAILABILITY_PERIOD_SLOT).value;
+        availabilityPeriodStart = uint32((data & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
+        availabilityPeriodEnd = uint32((data & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
     }
 }
