@@ -4,6 +4,7 @@ pragma solidity ^0.8.11;
 import "../asset/IAssetController.sol";
 import "./IWarperController.sol";
 
+// todo: handle warper pausing/unpausing
 interface IWarperManager {
     /**
      * @dev Thrown when performing action or accessing data of an unknown warper.
@@ -30,10 +31,14 @@ interface IWarperManager {
     error InvalidWarperInterface();
 
     /**
-     * @dev Thrown when there are no registered warpers for a particular asset.
-     * @param asset Asset address.
+     * @dev Thrown when the operation is not allowed due to the warper being paused.
      */
-    error UnsupportedAsset(address asset);
+    error WarperIsPaused();
+
+    /**
+     * @dev Thrown when the operation is not allowed due to the warper not being paused.
+     */
+    error WarperIsNotPaused();
 
     /**
      * @dev Emitted when a new warper is registered.
@@ -45,14 +50,14 @@ interface IWarperManager {
 
     /**
      * @dev Registered warper data.
-     * @param enabled True if the warper is enabled and operational.
      * @param universeId Warper universe ID.
      * @param controller Warper asset controller.
+     * @param paused Indicates whether the warper is paused.
      */
     struct Warper {
         uint256 universeId;
         IWarperController controller;
-        bool enabled; //todo: must affect renting
+        bool paused;
     }
 
     /**

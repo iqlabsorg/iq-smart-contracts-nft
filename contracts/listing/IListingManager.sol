@@ -34,6 +34,12 @@ interface IListingManager {
     error AssetIsLocked();
 
     /**
+     * @dev Thrown when there are no registered warpers for a particular asset.
+     * @param asset Asset address.
+     */
+    error UnsupportedAsset(address asset);
+
+    /**
      * @dev Thrown upon attempting to register a listing strategy twice.
      * @param strategyId Duplicate listing strategy ID.
      */
@@ -97,7 +103,6 @@ interface IListingManager {
     /**
      * @dev Listing details structure.
      * @param lister Lister account address.
-     * @param token Listed asset contract address.
      * @param asset Listed asset structure.
      * @param params Listing strategy parameters.
      * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
@@ -107,7 +112,6 @@ interface IListingManager {
      */
     struct Listing {
         address lister;
-        address token;
         Assets.Asset asset;
         Listings.Params params;
         uint32 maxLockPeriod;

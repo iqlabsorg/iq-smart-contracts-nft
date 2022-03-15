@@ -60,6 +60,11 @@ abstract contract MetahubStorage {
     CountersUpgradeable.Counter internal _listingIdTracker;
 
     /**
+     * @dev Rental agreement ID tracker (incremental counter).
+     */
+    CountersUpgradeable.Counter internal _rentalIdTracker;
+
+    /**
      * @dev Mapping from warper address to the warper entry.
      */
     mapping(address => IWarperManager.Warper) internal _warpers;
@@ -75,17 +80,22 @@ abstract contract MetahubStorage {
     mapping(uint256 => IListingManager.Listing) internal _listings;
 
     /**
-     * @dev Mapping from asset class ID to the asset class configuration.
-     */
-    mapping(bytes4 => IAssetClassManager.AssetClassConfig) internal _assetClasses;
-
-    /**
      * @dev Mapping from listing strategy ID to the listing strategy configuration.
      */
     mapping(bytes4 => IListingManager.ListingStrategyConfig) internal _listingStrategies;
 
     /**
+     * @dev Mapping from asset class ID to the asset class configuration.
+     */
+    mapping(bytes4 => IAssetClassManager.AssetClassConfig) internal _assetClasses;
+
+    /**
      * @dev Mapping from asset address to the asset details.
      */
     mapping(address => Asset) internal _assets;
+
+    /**
+     * @dev Mapping from rental agreement ID to the rental agreement details.
+     */
+    mapping(uint256 => IRentingManager.RentalAgreement) internal _rentalAgreements;
 }

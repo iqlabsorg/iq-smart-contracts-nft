@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-// todo: add universe accessor?  universe(uint256 universeId) external returns (name, symbol, universeName)
 interface IUniverseManager {
     /**
      * @dev Thrown when the message sender doesn't match the universe owner.

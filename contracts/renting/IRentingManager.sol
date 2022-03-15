@@ -4,15 +4,19 @@ pragma solidity ^0.8.11;
 import "./Rentings.sol";
 
 interface IRentingManager {
-    /**
-     * @dev Thrown when the warper cannot be used for rending.
-     */
-    error WarperIsDisabled();
-
     enum WarperRentalStatus {
         NOT_MINTED,
         MINTED,
         RENTED
+    }
+
+    // todo: docs
+    struct RentalAgreement {
+        uint256 listingId;
+        address renter;
+        address warper;
+        uint32 startTime;
+        uint32 endTime;
     }
 
     /**
@@ -31,8 +35,17 @@ interface IRentingManager {
      */
     function getWarperRentalStatus(address warper, uint256 tokenId) external view returns (WarperRentalStatus);
 
-    //todo: docs
-    function estimateRentalFee(Rentings.Params calldata rentingParams)
+    /**
+     * @dev Evaluates renting params and returns rental fee breakdown.
+     * @param rentingParams Renting parameters.
+     * @return listerBaseFee
+     * @return listerPremium
+     * @return universeBaseFee
+     * @return universePremium
+     * @return protocolFee
+     * @return total
+     */
+    function estimateRent(Rentings.Params calldata rentingParams)
         external
         view
         returns (
@@ -44,5 +57,11 @@ interface IRentingManager {
             uint256 total
         );
 
-    //    function rent(Renting.Params calldata rentingParams); // todo: validate msgSender is renter and add slippage protection
+    /**
+     * @dev Performs renting operation.
+     * @param rentingParams Renting parameters.
+     * @param maxPayment Maximal payment amount the renter is willing to pay.
+     * @return New rental ID.
+     */
+    function rent(Rentings.Params calldata rentingParams, uint256 maxPayment) external returns (uint256);
 }

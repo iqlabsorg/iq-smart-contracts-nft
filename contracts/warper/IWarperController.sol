@@ -18,7 +18,7 @@ interface IWarperController is IAssetController {
     function isCompatibleWarper(IWarper warper) external view returns (bool);
 
     // todo: docs
-    function validateRentingRequest(Assets.Asset calldata asset, Rentings.Params calldata rentingParams) external view;
+    function validateRentingParams(Assets.Asset calldata asset, Rentings.Params calldata rentingParams) external view;
 
     // todo: docs
     function calculatePremiums(
