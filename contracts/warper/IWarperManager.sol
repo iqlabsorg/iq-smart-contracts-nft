@@ -49,6 +49,18 @@ interface IWarperManager {
     event WarperRegistered(uint256 indexed universeId, address indexed original, address indexed warper);
 
     /**
+     * @dev Emitted when the warper is paused.
+     * @param warper Address.
+     */
+    event WarperPaused(address indexed warper);
+
+    /**
+     * @dev Emitted when the warper pause is lifted.
+     * @param warper Address.
+     */
+    event WarperUnpaused(address indexed warper);
+
+    /**
      * @dev Registered warper data.
      * @param universeId Warper universe ID.
      * @param controller Warper asset controller.
@@ -121,4 +133,18 @@ interface IWarperManager {
      * @return Warper details.
      */
     function warper(address warper) external view returns (Warper memory);
+
+    /**
+     * @dev Puts the warper on pause.
+     * Emits a {WarperPaused} event.
+     * @param warper Address.
+     */
+    function pauseWarper(address warper) external;
+
+    /**
+     * @dev Lifts the warper pause.
+     * Emits a {WarperUnpaused} event.
+     * @param warper Address.
+     */
+    function unpauseWarper(address warper) external;
 }

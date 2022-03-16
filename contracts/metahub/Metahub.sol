@@ -35,7 +35,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
-        if (_msgSender() != _universeOwner(universeId)) revert CallerIsNotUniverseOwner();
+        _onlyUniverseOwner(universeId);
         _;
     }
 
@@ -52,6 +52,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     modifier listed(uint256 listingId) {
         _checkListed(listingId);
+        _;
+    }
+
+    /**
+     * @dev Modifier to make sure that the warper has been registered beforehand.
+     */
+    modifier warperIsRegistered(address warper) {
+        _checkRegisteredWarper(warper);
         _;
     }
 
@@ -414,6 +422,32 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
+     * @inheritdoc IWarperManager
+     */
+    function pauseWarper(address warper) external warperIsRegistered(warper) {
+        Warper storage storedWarper = _warpers[warper];
+
+        _onlyUniverseOwner(storedWarper.universeId);
+        if (storedWarper.paused) revert WarperIsPaused();
+
+        storedWarper.paused = true;
+        emit WarperPaused(warper);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function unpauseWarper(address warper) external warperIsRegistered(warper) {
+        Warper storage storedWarper = _warpers[warper];
+
+        _onlyUniverseOwner(storedWarper.universeId);
+        if (storedWarper.paused) revert WarperIsNotPaused();
+
+        storedWarper.paused = false;
+        emit WarperUnpaused(warper);
+    }
+
+    /**
      * @inheritdoc IListingManager
      */
     function listing(uint256 listingId) external view returns (Listing memory) {
@@ -444,16 +478,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IWarperManager
      */
-    function isWarperAdmin(address warper, address account) external view returns (bool) {
-        _checkRegisteredWarper(warper);
+    function isWarperAdmin(address warper, address account) external view warperIsRegistered(warper) returns (bool) {
         return _universeOwner(_warpers[warper].universeId) == account;
     }
 
     /**
      * @inheritdoc IWarperManager
      */
-    function warper(address warper) external view returns (Warper memory) {
-        _checkRegisteredWarper(warper);
+    function warper(address warper) external view warperIsRegistered(warper) returns (Warper memory) {
         return _warpers[warper];
     }
 
@@ -641,6 +673,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function _checkRegisteredWarper(address warper) internal view {
         if (!_isRegisteredWarper(warper)) revert WarperIsNotRegistered(warper);
+    }
+
+    /**
+     * @dev Throws if the universe owner is not the tx sender.
+     * @param universeId Universe ID.
+     */
+    function _onlyUniverseOwner(uint256 universeId) internal view {
+        if (_msgSender() != _universeOwner(universeId)) revert CallerIsNotUniverseOwner();
     }
 
     /**
