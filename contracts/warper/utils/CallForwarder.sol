@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-error CallForwardToZeroAddress();
-
 abstract contract CallForwarder {
+    // TODO: docs
+    error CallForwardToZeroAddress();
+
     /**
      * @dev Forwards the current call to `target`.
      */

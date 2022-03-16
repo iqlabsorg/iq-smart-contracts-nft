@@ -10,15 +10,6 @@ import "../Warper.sol";
 import "./IERC721Warper.sol";
 import "../../metahub/IMetahub.sol";
 
-error BalanceQueryForZeroAddress();
-error OwnerQueryForNonexistentToken(uint256 tokenId);
-error OperatorQueryForNonexistentToken(uint256 tokenId);
-error TransferToNonERC721ReceiverImplementer(address to);
-error MintToTheZeroAddress();
-error TokenIsAlreadyMinted(uint256 tokenId);
-error TransferToTheZeroAddress();
-error MethodNotAllowed();
-
 /**
  * @title Warper for the ERC721 token contract
  */

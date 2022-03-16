@@ -7,6 +7,9 @@ import "@openzeppelin/contracts/access/IAccessControlEnumerable.sol";
  * @title Access Control List contract interface.
  */
 interface IACL is IAccessControlEnumerable {
+    // TODO: Docs
+    error RolesContractIncorrectlyConfigured();
+
     /**
      * @notice revert if the `account` does not have the specified role.
      * @param role the role specifier.

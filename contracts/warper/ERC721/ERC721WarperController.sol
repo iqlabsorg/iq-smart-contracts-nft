@@ -11,20 +11,6 @@ import "../mechanics/rental-period/IRentalPeriodMechanics.sol";
 
 contract ERC721WarperController is IWarperController, ERC721AssetController {
     /**
-     * @dev Thrown when the current time is not withing the warper availability period.
-     */
-    error WarperIsNotAvailableForRenting(
-        uint256 currentTime,
-        uint32 availabilityPeriodStart,
-        uint32 availabilityPeriodEnd
-    );
-
-    /**
-     * @dev Thrown when the requested rental period is not withing the warper allowed rental period range.
-     */
-    error WarperRentalPeriodIsOutOfRange(uint32 requestedRentalPeriod, uint32 minRentalPeriod, uint32 maxRentalPeriod);
-
-    /**
      * @inheritdoc IWarperController
      */
     function isCompatibleWarper(IWarper warper) external view returns (bool) {

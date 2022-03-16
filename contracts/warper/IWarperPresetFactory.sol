@@ -2,6 +2,12 @@
 pragma solidity ^0.8.11;
 
 interface IWarperPresetFactory {
+    // TODO Docs
+    error InvalidWarperPresetInterface();
+    error DuplicateWarperPresetId(bytes32 presetId);
+    error DisabledWarperPreset(bytes32 presetId);
+    error EnabledWarperPreset(bytes32 presetId);
+
     struct WarperPreset {
         bytes32 id;
         address implementation;

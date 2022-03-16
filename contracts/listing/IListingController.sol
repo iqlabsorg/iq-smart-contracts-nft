@@ -7,6 +7,13 @@ import "../renting/Rentings.sol";
 
 interface IListingController is IERC165 {
     /**
+     * @dev Thrown when the listing cannot be processed by the specific controller due to the listing strategy ID mismatch.
+     * @param actual Actual listing strategy ID.
+     * @param required Required listing strategy ID.
+     */
+    error ListingStrategyMismatch(bytes4 actual, bytes4 required);
+
+    /**
      * @dev Returns implemented strategy ID.
      * @return Listing strategy ID.
      */

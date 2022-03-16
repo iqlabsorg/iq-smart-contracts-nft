@@ -3,6 +3,26 @@ pragma solidity ^0.8.11;
 
 interface IAssetVault {
     /**
+     * @dev Thrown when the asset is not is found among vault inventory.
+     */
+    error AssetNotFound();
+
+    /**
+     * @dev Thrown when the function is called on the vault in recovery mode.
+     */
+    error VaultIsInRecoveryMode();
+
+    /**
+     * @dev Thrown when the asset return is not allowed, due to the vault state or the caller permissions.
+     */
+    error AssetReturnIsNotAllowed();
+
+    /**
+     * @dev Thrown when the asset deposit is not allowed, due to the vault state or the caller permissions.
+     */
+    error AssetDepositIsNotAllowed();
+
+    /**
      * @dev Emitted when the vault is switched to recovery mode by `account`.
      */
     event RecoveryModeActivated(address account);

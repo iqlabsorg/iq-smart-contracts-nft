@@ -6,16 +6,6 @@ import "./IConfigurableRentalPeriodExtension.sol";
 
 abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriodExtension, Warper {
     /**
-     * @dev Thrown when the the min rental period is not strictly lesser than max rental period
-     */
-    error InvalidMinRentalPeriod();
-
-    /**
-     * @dev Thrown when the max rental period is not greater or equal than min rental period
-     */
-    error InvalidMaxRentalPeriod();
-
-    /**
      * @dev Warper rental period.
      * @dev It contains both - the min and max values (uint32) - in a concatenated form.
      */

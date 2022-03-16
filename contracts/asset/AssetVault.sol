@@ -7,26 +7,6 @@ import "../acl/AccessControlled.sol";
 import "./IAssetVault.sol";
 
 /**
- * @dev Thrown when the asset is not is found among vault inventory.
- */
-error AssetNotFound();
-
-/**
- * @dev Thrown when the function is called on the vault in recovery mode.
- */
-error VaultIsInRecoveryMode();
-
-/**
- * @dev Thrown when the asset return is not allowed, due to the vault state or the caller permissions.
- */
-error AssetReturnIsNotAllowed();
-
-/**
- * @dev Thrown when the asset deposit is not allowed, due to the vault state or the caller permissions.
- */
-error AssetDepositIsNotAllowed();
-
-/**
  * @dev During the normal operation time, only Metahub contract is allowed to initiate asset return to the original asset owner.
  * In case of emergency, the vault admin can switch vault to recovery mode, therefore allowing anyone to initiate asset return.
  * NOTE: There is no way to transfer asset from the vault to an arbitrary address. The asset can only be returned to the rightful owner.

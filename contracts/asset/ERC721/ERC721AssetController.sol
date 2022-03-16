@@ -8,14 +8,14 @@ import "../Assets.sol";
 import "./ERC721AssetVault.sol";
 
 /**
- * @dev Thrown when the asset transfer value is invalid for ERC721 token standard.
- */
-error InvalidERC721TransferValue(uint256 value);
-
-/**
  * @title Asset controller for the ERC721 tokens
  */
 contract ERC721AssetController is IAssetController {
+    /**
+     * @dev Thrown when the asset transfer value is invalid for ERC721 token standard.
+     */
+    error InvalidERC721TransferValue(uint256 value);
+
     /**
      * @inheritdoc IAssetController
      */

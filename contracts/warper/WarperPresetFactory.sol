@@ -10,11 +10,6 @@ import "../Errors.sol";
 import "./IWarperPresetFactory.sol";
 import "./IWarperPreset.sol";
 
-error InvalidWarperPresetInterface();
-error DuplicateWarperPresetId(bytes32 presetId);
-error DisabledWarperPreset(bytes32 presetId);
-error EnabledWarperPreset(bytes32 presetId);
-
 contract WarperPresetFactory is Ownable, IWarperPresetFactory {
     using Clones for address;
     using Address for address;

@@ -6,16 +6,6 @@ import "./IConfigurableAvailabilityPeriodExtension.sol";
 
 abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvailabilityPeriodExtension, Warper {
     /**
-     * @dev Thrown when the availability period start time is not strictly lesser than the end time
-     */
-    error InvalidAvailabilityPeriodStart();
-
-    /**
-     * @dev Thrown when the availability period end time is not greater or equal than the start time
-     */
-    error InvalidAvailabilityPeriodEnd();
-
-    /**
      * @dev Warper availability period.
      */
     bytes32 private constant _AVAILABILITY_PERIOD_SLOT =

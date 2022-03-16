@@ -10,8 +10,6 @@ import "./Roles.sol";
  * @title Access Control List contract
  */
 contract ACL is IACL, AccessControlEnumerable {
-    error RolesContractIncorrectlyConfigured();
-
     constructor() {
         if (Roles.ADMIN != DEFAULT_ADMIN_ROLE) revert RolesContractIncorrectlyConfigured();
 

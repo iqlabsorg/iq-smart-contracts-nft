@@ -11,6 +11,20 @@ interface IWarperController is IAssetController {
     error AssetIsNotRentable(string reason);
 
     /**
+     * @dev Thrown when the current time is not withing the warper availability period.
+     */
+    error WarperIsNotAvailableForRenting(
+        uint256 currentTime,
+        uint32 availabilityPeriodStart,
+        uint32 availabilityPeriodEnd
+    );
+
+    /**
+     * @dev Thrown when the requested rental period is not withing the warper allowed rental period range.
+     */
+    error WarperRentalPeriodIsOutOfRange(uint32 requestedRentalPeriod, uint32 minRentalPeriod, uint32 maxRentalPeriod);
+
+    /**
      * @dev Validates that the warper interface is supported by the current WarperController.
      * @param warper Warper whose interface we must validate.
      * @return bool - `true` if warper is supported.

@@ -4,10 +4,11 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-error ContractIsAlreadyInitialized();
-error ContractIsNotInitializing();
-
 abstract contract InitializationContext {
+    // TODO: docs
+    error ContractIsAlreadyInitialized();
+    error ContractIsNotInitializing();
+
     /**
      * @dev Indicates that the contract has been initialized.
      */

@@ -5,6 +5,16 @@ import "./IRentalPeriodMechanics.sol";
 
 interface IConfigurableRentalPeriodExtension is IRentalPeriodMechanics {
     /**
+     * @dev Thrown when the the min rental period is not strictly lesser than max rental period
+     */
+    error InvalidMinRentalPeriod();
+
+    /**
+     * @dev Thrown when the max rental period is not greater or equal than min rental period
+     */
+    error InvalidMaxRentalPeriod();
+
+    /**
      * @dev Sets warper min rental period.
      * @param minRentalPeriod New min rental period value.
      */
