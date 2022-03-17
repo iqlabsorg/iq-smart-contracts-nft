@@ -3,14 +3,14 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./IMetahub.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarper.sol";
 import "../universe/IUniverseToken.sol";
 import "../asset/Assets.sol";
 import "../acl/IACL.sol";
-import "../user/User.sol";
+import "../user/Users.sol";
 
 abstract contract MetahubStorage {
     /**
@@ -25,7 +25,7 @@ abstract contract MetahubStorage {
         IACL acl;
         IWarperPresetFactory warperPresetFactory;
         IUniverseToken universeToken;
-        IERC20 baseToken;
+        IERC20Upgradeable baseToken;
         uint16 rentalFeePercent;
     }
 
@@ -90,5 +90,5 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from user address to the user data.
      */
-    mapping(address => User.Info) internal _users;
+    mapping(address => Users.Info) internal _users;
 }

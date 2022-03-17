@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+
 import "../acl/AccessControlled.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
@@ -26,13 +28,14 @@ import "../warper/IWarperController.sol";
 
 // todo: review lib imports
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
-    using Address for address;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using AddressUpgradeable for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using Assets for Assets.Asset;
     using Assets for Assets.Info;
-    using User for User.Info;
+    using Users for Users.Info;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
@@ -89,7 +92,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             IACL(acl),
             IWarperPresetFactory(warperPresetFactory),
             IUniverseToken(universeToken),
-            IERC20(baseToken),
+            IERC20Upgradeable(baseToken),
             rentalFeePercent
         );
     }
@@ -154,13 +157,16 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         uint256 listerFee = listerBaseFee + listerPremium;
         uint256 universeFee = universeBaseFee + universePremium;
 
-        // todo: handle payments
-
         // Find selected listing.
         Listings.Info storage listing = _listings[rentingParams.listingId];
 
+        // Handle payments.
+        _protocol.baseToken.safeTransferFrom(_msgSender(), listing.lister, listerFee);
+
+        // todo: pay to Universe
+        // todo: pay to Protocol
+
         // todo: warp original asset (mint warper)
-        // todo: register new rental agreement (global rental agreement mapping + renter index)
 
         return _registerRental(rentingParams);
     }
