@@ -12,6 +12,6 @@ contract AssetsMock {
         bytes memory data,
         uint256 value
     ) external pure returns (Assets.Asset memory) {
-        return Assets.make(assetClass, data, value);
+        return Assets.Asset(Assets.AssetId(assetClass, data), value);
     }
 }

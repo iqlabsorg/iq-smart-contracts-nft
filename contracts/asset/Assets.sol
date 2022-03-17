@@ -52,20 +52,6 @@ library Assets {
         EnumerableSetUpgradeable.AddressSet warpers;
     }
 
-    /**
-     * @dev Makes new Asset structure.
-     * @param class Asset class ID
-     * @param data Asset identification data.
-     * @param value Asset value (amount).
-     */
-    function make(
-        bytes4 class,
-        bytes memory data,
-        uint256 value
-    ) internal pure returns (Asset memory asset) {
-        return Asset(AssetId(class, data), value);
-    }
-
     // TODO: docs
     function returnAssetFromVault(Info storage self, Assets.Asset memory asset) internal {
         address(self.controller).functionDelegateCall(
