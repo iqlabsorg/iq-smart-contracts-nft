@@ -4,6 +4,17 @@ pragma solidity ^0.8.11;
 import "./Rentings.sol";
 
 interface IRentingManager {
+    /**
+     * @dev Thrown when the estimated rental fee calculated upon renting
+     * is higher than maximal payment amount the renter is willing to pay.
+     */
+    error RentalPriceSlippage();
+
+    /**
+     * @dev Thrown when the message sender doesn't match the renter address.
+     */
+    error CallerIsNotRenter();
+
     enum WarperRentalStatus {
         NOT_MINTED,
         MINTED,
@@ -60,8 +71,8 @@ interface IRentingManager {
     /**
      * @dev Performs renting operation.
      * @param rentingParams Renting parameters.
-     * @param maxPayment Maximal payment amount the renter is willing to pay.
+     * @param maxPaymentAmount Maximal payment amount the renter is willing to pay.
      * @return New rental ID.
      */
-    function rent(Rentings.Params calldata rentingParams, uint256 maxPayment) external returns (uint256);
+    function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256);
 }

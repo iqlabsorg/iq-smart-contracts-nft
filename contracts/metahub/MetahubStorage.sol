@@ -11,6 +11,7 @@ import "../universe/IUniverseToken.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
 import "../acl/IACL.sol";
+import "../user/User.sol";
 
 abstract contract MetahubStorage {
     /**
@@ -98,4 +99,9 @@ abstract contract MetahubStorage {
      * @dev Mapping from rental agreement ID to the rental agreement details.
      */
     mapping(uint256 => IRentingManager.RentalAgreement) internal _rentalAgreements;
+
+    /**
+     * @dev Mapping from user address to the user data.
+     */
+    mapping(address => User.Info) internal _users;
 }

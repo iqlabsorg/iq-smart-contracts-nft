@@ -24,12 +24,14 @@ import "./IMetahub.sol";
 import "./MetahubStorage.sol";
 import "../warper/IWarperController.sol";
 
+// todo: review lib imports
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
     using Address for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using Assets for Assets.Asset;
+    using User for User.Info;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
@@ -131,8 +133,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IRentingManager
      */
-    function rent(Rentings.Params calldata rentingParams, uint256 maxPayment) external returns (uint256) {
-        // todo: validate msgSender is renter and add slippage protection
+    function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256) {
+        // Message sender must match the renter address since the estimation might be renter specific.
+        if (_msgSender() != rentingParams.renter) revert CallerIsNotRenter();
+
         // Estimate renting.
         (
             uint256 listerBaseFee,
@@ -140,10 +144,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             uint256 universeBaseFee,
             uint256 universePremium,
             uint256 protocolFee,
-            uint256 total
+            uint256 totalRentalFee
         ) = estimateRent(rentingParams);
 
-        // todo: compare total to maxPayment
+        // Ensure no rental fee payment slippage.
+        if (totalRentalFee > maxPaymentAmount) revert RentalPriceSlippage();
+
+        uint256 listerFee = listerBaseFee + listerPremium;
+        uint256 universeFee = universeBaseFee + universePremium;
+
         // todo: handle payments
 
         // Find selected listing.
@@ -179,7 +188,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         );
         _rentalAgreements[rentalId] = rentalAgreement;
 
-        //todo: update renter token specific rental agreement index
+        // Update user rental references.
+        _users[params.renter].addRentalReference(rentalAgreement.warper, rentalId);
+
         //todo: clean up x2 expired rental agreements
         // todo: emit AssetRented event
 
