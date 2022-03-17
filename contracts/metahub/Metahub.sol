@@ -113,7 +113,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         _checkListed(rentingParams.listingId);
 
         // Find selected listing.
-        Listing storage listing = _listings[rentingParams.listingId];
+        Listings.Info storage listing = _listings[rentingParams.listingId];
 
         // Check whether listing is not paused.
         if (listing.paused) revert ListingIsPaused();
@@ -157,7 +157,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // todo: handle payments
 
         // Find selected listing.
-        Listing storage listing = _listings[rentingParams.listingId];
+        Listings.Info storage listing = _listings[rentingParams.listingId];
 
         // todo: warp original asset (mint warper)
         // todo: register new rental agreement (global rental agreement mapping + renter index)
@@ -365,7 +365,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         assert(_listings[listingId].lister == address(0));
 
         // Store new listing record.
-        Listing memory listing = Listing(lister, asset, params, maxLockPeriod, 0, false, false);
+        Listings.Info memory listing = Listings.Info(lister, asset, params, maxLockPeriod, 0, false, false);
         _listings[listingId] = listing;
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
@@ -377,7 +377,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function delistAsset(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        Listing storage listing = _listings[listingId];
+        Listings.Info storage listing = _listings[listingId];
         listing.delisted = true;
         emit AssetDelisted(listingId, listing.lister, listing.lockedTill);
     }
@@ -386,7 +386,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function withdrawAsset(uint256 listingId) external onlyLister(listingId) {
-        Listing memory listing = _listings[listingId];
+        Listings.Info memory listing = _listings[listingId];
         // Check whether the asset can be returned to the owner.
         if (_blockTimestamp() < listing.lockedTill) revert AssetIsLocked();
 
@@ -449,7 +449,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IListingManager
      */
-    function listing(uint256 listingId) external view returns (Listing memory) {
+    function listingInfo(uint256 listingId) external view returns (Listings.Info memory) {
         return _listings[listingId];
     }
 

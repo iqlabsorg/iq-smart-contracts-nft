@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
+import "../asset/Assets.sol";
 
 library Listings {
     /*
@@ -18,5 +19,25 @@ library Listings {
     struct Params {
         bytes4 strategy;
         bytes data;
+    }
+
+    /**
+     * @dev Listing details structure.
+     * @param lister Lister account address.
+     * @param asset Listed asset structure.
+     * @param params Listing strategy parameters.
+     * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
+     * @param lockedTill The earliest possible time when the asset can be returned to the owner.
+     * @param delisted Indicates whether the asset is delisted.
+     * @param paused Indicates whether the listing is paused.
+     */
+    struct Info {
+        address lister;
+        Assets.Asset asset;
+        Params params;
+        uint32 maxLockPeriod;
+        uint32 lockedTill;
+        bool delisted;
+        bool paused;
     }
 }

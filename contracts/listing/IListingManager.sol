@@ -101,26 +101,6 @@ interface IListingManager {
     event ListingUnpaused(uint256 indexed listingId);
 
     /**
-     * @dev Listing details structure.
-     * @param lister Lister account address.
-     * @param asset Listed asset structure.
-     * @param params Listing strategy parameters.
-     * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
-     * @param lockedTill The earliest possible time when the asset can be returned to the owner.
-     * @param delisted Indicates whether the asset is delisted.
-     * @param paused Indicates whether the listing is paused.
-     */
-    struct Listing {
-        address lister;
-        Assets.Asset asset;
-        Listings.Params params;
-        uint32 maxLockPeriod;
-        uint32 lockedTill;
-        bool delisted;
-        bool paused;
-    }
-
-    /**
      * @dev Listing strategy configuration.
      * @param controller Listing controller address.
      */
@@ -197,5 +177,5 @@ interface IListingManager {
      * @param listingId Listing ID.
      * @return Listing details.
      */
-    function listing(uint256 listingId) external view returns (Listing memory);
+    function listingInfo(uint256 listingId) external view returns (Listings.Info memory);
 }

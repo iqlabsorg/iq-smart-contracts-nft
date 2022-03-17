@@ -65,7 +65,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from listing ID to the listing details.
      */
-    mapping(uint256 => IListingManager.Listing) internal _listings;
+    mapping(uint256 => Listings.Info) internal _listings;
 
     /**
      * @dev Mapping from listing strategy ID to the listing strategy configuration.
