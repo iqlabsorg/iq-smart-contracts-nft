@@ -36,6 +36,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     using Assets for Assets.Asset;
     using Assets for Assets.Info;
     using Users for Users.Info;
+    using Listings for Listings.Info;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
@@ -118,8 +119,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // Find selected listing.
         Listings.Info storage listing = _listings[rentingParams.listingId];
 
+        //todo: validate max lock time
+
         // Check whether listing is not paused.
-        if (listing.paused) revert ListingIsPaused();
+        if (listing.paused) revert Listings.ListingIsPaused();
 
         // Find selected warper.
         Warper memory warper = _warpers[rentingParams.warper];
@@ -129,6 +132,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         // Check if the renting request can be fulfilled by selected warper.
         Assets.Asset memory asset = listing.asset;
+        //todo: warper.validateRentingParams(asset, rentingParams)
         warper.controller.validateRentingParams(asset, rentingParams);
 
         return _calculateRentalFee(asset, warper, listing.params, rentingParams);
@@ -185,6 +189,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         uint32 endTime = startTime + params.rentalPeriod;
 
         // todo: update listing lock time
+        _listings[params.listingId].addLock(endTime);
 
         RentalAgreement memory rentalAgreement = RentalAgreement(
             params.listingId,
@@ -410,9 +415,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function pauseListing(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        if (_listings[listingId].paused) revert ListingIsPaused();
-
-        _listings[listingId].paused = true;
+        _listings[listingId].pause();
         emit ListingPaused(listingId);
     }
 
@@ -420,9 +423,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function unpauseListing(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        if (!_listings[listingId].paused) revert ListingIsNotPaused();
-
-        _listings[listingId].paused = false;
+        _listings[listingId].unpause();
         emit ListingUnpaused(listingId);
     }
 
@@ -712,7 +713,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @param listingId Listing ID.
      */
     function _checkListed(uint256 listingId) internal view {
-        if (!_isRegisteredListing(listingId) || _listings[listingId].delisted) revert NotListed(listingId);
+        if (!_listings[listingId].listed()) revert NotListed(listingId);
     }
 
     /**

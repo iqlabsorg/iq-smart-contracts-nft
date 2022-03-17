@@ -18,16 +18,6 @@ interface IListingManager {
     error CallerIsNotAssetLister();
 
     /**
-     * @dev Thrown when the operation is not allowed due to the listing being paused.
-     */
-    error ListingIsPaused();
-
-    /**
-     * @dev Thrown when the operation is not allowed due to the listing not being paused.
-     */
-    error ListingIsNotPaused();
-
-    /**
      * @dev Thrown when the original asset cannot be withdrawn because of active rentals
      * or other activity that requires asset to stay in the vault.
      */

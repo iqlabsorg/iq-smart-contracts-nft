@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
+
 import "../asset/Assets.sol";
 
 library Listings {
@@ -7,6 +8,19 @@ library Listings {
      * @dev Listing strategy identifiers to be used across the system:
      */
     bytes4 public constant FIXED_PRICE = bytes4(keccak256("FIXED_PRICE"));
+
+    /**
+     * @dev Thrown when the operation is not allowed due to the listing being paused.
+     */
+    error ListingIsPaused();
+
+    /**
+     * @dev Thrown when the operation is not allowed due to the listing not being paused.
+     */
+    error ListingIsNotPaused();
+
+    //todo: docs
+    error MaxLockPeriodExceeded();
 
     /**
      * @dev Listing params.
@@ -22,7 +36,7 @@ library Listings {
     }
 
     /**
-     * @dev Listing details structure.
+     * @dev Listing info structure.
      * @param lister Lister account address.
      * @param asset Listed asset structure.
      * @param params Listing strategy parameters.
@@ -39,5 +53,45 @@ library Listings {
         uint32 lockedTill;
         bool delisted;
         bool paused;
+    }
+
+    /**
+     * @dev Puts the listing on pause.
+     */
+    function pause(Info storage self) internal {
+        if (self.paused) revert ListingIsPaused();
+
+        self.paused = true;
+    }
+
+    /**
+     * @dev Lifts the listing pause.
+     */
+    function unpause(Info storage self) internal {
+        if (!self.paused) revert ListingIsNotPaused();
+
+        self.paused = false;
+    }
+
+    /**
+     * Determines whether the listing is active.
+     */
+    function listed(Info storage self) internal view returns (bool) {
+        return self.lister != address(0) && !self.delisted;
+    }
+
+    /**
+     * @dev Extends listing lock time.
+     * Does not modify the state if current lock time is larger.
+     */
+    function addLock(Info storage self, uint32 unlockTimestamp) internal {
+        // Listing is already locked till later time, no need to extend locking period.
+        if (self.lockedTill >= unlockTimestamp) return;
+
+        // Try to extend listing lock.
+        uint32 lockPeriod = unlockTimestamp - uint32(block.timestamp);
+        if (lockPeriod > self.maxLockPeriod) revert MaxLockPeriodExceeded();
+        self.lockedTill = unlockTimestamp;
+        // todo: skip the check but assert lockPeriod < maxLockPeriod?
     }
 }
