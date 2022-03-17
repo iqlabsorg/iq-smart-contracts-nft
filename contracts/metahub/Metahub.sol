@@ -31,6 +31,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using Assets for Assets.Asset;
+    using Assets for Assets.Info;
     using User for User.Info;
 
     /**
@@ -337,14 +338,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         // Transfer asset from lister account to the vault. Asset transfer is performed via delegate call to the corresponding asset controller.
         // This approach allows to keep all token approvals on the Metahub account and utilize controller asset specific transfer logic.
-        address(_assets[token].controller).functionDelegateCall(
-            abi.encodeWithSelector(
-                IAssetController.transferAssetToVault.selector,
-                asset,
-                _msgSender(),
-                address(_assets[token].vault)
-            )
-        );
+        _assets[token].transferAssetToVault(asset, _msgSender());
 
         return _registerListing(_msgSender(), asset, params, maxLockPeriod);
     }
@@ -401,13 +395,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         // Transfer asset from the vault to the original owner.
         address token = IAssetController(_assetClasses[listing.asset.id.class].controller).getToken(listing.asset);
-        address(_assets[token].controller).functionDelegateCall(
-            abi.encodeWithSelector(
-                IAssetController.returnAssetFromVault.selector,
-                listing.asset,
-                address(_assets[token].vault)
-            )
-        );
+        _assets[token].returnAssetFromVault(listing.asset);
 
         emit AssetWithdrawn(listingId, listing.lister, listing.asset);
     }

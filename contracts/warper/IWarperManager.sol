@@ -4,7 +4,6 @@ pragma solidity ^0.8.11;
 import "../asset/IAssetController.sol";
 import "./IWarperController.sol";
 
-// todo: handle warper pausing/unpausing
 interface IWarperManager {
     /**
      * @dev Thrown when performing action or accessing data of an unknown warper.

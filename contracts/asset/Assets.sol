@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+
+import "./IAssetController.sol";
+import "./IAssetVault.sol";
+
 library Assets {
+    using Address for address;
+
     /*
      * @dev This is the list of asset class identifiers to be used across the system.
      */
@@ -33,6 +41,18 @@ library Assets {
     }
 
     /**
+     * @dev Original asset data.
+     * @param controller Asset controller.
+     * @param vault Asset vault.
+     * @param warpers Set of warper addresses registered for the asset.
+     */
+    struct Info {
+        IAssetController controller;
+        IAssetVault vault;
+        EnumerableSetUpgradeable.AddressSet warpers;
+    }
+
+    /**
      * @dev Makes new Asset structure.
      * @param class Asset class ID
      * @param data Asset identification data.
@@ -44,5 +64,23 @@ library Assets {
         uint256 value
     ) internal pure returns (Asset memory asset) {
         return Asset(AssetId(class, data), value);
+    }
+
+    // TODO: docs
+    function returnAssetFromVault(Info storage self, Assets.Asset memory asset) internal {
+        address(self.controller).functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, address(self.vault))
+        );
+    }
+
+    // TODO: docs
+    function transferAssetToVault(
+        Info storage self,
+        Assets.Asset memory asset,
+        address from
+    ) internal {
+        address(self.controller).functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, from, address(self.vault))
+        );
     }
 }

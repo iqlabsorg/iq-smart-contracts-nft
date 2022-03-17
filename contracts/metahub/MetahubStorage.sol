@@ -8,8 +8,7 @@ import "./IMetahub.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarper.sol";
 import "../universe/IUniverseToken.sol";
-import "../asset/IAssetController.sol";
-import "../asset/IAssetVault.sol";
+import "../asset/Assets.sol";
 import "../acl/IACL.sol";
 import "../user/User.sol";
 
@@ -28,18 +27,6 @@ abstract contract MetahubStorage {
         IUniverseToken universeToken;
         IERC20 baseToken;
         uint16 rentalFeePercent;
-    }
-
-    /**
-     * @dev Original asset data.
-     * @param controller Asset controller.
-     * @param vault Asset vault.
-     * @param warpers Set of warper addresses registered for the asset.
-     */
-    struct Asset {
-        IAssetController controller;
-        IAssetVault vault;
-        EnumerableSetUpgradeable.AddressSet warpers;
     }
 
     /**
@@ -93,7 +80,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from asset address to the asset details.
      */
-    mapping(address => Asset) internal _assets;
+    mapping(address => Assets.Info) internal _assets;
 
     /**
      * @dev Mapping from rental agreement ID to the rental agreement details.
