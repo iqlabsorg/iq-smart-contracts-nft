@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./IMetahub.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarper.sol";
+import "../warper/Warpers.sol";
 import "../universe/IUniverseToken.sol";
 import "../asset/Assets.sol";
 import "../acl/IACL.sol";
@@ -55,7 +56,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from warper address to the warper entry.
      */
-    mapping(address => IWarperManager.Warper) internal _warpers;
+    mapping(address => Warpers.Info) internal _warpers;
 
     /**
      * @dev Mapping from universe ID to the universe entry.

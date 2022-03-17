@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "../asset/IAssetController.sol";
-import "./IWarperController.sol";
+import "./Warpers.sol";
 
 interface IWarperManager {
     /**
@@ -30,16 +30,6 @@ interface IWarperManager {
     error InvalidWarperInterface();
 
     /**
-     * @dev Thrown when the operation is not allowed due to the warper being paused.
-     */
-    error WarperIsPaused();
-
-    /**
-     * @dev Thrown when the operation is not allowed due to the warper not being paused.
-     */
-    error WarperIsNotPaused();
-
-    /**
      * @dev Emitted when a new warper is registered.
      * @param universeId Universe ID.
      * @param original Original asset contract address.
@@ -58,18 +48,6 @@ interface IWarperManager {
      * @param warper Address.
      */
     event WarperUnpaused(address indexed warper);
-
-    /**
-     * @dev Registered warper data.
-     * @param universeId Warper universe ID.
-     * @param controller Warper asset controller.
-     * @param paused Indicates whether the warper is paused.
-     */
-    struct Warper {
-        uint256 universeId;
-        IWarperController controller;
-        bool paused;
-    }
 
     /**
      * @dev Deploys a preset warper identified by `presetId`.
@@ -128,10 +106,10 @@ interface IWarperManager {
 
     /**
      * @dev Returns registered warper details.
-     * @param warper Warper address.
+     * @param warperInfo Warper address.
      * @return Warper details.
      */
-    function warper(address warper) external view returns (Warper memory);
+    function warperInfo(address warperInfo) external view returns (Warpers.Info memory);
 
     /**
      * @dev Puts the warper on pause.

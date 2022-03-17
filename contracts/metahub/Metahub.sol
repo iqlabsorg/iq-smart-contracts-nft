@@ -15,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "../acl/AccessControlled.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
+import "../warper/Warpers.sol";
 import "../warper/IWarper.sol";
 import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
@@ -37,6 +38,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     using Assets for Assets.Info;
     using Users for Users.Info;
     using Listings for Listings.Info;
+    using Warpers for Warpers.Info;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
@@ -125,10 +127,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (listing.paused) revert Listings.ListingIsPaused();
 
         // Find selected warper.
-        Warper memory warper = _warpers[rentingParams.warper];
+        Warpers.Info storage warper = _warpers[rentingParams.warper];
 
         // Check whether the warper is not paused.
-        if (warper.paused) revert WarperIsPaused();
+        if (warper.paused) revert Warpers.WarperIsPaused();
 
         // Check if the renting request can be fulfilled by selected warper.
         Assets.Asset memory asset = listing.asset;
@@ -431,12 +433,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function pauseWarper(address warper) external registeredWarper(warper) {
-        Warper storage storedWarper = _warpers[warper];
+        Warpers.Info storage warperInfo = _warpers[warper];
 
-        _checkUniverseOwner(storedWarper.universeId, _msgSender());
-        if (storedWarper.paused) revert WarperIsPaused();
+        _checkUniverseOwner(warperInfo.universeId, _msgSender());
 
-        storedWarper.paused = true;
+        warperInfo.pauseWarper();
         emit WarperPaused(warper);
     }
 
@@ -444,12 +445,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function unpauseWarper(address warper) external registeredWarper(warper) {
-        Warper storage storedWarper = _warpers[warper];
+        Warpers.Info storage warperInfo = _warpers[warper];
 
-        _checkUniverseOwner(storedWarper.universeId, _msgSender());
-        if (storedWarper.paused) revert WarperIsNotPaused();
+        _checkUniverseOwner(warperInfo.universeId, _msgSender());
 
-        storedWarper.paused = false;
+        warperInfo.unpauseWarper();
         emit WarperUnpaused(warper);
     }
 
@@ -491,7 +491,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IWarperManager
      */
-    function warper(address warper) external view registeredWarper(warper) returns (Warper memory) {
+    function warperInfo(address warper) external view registeredWarper(warper) returns (Warpers.Info memory) {
         return _warpers[warper];
     }
 
@@ -562,7 +562,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // Associate warper with the universe and current asset class controller,
         // to maintain backward compatibility in case of controller generation upgrade.
         // The warper is disabled by default.
-        _warpers[warper] = Warper(universeId, controller, false);
+        _warpers[warper] = Warpers.Info({universeId: universeId, controller: controller, paused: false});
 
         // Associate the warper with the universe.
         _universes[universeId].warpers.add(warper);
@@ -729,7 +729,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function _calculateRentalFee(
         Assets.Asset memory asset,
-        Warper memory warper,
+        Warpers.Info memory warper,
         Listings.Params memory listingParams,
         Rentings.Params memory rentingParams
     )
