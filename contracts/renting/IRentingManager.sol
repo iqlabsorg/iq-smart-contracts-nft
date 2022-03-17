@@ -21,15 +21,6 @@ interface IRentingManager {
         RENTED
     }
 
-    // todo: docs
-    struct RentalAgreement {
-        uint256 listingId;
-        address renter;
-        address warper;
-        uint32 startTime;
-        uint32 endTime;
-    }
-
     /**
      * @dev Get the amount of currently active rentals for a given user for a warper.
      * @param warper Warper address.

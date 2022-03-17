@@ -15,4 +15,13 @@ library Rentings {
         address renter;
         uint32 rentalPeriod;
     }
+
+    // todo: docs
+    struct Agreement {
+        uint256 listingId;
+        address warper;
+        address renter;
+        uint32 startTime;
+        uint32 endTime;
+    }
 }

@@ -19,12 +19,12 @@ import "../warper/IWarper.sol";
 import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
 import "../warper/IWarperPresetFactory.sol";
+import "../warper/IWarperController.sol";
 import "../universe/IUniverseToken.sol";
 import "../listing/IListingController.sol";
 import "../Errors.sol";
 import "./IMetahub.sol";
 import "./MetahubStorage.sol";
-import "../warper/IWarperController.sol";
 
 // todo: review lib imports
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
@@ -191,10 +191,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // todo: update listing lock time
         _listings[params.listingId].addLock(endTime);
 
-        RentalAgreement memory rentalAgreement = RentalAgreement(
+        Rentings.Agreement memory rentalAgreement = Rentings.Agreement(
             params.listingId,
-            params.renter,
             params.warper,
+            params.renter,
             startTime,
             endTime
         );

@@ -85,7 +85,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from rental agreement ID to the rental agreement details.
      */
-    mapping(uint256 => IRentingManager.RentalAgreement) internal _rentalAgreements;
+    mapping(uint256 => Rentings.Agreement) internal _rentalAgreements;
 
     /**
      * @dev Mapping from user address to the user data.
