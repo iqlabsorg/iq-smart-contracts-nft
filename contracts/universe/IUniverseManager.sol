@@ -3,9 +3,9 @@ pragma solidity ^0.8.11;
 
 interface IUniverseManager {
     /**
-     * @dev Thrown when the message sender doesn't match the universe owner.
+     * @dev Thrown when a check is made where the given account must also be the universe owner.
      */
-    error CallerIsNotUniverseOwner();
+    error AccountIsNotUniverseOwner(address account);
 
     /**
      * @dev Emitted when a universe is created.

@@ -48,7 +48,7 @@ export function shouldBehaveLikeWarperManager(): void {
       it('verifies universe ownership upon warper deployment', async () => {
         await expect(
           metahub.connect(stranger).deployWarper(universeId, originalAsset.address, warperPresetId),
-        ).to.be.revertedWith('CallerIsNotUniverseOwner');
+        ).to.be.revertedWith(`AccountIsNotUniverseOwner("${stranger.address}")`);
       });
     });
 
