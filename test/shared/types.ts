@@ -2,7 +2,6 @@ import { FakeContract } from '@defi-wonderland/smock';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import type { Fixture } from 'ethereum-waffle';
 import { constants } from 'ethers';
-import { formatBytes32String } from 'ethers/lib/utils';
 import {
   Metahub,
   ERC721Mock,
