@@ -29,7 +29,7 @@ interface IRentingManager {
      * @param account Account address.
      * @return Amount of active rentals.
      */
-    function getActiveWarperRentalCount(address warper, address account) external view returns (uint256);
+    function warperActiveRentalCount(address warper, address account) external view returns (uint256);
 
     /**
      * @dev Get the rental status for a token on a given warper.

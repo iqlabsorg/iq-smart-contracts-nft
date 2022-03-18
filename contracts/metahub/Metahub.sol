@@ -197,7 +197,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             endTime
         );
 
-        uint256 rentalId = _rentingRegistry.register(rentalAgreement);
+        uint256 rentalId = _rentingRegistry.add(rentalAgreement);
 
         //todo: clean up x2 expired rental agreements
         // todo: emit AssetRented event
@@ -739,9 +739,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         total = listerBaseFee + listerPremium + universeBaseFee + universePremium + protocolFee;
     }
 
-    //todo implement the real implementation here
-    function getActiveWarperRentalCount(address warper, address account) external view returns (uint256) {
-        return 0;
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function warperActiveRentalCount(address warper, address account) external view returns (uint256 count) {
+        _rentingRegistry.renterActiveRentalCountByWarper(account, warper);
     }
 
     //todo implement the real implementation here

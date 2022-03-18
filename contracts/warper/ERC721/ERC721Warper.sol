@@ -46,7 +46,7 @@ contract ERC721Warper is IERC721Warper, Warper {
     function balanceOf(address owner) public view virtual override returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
 
-        return IMetahub(_metahub()).getActiveWarperRentalCount(address(this), owner);
+        return IMetahub(_metahub()).warperActiveRentalCount(address(this), owner);
     }
 
     /**
