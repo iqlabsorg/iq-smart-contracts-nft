@@ -20,7 +20,7 @@ export function shouldBehaveLikeBalanceOf(): void {
     context('when the given address has rented some tokens', () => {
       const activeRentalCount = 10;
       beforeEach(() => {
-        metahub.getActiveWarperRentalCount.returns(activeRentalCount);
+        metahub.warperActiveRentalCount.returns(activeRentalCount);
       });
 
       it('returns the amount of tokens owned by the given address', async () => {
@@ -31,7 +31,7 @@ export function shouldBehaveLikeBalanceOf(): void {
     context('when the given address has not rented any tokens', () => {
       const activeRentalCount = 0;
       beforeEach(() => {
-        metahub.getActiveWarperRentalCount.returns(activeRentalCount);
+        metahub.warperActiveRentalCount.returns(activeRentalCount);
       });
 
       it('returns 0', async () => {
