@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "../asset/Assets.sol";
 
 library Listings {
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+
     /*
      * @dev Listing strategy identifiers to be used across the system:
      */
@@ -46,7 +49,7 @@ library Listings {
      * @param paused Indicates whether the listing is paused.
      */
     struct Info {
-        address lister;
+        address lister; // todo: move after params
         Assets.Asset asset;
         Params params;
         uint32 maxLockPeriod;
@@ -87,11 +90,31 @@ library Listings {
     function addLock(Info storage self, uint32 unlockTimestamp) internal {
         // Listing is already locked till later time, no need to extend locking period.
         if (self.lockedTill >= unlockTimestamp) return;
-
         // Try to extend listing lock.
         uint32 lockPeriod = unlockTimestamp - uint32(block.timestamp);
         if (lockPeriod > self.maxLockPeriod) revert MaxLockPeriodExceeded();
         self.lockedTill = unlockTimestamp;
-        // todo: skip the check but assert lockPeriod < maxLockPeriod?
+    }
+
+    /**
+     * @dev Listing registry.
+     * @param idTracker Listing ID tracker (incremental counter).
+     * @param listings Mapping from listing ID to the listing info.
+     */
+    struct Registry {
+        CountersUpgradeable.Counter idTracker; // todo: reduce size
+        mapping(uint256 => Info) listings;
+    }
+
+    /**
+     * @dev Saves new listing information under new ID.
+     * @return listingId New listing ID.
+     */
+    function register(Registry storage self, Info memory listing) internal returns (uint256 listingId) {
+        // Generate new listing ID.
+        self.idTracker.increment();
+        listingId = self.idTracker.current();
+        // Store new listing record.
+        self.listings[listingId] = listing;
     }
 }

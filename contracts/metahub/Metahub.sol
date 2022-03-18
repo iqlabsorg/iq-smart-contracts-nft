@@ -38,6 +38,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     using Assets for Assets.Info;
     using Users for Users.Info;
     using Listings for Listings.Info;
+    using Listings for Listings.Registry;
     using Warpers for Warpers.Info;
 
     /**
@@ -60,7 +61,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make a function callable only by the asset lister (original owner).
      */
     modifier onlyLister(uint256 listingId) {
-        if (_msgSender() != _listings[listingId].lister) revert CallerIsNotAssetLister();
+        if (_msgSender() != _listingRegistry.listings[listingId].lister) revert CallerIsNotAssetLister();
         _;
     }
 
@@ -127,7 +128,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         _checkListed(rentingParams.listingId);
 
         // Find selected listing.
-        Listings.Info storage listing = _listings[rentingParams.listingId];
+        Listings.Info storage listing = _listingRegistry.listings[rentingParams.listingId];
 
         //todo: validate max lock time
 
@@ -172,7 +173,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         uint256 universeFee = universeBaseFee + universePremium;
 
         // Find selected listing.
-        Listings.Info storage listing = _listings[rentingParams.listingId];
+        Listings.Info storage listing = _listingRegistry.listings[rentingParams.listingId];
 
         // Handle payments.
         _protocol.baseToken.safeTransferFrom(_msgSender(), listing.lister, listerFee);
@@ -199,7 +200,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         uint32 endTime = startTime + params.rentalPeriod;
 
         // todo: update listing lock time
-        _listings[params.listingId].addLock(endTime);
+        _listingRegistry.listings[params.listingId].addLock(endTime);
 
         Rentings.Agreement memory rentalAgreement = Rentings.Agreement(
             params.listingId,
@@ -361,33 +362,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // This approach allows to keep all token approvals on the Metahub account and utilize controller asset specific transfer logic.
         _assets[token].transferAssetToVault(asset, _msgSender());
 
-        return _registerListing(_msgSender(), asset, params, maxLockPeriod);
-    }
-
-    /**
-     * @dev Performs new listing registration.
-     * @param lister The lister address.
-     * @param asset Asset to be listed.
-     * @param params Listing strategy parameters.
-     * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
-     * @return New listing ID.
-     */
-    function _registerListing(
-        address lister,
-        Assets.Asset calldata asset,
-        Listings.Params calldata params,
-        uint32 maxLockPeriod
-    ) internal returns (uint256) {
-        // Generate new listing ID.
-        _listingIdTracker.increment();
-        uint256 listingId = _listingIdTracker.current();
-
-        // Listing ID must be unique (this could throw only if listing ID tracker state is incorrect).
-        assert(_listings[listingId].lister == address(0));
-
-        // Store new listing record.
-        Listings.Info memory listing = Listings.Info(lister, asset, params, maxLockPeriod, 0, false, false);
-        _listings[listingId] = listing;
+        // Register listing.
+        Listings.Info memory listing = Listings.Info(_msgSender(), asset, params, maxLockPeriod, 0, false, false);
+        uint256 listingId = _listingRegistry.register(listing);
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
 
@@ -398,7 +375,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function delistAsset(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        Listings.Info storage listing = _listings[listingId];
+        Listings.Info storage listing = _listingRegistry.listings[listingId];
         listing.delisted = true;
         emit AssetDelisted(listingId, listing.lister, listing.lockedTill);
     }
@@ -407,12 +384,12 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function withdrawAsset(uint256 listingId) external onlyLister(listingId) {
-        Listings.Info memory listing = _listings[listingId];
+        Listings.Info memory listing = _listingRegistry.listings[listingId];
         // Check whether the asset can be returned to the owner.
         if (_blockTimestamp() < listing.lockedTill) revert AssetIsLocked();
 
         // Delete listing record.
-        delete _listings[listingId];
+        delete _listingRegistry.listings[listingId]; //todo: use lib to for cleanup
 
         // Transfer asset from the vault to the original owner.
         address token = IAssetController(_assetClasses[listing.asset.id.class].controller).getToken(listing.asset);
@@ -425,7 +402,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function pauseListing(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        _listings[listingId].pause();
+        _listingRegistry.listings[listingId].pause();
         emit ListingPaused(listingId);
     }
 
@@ -433,7 +410,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function unpauseListing(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        _listings[listingId].unpause();
+        _listingRegistry.listings[listingId].unpause();
         emit ListingUnpaused(listingId);
     }
 
@@ -457,7 +434,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function listingInfo(uint256 listingId) external view returns (Listings.Info memory) {
-        return _listings[listingId];
+        return _listingRegistry.listings[listingId];
     }
 
     /**
@@ -621,7 +598,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @param listingId Listing ID.
      */
     function _isRegisteredListing(uint256 listingId) internal view returns (bool) {
-        return _listings[listingId].lister != address(0);
+        return _listingRegistry.listings[listingId].lister != address(0); // todo: lib
     }
 
     /**
@@ -722,7 +699,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @param listingId Listing ID.
      */
     function _checkListed(uint256 listingId) internal view {
-        if (!_listings[listingId].listed()) revert NotListed(listingId);
+        if (!_listingRegistry.listings[listingId].listed()) revert NotListed(listingId); //todo: lib
     }
 
     /**

@@ -44,14 +44,14 @@ abstract contract MetahubStorage {
     ProtocolConfig internal _protocol;
 
     /**
-     * @dev Listing ID tracker (incremental counter).
+     * @dev Listing registry contains data about all listings.
      */
-    CountersUpgradeable.Counter internal _listingIdTracker;
+    Listings.Registry internal _listingRegistry;
 
     /**
      * @dev Rental agreement ID tracker (incremental counter).
      */
-    CountersUpgradeable.Counter internal _rentalIdTracker;
+    CountersUpgradeable.Counter internal _rentalIdTracker; //todo: move to registry
 
     /**
      * @dev Mapping from warper address to the warper entry.
@@ -62,11 +62,6 @@ abstract contract MetahubStorage {
      * @dev Mapping from universe ID to the universe entry.
      */
     mapping(uint256 => Universe) internal _universes;
-
-    /**
-     * @dev Mapping from listing ID to the listing details.
-     */
-    mapping(uint256 => Listings.Info) internal _listings;
 
     /**
      * @dev Mapping from listing strategy ID to the listing strategy configuration.
@@ -86,7 +81,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Mapping from rental agreement ID to the rental agreement details.
      */
-    mapping(uint256 => Rentings.Agreement) internal _rentalAgreements;
+    mapping(uint256 => Rentings.Agreement) internal _rentalAgreements; //todo: move to registry
 
     /**
      * @dev Mapping from user address to the user data.
