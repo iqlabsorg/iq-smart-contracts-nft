@@ -433,11 +433,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function pauseWarper(address warper) external registeredWarper(warper) {
-        Warpers.Info storage warperInfo = _warpers[warper];
+        _checkUniverseOwner(_warpers[warper].universeId, _msgSender());
 
-        _checkUniverseOwner(warperInfo.universeId, _msgSender());
-
-        warperInfo.pauseWarper();
+        _warpers[warper].pause();
         emit WarperPaused(warper);
     }
 
@@ -445,11 +443,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function unpauseWarper(address warper) external registeredWarper(warper) {
-        Warpers.Info storage warperInfo = _warpers[warper];
+        _checkUniverseOwner(_warpers[warper].universeId, _msgSender());
 
-        _checkUniverseOwner(warperInfo.universeId, _msgSender());
-
-        warperInfo.unpauseWarper();
+        _warpers[warper].unpause();
         emit WarperUnpaused(warper);
     }
 

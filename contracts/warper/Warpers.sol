@@ -27,14 +27,14 @@ library Warpers {
     }
 
     // TODO: docs
-    function pauseWarper(Info storage self) internal {
+    function pause(Info storage self) internal {
         if (self.paused) revert WarperIsPaused();
 
         self.paused = true;
     }
 
     // TODO: docs
-    function unpauseWarper(Info storage self) internal {
+    function unpause(Info storage self) internal {
         if (!self.paused) revert WarperIsNotPaused();
 
         self.paused = false;
