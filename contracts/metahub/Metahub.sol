@@ -49,6 +49,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
+     * @dev Modifier to make a function callable only by the warpers admin (universe owner).
+     */
+    modifier onlyWarperAdmin(address warper) {
+        _checkWarperAdmin(warper, _msgSender());
+        _;
+    }
+
+    /**
      * @dev Modifier to make a function callable only by the asset lister (original owner).
      */
     modifier onlyLister(uint256 listingId) {
@@ -432,9 +440,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IWarperManager
      */
-    function pauseWarper(address warper) external registeredWarper(warper) {
-        _checkUniverseOwner(_warpers[warper].universeId, _msgSender());
-
+    function pauseWarper(address warper) external onlyWarperAdmin(warper) {
         _warpers[warper].pause();
         emit WarperPaused(warper);
     }
@@ -442,9 +448,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IWarperManager
      */
-    function unpauseWarper(address warper) external registeredWarper(warper) {
-        _checkUniverseOwner(_warpers[warper].universeId, _msgSender());
-
+    function unpauseWarper(address warper) external onlyWarperAdmin(warper) {
         _warpers[warper].unpause();
         emit WarperUnpaused(warper);
     }
@@ -675,6 +679,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      */
     function _checkRegisteredWarper(address warper) internal view {
         if (!_isRegisteredWarper(warper)) revert WarperIsNotRegistered(warper);
+    }
+
+    /**
+     * @dev Throws if the warpers universe owner is not the provided account address.
+     * @param warper Warpers address.
+     * @param account The address that's expected to be the warpers universe owner.
+     */
+    function _checkWarperAdmin(address warper, address account) internal view {
+        _checkUniverseOwner(_warpers[warper].universeId, account);
     }
 
     /**
