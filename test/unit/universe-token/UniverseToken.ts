@@ -1,6 +1,8 @@
 import { smock } from '@defi-wonderland/smock';
+import { Signer } from 'ethers';
 import hre, { ethers } from 'hardhat';
-import { Metahub, Metahub__factory, UniverseToken, UniverseToken__factory } from '../../../typechain';
+import { IUniverseToken, Metahub, Metahub__factory, Ownable, UniverseToken__factory } from '../../../typechain';
+import { shouldBehavesLikeOwnable } from '../shared/Ownable.behaviour';
 import { shouldBehaveLikeUniverseToken } from './UniverseToken.behaviour';
 
 export async function unitFixtureUniverseTokenMock() {
@@ -32,8 +34,10 @@ export function unitTestUniverseToken(): void {
   describe('UniverseToken', function () {
     beforeEach(async function () {
       const { universeToken, metahub } = await this.loadFixture(unitFixtureUniverseTokenMock);
-      this.mocks.metahub = metahub;
-      this.contracts.universeToken = universeToken as unknown as UniverseToken;
+      this.universeToken = {
+        underTest: universeToken as unknown as IUniverseToken,
+        metahubSigner: metahub.wallet as Signer,
+      };
     });
 
     shouldBehaveLikeUniverseToken();
