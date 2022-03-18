@@ -43,6 +43,11 @@ abstract contract MetahubStorage {
     ProtocolConfig internal _protocol;
 
     /**
+     * @dev Asset registry contains data about all registered assets and supported asset classes.
+     */
+    Assets.Registry internal _assetRegistry;
+
+    /**
      * @dev Listing registry contains data about all listings.
      */
     Listings.Registry internal _listingRegistry;
@@ -66,14 +71,4 @@ abstract contract MetahubStorage {
      * @dev Mapping from listing strategy ID to the listing strategy configuration.
      */
     mapping(bytes4 => IListingManager.ListingStrategyConfig) internal _listingStrategies;
-
-    /**
-     * @dev Mapping from asset class ID to the asset class configuration.
-     */
-    mapping(bytes4 => IAssetClassManager.AssetClassConfig) internal _assetClasses;
-
-    /**
-     * @dev Mapping from asset address to the asset details.
-     */
-    mapping(address => Assets.Info) internal _assets;
 }

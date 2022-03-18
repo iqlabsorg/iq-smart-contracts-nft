@@ -6,28 +6,6 @@ import "./IAssetVault.sol";
 
 interface IAssetClassManager {
     /**
-     * @dev Thrown when the asset class is not registered or deprecated.
-     * @param assetClass Asset class ID.
-     */
-    error UnsupportedAssetClass(bytes4 assetClass);
-
-    /**
-     * @dev Thrown upon attempting to register an asset class twice.
-     * @param assetClass Duplicate asset class ID.
-     */
-    error AssetClassIsAlreadyRegistered(bytes4 assetClass);
-
-    /**
-     * @dev Asset class configuration.
-     * @param controller Asset class controller.
-     * @param vault Asset class vault.
-     */
-    struct AssetClassConfig {
-        address controller;
-        IAssetVault vault;
-    }
-
-    /**
      * @dev Emitted when the asset class controller is registered.
      * @param assetClass Asset class ID.
      * @param controller Controller address.
@@ -38,29 +16,23 @@ interface IAssetClassManager {
     /**
      * @dev Emitted when the asset class controller is changed.
      * @param assetClass Asset class ID.
-     * @param previousController Previous controller address.
      * @param newController New controller address.
      */
-    event AssetClassControllerChanged(
-        bytes4 indexed assetClass,
-        address indexed previousController,
-        address indexed newController
-    );
+    event AssetClassControllerChanged(bytes4 indexed assetClass, address indexed newController);
 
     /**
      * @dev Emitted when the asset class vault is changed.
      * @param assetClass Asset class ID.
-     * @param previousVault Previous vault address.
      * @param newVault New vault address.
      */
-    event AssetClassVaultChanged(bytes4 indexed assetClass, address indexed previousVault, address indexed newVault);
+    event AssetClassVaultChanged(bytes4 indexed assetClass, address indexed newVault);
 
     /**
      * @dev Registers new asset class.
      * @param assetClass Asset class ID.
      * @param config Asset class initial configuration.
      */
-    function registerAssetClass(bytes4 assetClass, AssetClassConfig calldata config) external;
+    function registerAssetClass(bytes4 assetClass, Assets.ClassConfig calldata config) external;
 
     /**
      * @dev Sets asset class vault.
@@ -79,5 +51,5 @@ interface IAssetClassManager {
     /**
      * @dev Returns asset class configuration.
      */
-    function assetClassConfig(bytes4 assetClass) external view returns (AssetClassConfig memory);
+    function assetClassConfig(bytes4 assetClass) external view returns (Assets.ClassConfig memory);
 }

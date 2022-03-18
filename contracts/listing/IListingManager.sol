@@ -24,12 +24,6 @@ interface IListingManager {
     error AssetIsLocked();
 
     /**
-     * @dev Thrown when there are no registered warpers for a particular asset.
-     * @param asset Asset address.
-     */
-    error UnsupportedAsset(address asset);
-
-    /**
      * @dev Thrown upon attempting to register a listing strategy twice.
      * @param strategyId Duplicate listing strategy ID.
      */

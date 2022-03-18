@@ -4,11 +4,15 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
+import "../Errors.sol";
 import "./IAssetController.sol";
 import "./IAssetVault.sol";
 
 library Assets {
     using Address for address;
+    using Assets for Registry;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     /*
      * @dev This is the list of asset class identifiers to be used across the system.
@@ -16,6 +20,24 @@ library Assets {
     bytes4 public constant ERC20 = bytes4(keccak256("ERC20"));
     bytes4 public constant ERC721 = bytes4(keccak256("ERC721"));
     bytes4 public constant ERC1155 = bytes4(keccak256("ERC1155"));
+
+    /**
+     * @dev Thrown upon attempting to register an asset class twice.
+     * @param assetClass Duplicate asset class ID.
+     */
+    error AssetClassIsAlreadyRegistered(bytes4 assetClass);
+
+    /**
+     * @dev Thrown when the asset class is not registered or deprecated.
+     * @param assetClass Asset class ID.
+     */
+    error UnsupportedAssetClass(bytes4 assetClass);
+
+    /**
+     * @dev Thrown when there are no registered warpers for a particular asset.
+     * @param asset Asset address.
+     */
+    error UnsupportedAsset(address asset);
 
     /**
      * @dev Communicates asset identification information.
@@ -52,21 +74,138 @@ library Assets {
         EnumerableSetUpgradeable.AddressSet warpers;
     }
 
-    // TODO: docs
-    function returnAssetFromVault(Info storage self, Assets.Asset memory asset) internal {
-        address(self.controller).functionDelegateCall(
-            abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, address(self.vault))
-        );
+    /**
+     * @dev Asset class configuration.
+     * @param controller Asset class controller.
+     * @param vault Asset class vault.
+     */
+    struct ClassConfig {
+        IAssetVault vault;
+        address controller;
+    }
+
+    /**
+     * @dev Asset registry.
+     * @param classes Mapping from asset class ID to the asset class configuration.
+     * @param assets Mapping from asset address to the asset details.
+     */
+    struct Registry {
+        mapping(bytes4 => ClassConfig) classes;
+        mapping(address => Info) assets;
+    }
+
+    /**
+     * @dev Registers new asset.
+     */
+    function registerAsset(
+        Registry storage self,
+        bytes4 assetClass,
+        address asset
+    ) internal {
+        self.assets[asset].vault = self.classes[assetClass].vault;
+        self.assets[asset].controller = IAssetController(self.classes[assetClass].controller);
+    }
+
+    /**
+     * @dev Checks asset registration by address.
+     * The registered asset must have controller.
+     */
+    function isRegisteredAsset(Registry storage self, address asset) internal view returns (bool) {
+        return address(self.assets[asset].controller) != address(0);
+    }
+
+    /**
+     * @dev Checks asset support by address.
+     * The supported asset should have at least one warper.
+     * @param asset Asset address.
+     */
+    function isSupportedAsset(Registry storage self, address asset) internal view returns (bool) {
+        return self.assets[asset].warpers.length() > 0;
+    }
+
+    /**
+     * @dev Throws if asset is not supported.
+     * @param asset Asset address.
+     */
+    function checkAssetSupport(Registry storage self, address asset) internal view {
+        if (!self.isSupportedAsset(asset)) revert UnsupportedAsset(asset);
+    }
+
+    /**
+     * @dev Throws if asset class is not supported.
+     * @param assetClass Asset class ID.
+     */
+    function checkAssetClassSupport(Registry storage self, bytes4 assetClass) internal view {
+        if (!self.isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
+    }
+
+    /**
+     * @dev Checks asset class support.
+     * @param assetClass Asset class ID.
+     */
+    function isRegisteredAssetClass(Registry storage self, bytes4 assetClass) internal view returns (bool) {
+        // The registered asset must have controller.
+        return address(self.classes[assetClass].controller) != address(0);
     }
 
     // TODO: docs
     function transferAssetToVault(
-        Info storage self,
+        Registry storage self,
         Assets.Asset memory asset,
         address from
     ) internal {
-        address(self.controller).functionDelegateCall(
-            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, from, address(self.vault))
+        // Extract token address from asset struct and check whether the asset is supported.
+        address token = IAssetController(self.classes[asset.id.class].controller).getToken(asset);
+        self.checkAssetSupport(token); //todo: check this before calling the function
+
+        // Transfer asset to the class asset specific vault.
+        address assetController = address(self.assets[token].controller);
+        address assetVault = address(self.assets[token].vault);
+        assetController.functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, from, assetVault)
         );
+    }
+
+    // TODO: docs
+    function returnAssetFromVault(Registry storage self, Assets.Asset memory asset) internal {
+        address token = IAssetController(self.classes[asset.id.class].controller).getToken(asset);
+        address assetController = address(self.assets[token].controller);
+        address assetVault = address(self.assets[token].vault);
+
+        assetController.functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, assetVault)
+        );
+    }
+
+    //todo: docs
+    function registerAssetClass(
+        Registry storage self,
+        bytes4 assetClass,
+        ClassConfig memory classConfig
+    ) internal {
+        if (self.isRegisteredAssetClass(assetClass)) revert AssetClassIsAlreadyRegistered(assetClass);
+        self.classes[assetClass] = classConfig;
+    }
+
+    //todo: docs
+    function setAssetClassVault(
+        Registry storage self,
+        bytes4 assetClass,
+        address vault
+    ) internal {
+        bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
+        if (vaultAssetClass != assetClass) revert AssetClassMismatch(vaultAssetClass, assetClass);
+        self.classes[assetClass].vault = IAssetVault(vault);
+    }
+
+    //todo: docs
+    function setAssetClassController(
+        Registry storage self,
+        bytes4 assetClass,
+        address controller
+    ) internal {
+        bytes4 controllerAssetClass = IAssetController(controller).assetClass();
+        if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
+        self.classes[assetClass].controller = controller;
     }
 }

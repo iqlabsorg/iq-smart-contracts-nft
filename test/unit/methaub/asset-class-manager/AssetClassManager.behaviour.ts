@@ -27,7 +27,7 @@ export function shouldBehaveLikeAssetClassManager(): void {
         it('allows to add asset class controller', async () => {
           await expect(metahub.setAssetClassController(AssetClass.ERC721, erc721controller.address))
             .to.emit(metahub, 'AssetClassControllerChanged')
-            .withArgs(AssetClass.ERC721, AddressZero, erc721controller.address);
+            .withArgs(AssetClass.ERC721, erc721controller.address);
         });
       });
 
