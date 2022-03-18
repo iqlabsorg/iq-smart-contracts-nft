@@ -3,6 +3,8 @@ pragma solidity ^0.8.11;
 
 import "./Rentings.sol";
 
+// todo: implement userRentalCount, userRentalIds, userRentals(account, start, count)
+
 interface IRentingManager {
     /**
      * @dev Thrown when the estimated rental fee calculated upon renting

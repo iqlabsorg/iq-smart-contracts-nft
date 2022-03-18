@@ -11,7 +11,6 @@ import "../warper/Warpers.sol";
 import "../universe/IUniverseToken.sol";
 import "../asset/Assets.sol";
 import "../acl/IACL.sol";
-import "../user/Users.sol";
 
 abstract contract MetahubStorage {
     /**
@@ -49,9 +48,9 @@ abstract contract MetahubStorage {
     Listings.Registry internal _listingRegistry;
 
     /**
-     * @dev Rental agreement ID tracker (incremental counter).
+     * @dev Renting registry contains data about all rentals.
      */
-    CountersUpgradeable.Counter internal _rentalIdTracker; //todo: move to registry
+    Rentings.Registry internal _rentingRegistry;
 
     /**
      * @dev Mapping from warper address to the warper entry.
@@ -77,14 +76,4 @@ abstract contract MetahubStorage {
      * @dev Mapping from asset address to the asset details.
      */
     mapping(address => Assets.Info) internal _assets;
-
-    /**
-     * @dev Mapping from rental agreement ID to the rental agreement details.
-     */
-    mapping(uint256 => Rentings.Agreement) internal _rentalAgreements; //todo: move to registry
-
-    /**
-     * @dev Mapping from user address to the user data.
-     */
-    mapping(address => Users.Info) internal _users;
 }
