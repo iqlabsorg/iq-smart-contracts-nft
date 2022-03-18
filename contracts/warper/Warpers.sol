@@ -35,7 +35,7 @@ library Warpers {
 
     // TODO: docs
     function unpauseWarper(Info storage self) internal {
-        if (self.paused) revert WarperIsNotPaused();
+        if (!self.paused) revert WarperIsNotPaused();
 
         self.paused = false;
     }
