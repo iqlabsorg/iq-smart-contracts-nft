@@ -76,6 +76,7 @@ library Rentings {
      * @dev Renting registry
      * @param idTracker Rental agreement ID tracker (incremental counter).
      * @param agreements Mapping from rental agreement ID to the rental agreement details.
+     * @param renters Mapping from renter address to the renter info.
      */
     struct Registry {
         CountersUpgradeable.Counter idTracker; // todo: reduce size

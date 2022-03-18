@@ -2,10 +2,12 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "../asset/Assets.sol";
 
 library Listings {
     using CountersUpgradeable for CountersUpgradeable.Counter;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     /*
      * @dev Listing strategy identifiers to be used across the system:
@@ -96,25 +98,46 @@ library Listings {
         self.lockedTill = unlockTimestamp;
     }
 
+    // todo: docs
+    struct ListerInfo {
+        EnumerableSetUpgradeable.UintSet listingIndex;
+    }
+
     /**
      * @dev Listing registry.
      * @param idTracker Listing ID tracker (incremental counter).
      * @param listings Mapping from listing ID to the listing info.
+     * @param listers Mapping from lister address to the lister info.
      */
     struct Registry {
         CountersUpgradeable.Counter idTracker; // todo: reduce size
         mapping(uint256 => Info) listings;
+        mapping(address => ListerInfo) listers;
     }
 
     /**
      * @dev Saves new listing information under new ID.
      * @return listingId New listing ID.
      */
-    function register(Registry storage self, Info memory listing) internal returns (uint256 listingId) {
+    function add(Registry storage self, Info memory listing) internal returns (uint256 listingId) {
         // Generate new listing ID.
         self.idTracker.increment();
         listingId = self.idTracker.current();
         // Store new listing record.
         self.listings[listingId] = listing;
+        // Add user listing data.
+        self.listers[listing.lister].listingIndex.add(listingId);
+    }
+
+    /**
+     * @dev Removes listing information.
+     * @param listingId The ID of the listing to be deleted.
+     */
+    function remove(Registry storage self, uint256 listingId) internal {
+        address lister = self.listings[listingId].lister;
+        // Remove user listing data.
+        self.listers[lister].listingIndex.remove(listingId);
+        // Delete listing.
+        delete self.listings[listingId];
     }
 }

@@ -349,7 +349,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         // Register listing.
         Listings.Info memory listing = Listings.Info(_msgSender(), asset, params, maxLockPeriod, 0, false, false);
-        uint256 listingId = _listingRegistry.register(listing);
+        uint256 listingId = _listingRegistry.add(listing);
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
 
@@ -374,7 +374,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (_blockTimestamp() < listing.lockedTill) revert AssetIsLocked();
 
         // Delete listing record.
-        delete _listingRegistry.listings[listingId]; //todo: use lib to for cleanup
+        _listingRegistry.remove(listingId);
 
         // Transfer asset from the vault to the original owner.
         address token = IAssetController(_assetClasses[listing.asset.id.class].controller).getToken(listing.asset);
