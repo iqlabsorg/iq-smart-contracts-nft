@@ -9,6 +9,7 @@ import {
   unitTestAssetsLibrary,
   unitTestAssetVault,
 } from './assets';
+import { unitTestACL } from './acl/acl';
 
 baseContext('Unit Tests', function () {
   unitTestWarperPresetFactory();
@@ -19,4 +20,5 @@ baseContext('Unit Tests', function () {
   unitTestAssetVault();
   unitTestAssetController();
   unitTestAssetClassRegistry();
+  unitTestACL();
 });
