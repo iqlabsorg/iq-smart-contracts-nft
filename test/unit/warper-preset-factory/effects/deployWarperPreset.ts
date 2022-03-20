@@ -2,27 +2,26 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { deployWarperPreset } from '../../../shared/utils';
-import { WarperPresetFactory, WarperPresetMock, WarperPresetMock__factory } from '../../../../typechain';
+import { IWarperPresetFactory, WarperPresetMock, WarperPresetMock__factory } from '../../../../typechain';
 import { presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
 export function shouldBehaveLikeDeployWarperPreset(): void {
   describe('deploy warper preset', function () {
-    let warperPresetFactory: WarperPresetFactory;
+    let warperPresetFactory: IWarperPresetFactory;
     let warperImpl1: WarperPresetMock;
-    let warperImpl2: WarperPresetMock;
 
     let stranger: SignerWithAddress;
     let deployer: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-      [warperImpl1, warperImpl2] = this.mocks.warperPreset;
+      warperPresetFactory = this.warperPresetFactory.underTest;
 
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
+      await warperPresetFactory.addPreset(presetId1, this.warperPresetFactory.warperPreset1.address);
+      await warperPresetFactory.addPreset(presetId2, this.warperPresetFactory.warperPreset2.address);
 
-      await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
-      await warperPresetFactory.addPreset(presetId2, warperImpl2.address);
+      warperImpl1 = this.warperPresetFactory.warperPreset1;
     });
 
     it('allows anyone to deploy a warper from preset', async () => {

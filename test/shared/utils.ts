@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction } from 'ethers';
-import { IUniverseManager, IWarperManager, Metahub, WarperPresetFactory } from '../../typechain';
+import { IUniverseManager, IWarperManager, IWarperPresetFactory, Metahub, WarperPresetFactory } from '../../typechain';
 import { Assets, WarperRegisteredEvent } from '../../typechain/Metahub';
 import { wait } from '../../tasks';
 
@@ -68,7 +68,7 @@ export async function createUniverse(
  * @param params
  */
 export async function deployWarperPreset(
-  factory: WarperPresetFactory,
+  factory: IWarperPresetFactory,
   ...params: Parameters<WarperPresetFactory['deployPreset']>
 ): Promise<string> {
   const receipt = await wait(factory.deployPreset(...params));

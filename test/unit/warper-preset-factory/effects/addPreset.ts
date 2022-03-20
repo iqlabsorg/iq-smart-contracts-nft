@@ -1,21 +1,22 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { WarperPresetFactory, WarperPresetMock } from '../../../../typechain';
+import { IWarperPresetFactory, WarperPresetMock } from '../../../../typechain';
 import { expectWarperPresetData, presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
 export function shouldBehaveLikeAddingANewPreset(): void {
   describe('add a new preset', function () {
-    let warperPresetFactory: WarperPresetFactory;
+    let warperPresetFactory: IWarperPresetFactory;
     let warperImpl1: WarperPresetMock;
     let warperImpl2: WarperPresetMock;
 
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-      [warperImpl1, warperImpl2] = this.mocks.warperPreset;
+      warperPresetFactory = this.warperPresetFactory.underTest;
 
       [stranger] = this.signers.unnamed;
+      warperImpl1 = this.warperPresetFactory.warperPreset1;
+      warperImpl2 = this.warperPresetFactory.warperPreset2;
     });
 
     describe('When adding new warper preset', () => {

@@ -1,19 +1,19 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { WarperPresetFactory } from '../../../../typechain';
+import { IWarperPresetFactory } from '../../../../typechain';
 import { expectWarperPresetData, presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
 export function shouldBehaveLikeDisablePreset(): void {
   describe('disable preset', function () {
-    let warperPresetFactory: WarperPresetFactory;
+    let warperPresetFactory: IWarperPresetFactory;
     let stranger: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
+      warperPresetFactory = this.warperPresetFactory.underTest;
 
       [stranger] = this.signers.unnamed;
-      await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
-      await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
+      await warperPresetFactory.addPreset(presetId1, this.warperPresetFactory.warperPreset1.address);
+      await warperPresetFactory.addPreset(presetId2, this.warperPresetFactory.warperPreset2.address);
     });
 
     it('allows owner to disable preset', async () => {

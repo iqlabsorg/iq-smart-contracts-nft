@@ -1,5 +1,5 @@
 import hre, { ethers } from 'hardhat';
-import { WarperPresetFactory__factory, WarperPresetMock__factory } from '../../../typechain';
+import { IWarperPresetFactory, WarperPresetFactory__factory, WarperPresetMock__factory } from '../../../typechain';
 import { shouldBehaveWarperPresetFactory } from './WarperPresetFactory.behaviour';
 
 export async function unitFixtureWarperPresetFactory() {
@@ -24,8 +24,12 @@ export function unitTestWarperPresetFactory(): void {
       const { warperImplMock1, warperImplMock2, warperPresetFactory } = await this.loadFixture(
         unitFixtureWarperPresetFactory,
       );
-      this.mocks.warperPreset = [warperImplMock1, warperImplMock2];
-      this.contracts.warperPresetFactory = warperPresetFactory;
+
+      this.warperPresetFactory = {
+        underTest: warperPresetFactory as unknown as IWarperPresetFactory,
+        warperPreset1: warperImplMock1,
+        warperPreset2: warperImplMock2,
+      };
     });
 
     shouldBehaveWarperPresetFactory();

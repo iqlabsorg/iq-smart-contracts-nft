@@ -1,10 +1,21 @@
 import { expect } from 'chai';
 import { formatBytes32String } from 'ethers/lib/utils';
+import { IWarperPresetFactory, WarperPresetMock } from '../../../typechain';
 import { shouldBehaveLikeAddingANewPreset } from './effects/addPreset';
 import { shouldBehaveLikeDeployWarperPreset } from './effects/deployWarperPreset';
 import { shouldBehaveLikeDisablePreset } from './effects/disablePreset';
 import { shouldBehaveEnablePreset } from './effects/enablePreset';
 import { shouldBehaveLikeRemovePreset } from './effects/removePreset';
+
+declare module 'mocha' {
+  interface Context {
+    warperPresetFactory: {
+      underTest: IWarperPresetFactory;
+      warperPreset1: WarperPresetMock;
+      warperPreset2: WarperPresetMock;
+    };
+  }
+}
 
 /**
  * Warper preset factory tests
