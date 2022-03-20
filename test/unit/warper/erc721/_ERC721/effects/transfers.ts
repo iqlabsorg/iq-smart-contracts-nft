@@ -31,9 +31,9 @@ export function shouldBehaveTransfer(): void {
     const RECEIVER_MAGIC_VALUE = '0x150b7a02';
 
     beforeEach(async function () {
-      metahub = this.mocks.metahub;
       assetClassRegistry = this.mocks.assetClassRegistry;
-      warper = this.contracts.erc721Warper;
+      metahub = this.erc721Warper.metahub;
+      warper = this.erc721Warper.underTest;
       assetOwner = this.signers.named['assetOwner'];
       deployer = this.signers.named['deployer'];
 
@@ -41,11 +41,11 @@ export function shouldBehaveTransfer(): void {
 
       assetClassRegistry.assetClassConfig.returns({
         vault: AddressZero,
-        controller: this.contracts.erc721WarperController.address,
+        controller: this.erc721Warper.erc721WarperController.address,
       });
 
       // Mint
-      await warper.connect(this.mocks.metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
+      await warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
     // Reusable test case dependencies

@@ -1,21 +1,41 @@
-import { shouldBehaveLikeRejectERC20TokenInterface } from './effects/interfaceCompatibility';
-import { shouldBehaveLikeMulticall } from './effects/multicall';
-import { shouldBehaveLikeAbleToForwardCalls } from './views/forwardCalls';
-import { shouldBehaveLikeGetMetahub } from './views/getMetahub';
-import { shouldBehaveLikeGetOriginal } from './views/getOriginal';
+import { expect } from 'chai';
+import { ERC721, IWarperPreset, Metahub } from '../../../typechain';
+
+declare module 'mocha' {
+  interface Context {
+    warper: {
+      underTest: IWarperPreset;
+      metahub: Metahub;
+      originalAsset: ERC721;
+      forwarder: {
+        call: () => Promise<string>;
+        expected: string;
+      };
+    };
+  }
+}
 
 /**
  * Core warper method functionality
  */
 export function shouldBehaveLikeWarper(): void {
   describe('View Functions', function () {
-    shouldBehaveLikeGetOriginal();
-    shouldBehaveLikeGetMetahub();
-    shouldBehaveLikeAbleToForwardCalls();
-  });
+    describe('__original', () => {
+      it('returns the original asset address', async function () {
+        await expect(this.warper.underTest.__original()).to.eventually.eq(this.warper.originalAsset.address);
+      });
+    });
 
-  describe('Effect Functions', function () {
-    shouldBehaveLikeRejectERC20TokenInterface();
-    shouldBehaveLikeMulticall();
+    describe('__metahub', () => {
+      it('returns the metahub address', async function () {
+        await expect(this.warper.underTest.__metahub()).to.eventually.equal(this.warper.metahub.address);
+      });
+    });
+
+    describe('call forwarding', () => {
+      it('can forward the call to the original asset contract', async function () {
+        await expect(this.warper.forwarder.call()).to.eventually.eq(this.warper.forwarder.expected);
+      });
+    });
   });
 }

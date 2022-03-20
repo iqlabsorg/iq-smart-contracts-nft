@@ -1,20 +1,34 @@
 import { smock } from '@defi-wonderland/smock';
+import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import hre, { ethers } from 'hardhat';
 import {
   AssetClassRegistry,
   AssetClassRegistry__factory,
+  ConfigurableAvailabilityPeriodExtension,
+  ConfigurableRentalPeriodExtension,
   ERC20Mock__factory,
+  ERC721,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
   ERC721Warper,
   ERC721WarperController__factory,
+  IAvailabilityPeriodMechanics,
+  IRentalPeriodMechanics,
   IWarperPreset,
   Metahub,
   Metahub__factory,
+  Multicall,
   Warper,
 } from '../../../typechain';
-import { shouldBehaveLikeERC721Warper, shouldBehaveLikeERC721Configurable } from './erc721';
+import { AddressZero } from '../../shared/types';
+import { shouldBehavesLikeMulticall } from '../shared/Multicall.behaviour';
+import { shouldBehaveLikeERC721Warper } from './erc721/ERC721Warper.behaviour';
+import { shouldBehaveLikeERC721PresetConfigurable } from './erc721/presets/ERC721Configurable.behaviour';
+import { shouldBehaveLikeAvailabilityPeriod } from './mechanics/availability-period/AvailabilityPeriod.behaviour';
+import { shouldBehaveLikeConfigurableAvailabilityPeriod } from './mechanics/availability-period/ConfigurableAvailabilityPeriod.behaviour';
+import { shouldBehaveLikeConfigurableRentalPeriod } from './mechanics/rental-period/ConfigurableRentalPeriod.behaviour';
+import { shouldBehaveLikeRentalPeriod } from './mechanics/rental-period/RentalPeriod.behaviour';
 import { shouldBehaveLikeWarper } from './warper.behaviour';
 
 export async function unitFixtureERC721WarperConfigurable() {
@@ -74,30 +88,66 @@ export async function unitFixtureERC721WarperConfigurable() {
 }
 
 export function unitTestWarpers(): void {
-  describe('ERC721Warper Configurable', function () {
+  describe('ERC721 Preset Configurable', function () {
     beforeEach(async function () {
-      const {
-        erc721Warper,
-        metahub,
-        assetClassRegistry,
-        oNFT,
-        erc20Token,
-        uninitializedErc721Warper,
-        erc721WarperController,
-      } = await this.loadFixture(unitFixtureERC721WarperConfigurable);
-      this.mocks.assets.erc721 = oNFT;
-      this.mocks.assets.erc20 = erc20Token;
-      this.mocks.metahub = metahub;
+      const { erc721Warper, metahub, oNFT, erc721WarperController, assetClassRegistry } = await this.loadFixture(
+        unitFixtureERC721WarperConfigurable,
+      );
       this.mocks.assetClassRegistry = assetClassRegistry;
-      this.contracts.presets.erc721Configurable = erc721Warper;
-      this.contracts.erc721Warper = erc721Warper as unknown as ERC721Warper;
-      this.contracts.warperPreset = uninitializedErc721Warper as unknown as IWarperPreset;
-      this.contracts.warper = erc721Warper as unknown as Warper;
-      this.contracts.erc721WarperController = erc721WarperController;
+
+      this.warper = {
+        underTest: erc721Warper as unknown as IWarperPreset,
+        originalAsset: oNFT as unknown as ERC721,
+        metahub: metahub as unknown as Metahub,
+        forwarder: {
+          call: () => {
+            return ERC721Mock__factory.connect(erc721Warper.address, this.signers.unnamed[0]).symbol();
+          },
+          expected: await oNFT.symbol(),
+        },
+      };
+
+      this.multicall = {
+        underTest: erc721Warper as unknown as Multicall,
+        call1: oNFT.interface.encodeFunctionData('mint', [this.signers.unnamed[0].address, 1]),
+        call2: oNFT.interface.encodeFunctionData('mint', [this.signers.unnamed[0].address, 22]),
+        call3: oNFT.interface.encodeFunctionData('mint', [this.signers.unnamed[0].address, 42]),
+        assert: async tx => {
+          await expect(tx).to.emit(oNFT, 'Transfer').withArgs(AddressZero, this.signers.unnamed[0].address, 1);
+          await expect(tx).to.emit(oNFT, 'Transfer').withArgs(AddressZero, this.signers.unnamed[0].address, 22);
+          await expect(tx).to.emit(oNFT, 'Transfer').withArgs(AddressZero, this.signers.unnamed[0].address, 42);
+        },
+      };
+
+      this.erc721Warper = {
+        erc721WarperController: erc721WarperController,
+        metahub: metahub,
+        underTest: erc721Warper as unknown as ERC721Warper,
+      };
+
+      this.rentalPeriod = {
+        underTest: erc721Warper as unknown as IRentalPeriodMechanics,
+      };
+      this.configurableRentalPeriod = {
+        underTest: erc721Warper as unknown as ConfigurableRentalPeriodExtension,
+        metahub: metahub,
+      };
+      this.availabilityPeriod = {
+        underTest: erc721Warper as unknown as IAvailabilityPeriodMechanics,
+      };
+      this.configurableAvailabilityPeriod = {
+        underTest: erc721Warper as unknown as ConfigurableAvailabilityPeriodExtension,
+        metahub: metahub,
+      };
     });
 
     shouldBehaveLikeWarper();
     shouldBehaveLikeERC721Warper();
-    shouldBehaveLikeERC721Configurable();
+    shouldBehaveLikeERC721PresetConfigurable();
+    shouldBehavesLikeMulticall();
+    shouldBehaveLikeRentalPeriod();
+    shouldBehaveLikeConfigurableRentalPeriod();
+    shouldBehaveLikeAvailabilityPeriod();
+    shouldBehaveLikeConfigurableAvailabilityPeriod();
   });
 }
