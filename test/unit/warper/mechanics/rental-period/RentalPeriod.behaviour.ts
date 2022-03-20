@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { IRentalPeriodMechanics } from '../../../../../typechain';
-import { MaxUint32 } from '../../utils';
+import { MaxUint32 } from '../../../../shared/utils';
 
 declare module 'mocha' {
   interface Context {

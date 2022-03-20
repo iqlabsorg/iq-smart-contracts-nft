@@ -6,6 +6,8 @@ import { wait } from '../../tasks';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 
+export const MaxUint32 = 2 ** 32 - 1;
+
 export const RolesLibrary = {
   ADMIN_ROLE: '0x0000000000000000000000000000000000000000000000000000000000000000',
   SUPERVISOR_ROLE: '0x060c8eced3c6b422fe5573c862b67b9f6e25a3fc7d9543b14f7aee77b138e70d',

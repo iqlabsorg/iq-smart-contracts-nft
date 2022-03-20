@@ -7,7 +7,6 @@ import {
   AssetClassRegistry__factory,
   ConfigurableAvailabilityPeriodExtension,
   ConfigurableRentalPeriodExtension,
-  ERC20Mock__factory,
   ERC721,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
@@ -19,7 +18,6 @@ import {
   Metahub,
   Metahub__factory,
   Multicall,
-  Warper,
 } from '../../../typechain';
 import { AddressZero } from '../../shared/types';
 import { shouldBehavesLikeMulticall } from '../shared/Multicall.behaviour';
