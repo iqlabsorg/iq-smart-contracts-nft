@@ -183,6 +183,7 @@ library Assets {
         bytes4 assetClass,
         ClassConfig memory classConfig
     ) internal {
+        //todo: validate interfaces
         if (self.isRegisteredAssetClass(assetClass)) revert AssetClassIsAlreadyRegistered(assetClass);
         self.classes[assetClass] = classConfig;
     }

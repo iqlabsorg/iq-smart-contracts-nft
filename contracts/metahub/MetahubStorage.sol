@@ -1,74 +1,46 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "./IMetahub.sol";
-import "../warper/IWarperPresetFactory.sol";
-import "../warper/IWarper.sol";
-import "../warper/Warpers.sol";
-import "../universe/IUniverseToken.sol";
-import "../asset/Assets.sol";
 import "../acl/IACL.sol";
+import "../universe/Universes.sol";
+import "../asset/Assets.sol";
+import "../warper/Warpers.sol";
+import "../listing/Listings.sol";
+import "./Protocol.sol";
 
 abstract contract MetahubStorage {
     /**
+     * @dev ACL contract.
+     */
+    IACL internal _aclContract;
+
+    /**
      * @dev Protocol configuration.
-     * @param acl ACL contract.
-     * @param warperPresetFactory Warper preset factory contract.
-     * @param universeToken Universe NFT contract.
-     * @param baseToken ERC20 contract. Used as the price denominator.
-     * @param rentalFeePercent The fixed part of the total rental fee paid to protocol.
      */
-    struct ProtocolConfig {
-        IACL acl;
-        IWarperPresetFactory warperPresetFactory;
-        IUniverseToken universeToken;
-        IERC20Upgradeable baseToken;
-        uint16 rentalFeePercent;
-    }
+    Protocol.Info internal _protocol;
 
     /**
-     * @dev Universe data.
-     * @param rentalFeePercent The fixed part of the total rental fee paid to universe.
-     * @param warpers Set of warper addresses registered by the universe.
+     * @dev Universe registry contains the data about all registered universes and their settings.
      */
-    struct Universe {
-        uint16 rentalFeePercent;
-        EnumerableSetUpgradeable.AddressSet warpers;
-    }
-
-    /// STORAGE ///
-    ProtocolConfig internal _protocol;
+    Universes.Registry internal _universeRegistry;
 
     /**
-     * @dev Asset registry contains data about all registered assets and supported asset classes.
+     * @dev Asset registry contains the data about all registered assets and supported asset classes.
      */
     Assets.Registry internal _assetRegistry;
 
     /**
-     * @dev Listing registry contains data about all listings.
+     * @dev Warper registry contains the data about all registered warpers.
+     */
+    Warpers.Registry internal _warperRegistry;
+
+    /**
+     * @dev Listing registry contains the data about all listings.
      */
     Listings.Registry internal _listingRegistry;
 
     /**
-     * @dev Renting registry contains data about all rentals.
+     * @dev Renting registry contains the data about all rentals.
      */
     Rentings.Registry internal _rentingRegistry;
-
-    /**
-     * @dev Mapping from warper address to the warper entry.
-     */
-    mapping(address => Warpers.Info) internal _warpers;
-
-    /**
-     * @dev Mapping from universe ID to the universe entry.
-     */
-    mapping(uint256 => Universe) internal _universes;
-
-    /**
-     * @dev Mapping from listing strategy ID to the listing strategy configuration.
-     */
-    mapping(bytes4 => IListingManager.ListingStrategyConfig) internal _listingStrategies;
 }

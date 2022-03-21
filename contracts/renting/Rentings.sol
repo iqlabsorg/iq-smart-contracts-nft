@@ -47,7 +47,9 @@ library Rentings {
     struct RenterInfo {
         EnumerableSetUpgradeable.UintSet rentalIndex;
         EnumerableSetUpgradeable.AddressSet warpers;
-        mapping(address => EnumerableSetUpgradeable.UintSet) warperRentalIndex;
+        //        mapping(warperAddress => setOfHashes);
+        mapping(address => EnumerableSetUpgradeable.UintSet) warperRentalIndex; // todo: AssetId hash here instead of warper address
+        //        mapping(assetIdHash => EnumerableSetUpgradeable.UintSet) warperRentalIndex;
     }
 
     //todo: docs
@@ -73,13 +75,14 @@ library Rentings {
     }
 
     /**
-     * @dev Renting registry
+     * @dev Renting registry.
      * @param idTracker Rental agreement ID tracker (incremental counter).
      * @param agreements Mapping from rental agreement ID to the rental agreement details.
      * @param renters Mapping from renter address to the renter info.
      */
     struct Registry {
         CountersUpgradeable.Counter idTracker; // todo: reduce size
+        //        mapping(assetIdHash) => currentRentalId;
         mapping(uint256 => Agreement) agreements;
         mapping(address => RenterInfo) renters;
     }

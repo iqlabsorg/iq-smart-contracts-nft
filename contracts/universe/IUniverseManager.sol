@@ -3,9 +3,14 @@ pragma solidity ^0.8.11;
 
 interface IUniverseManager {
     /**
-     * @dev Thrown when a check is made where the given account must also be the universe owner.
+     * @dev The universe properties & initial configuration params.
+     * @param name The universe name.
+     * @param rentalFeePercent The base percentage of the rental fee which the universe charges for using its warpers.
      */
-    error AccountIsNotUniverseOwner(address account);
+    struct UniverseParams {
+        string name;
+        uint16 rentalFeePercent;
+    }
 
     /**
      * @dev Emitted when a universe is created.
@@ -16,10 +21,10 @@ interface IUniverseManager {
 
     /**
      * @dev Creates new Universe. This includes minting new universe NFT, where the caller of this method becomes the universe owner.
-     * @param name Universe name.
+     * @param params The universe properties & initial configuration params.
      * @return Universe ID (universe token ID).
      */
-    function createUniverse(string calldata name) external returns (uint256);
+    function createUniverse(UniverseParams calldata params) external returns (uint256);
 
     /**
      * @dev Aggregate and return Universe data.

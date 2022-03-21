@@ -8,11 +8,6 @@ import "./Listings.sol";
 
 interface IListingManager {
     /**
-     * @dev Thrown when the `listingId` is invalid or the asset has been delisted.
-     */
-    error NotListed(uint256 listingId);
-
-    /**
      * @dev Thrown when the message sender doesn't match the asset lister address.
      */
     error CallerIsNotAssetLister();
@@ -22,23 +17,6 @@ interface IListingManager {
      * or other activity that requires asset to stay in the vault.
      */
     error AssetIsLocked();
-
-    /**
-     * @dev Thrown upon attempting to register a listing strategy twice.
-     * @param strategyId Duplicate listing strategy ID.
-     */
-    error ListingStrategyIsAlreadyRegistered(bytes4 strategyId);
-
-    /**
-     * @dev Thrown when listing controller is dos not implement the required interface.
-     */
-    error InvalidListingControllerInterface();
-
-    /**
-     * @dev Thrown when the listing strategy is not registered or deprecated.
-     * @param strategyId Unsupported listing strategy ID.
-     */
-    error UnsupportedListingStrategy(bytes4 strategyId);
 
     /**
      * @dev Emitted when a new asset is listed for renting.
@@ -85,19 +63,11 @@ interface IListingManager {
     event ListingUnpaused(uint256 indexed listingId);
 
     /**
-     * @dev Listing strategy configuration.
-     * @param controller Listing controller address.
-     */
-    struct ListingStrategyConfig {
-        IListingController controller;
-    }
-
-    /**
      * @dev Registers new listing strategy.
      * @param strategyId Listing strategy ID.
      * @param config Listing strategy configuration.
      */
-    function registerListingStrategy(bytes4 strategyId, ListingStrategyConfig calldata config) external;
+    function registerListingStrategy(bytes4 strategyId, Listings.StrategyInfo calldata config) external;
 
     /**
      * @dev Sets listing strategy controller.
@@ -109,9 +79,9 @@ interface IListingManager {
     /**
      * @dev Returns listing strategy configuration.
      * @param strategyId Listing strategy ID.
-     * @return Listing strategy config.
+     * @return Listing strategy information.
      */
-    function listingStrategy(bytes4 strategyId) external view returns (ListingStrategyConfig memory);
+    function listingStrategy(bytes4 strategyId) external view returns (Listings.StrategyInfo memory);
 
     /**
      * @dev Performs new asset listing.

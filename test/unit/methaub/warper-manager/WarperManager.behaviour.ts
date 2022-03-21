@@ -32,7 +32,10 @@ export function shouldBehaveLikeWarperManager(): void {
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
 
-      universeId = await createUniverse(this.contracts.metahub as unknown as IUniverseManager, 'IQ Universe');
+      universeId = await createUniverse(this.contracts.metahub as unknown as IUniverseManager, {
+        name: 'IQ Universe',
+        rentalFeePercent: 1000,
+      });
     });
 
     describe('When Universe is created', () => {

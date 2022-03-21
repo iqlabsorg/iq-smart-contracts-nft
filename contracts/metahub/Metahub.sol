@@ -4,7 +4,6 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
@@ -26,6 +25,7 @@ import "../listing/IListingController.sol";
 import "../Errors.sol";
 import "./IMetahub.sol";
 import "./MetahubStorage.sol";
+import "./Protocol.sol";
 
 // todo: review lib imports
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
@@ -41,12 +41,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     using Listings for Listings.Registry;
     using Rentings for Rentings.Registry;
     using Warpers for Warpers.Info;
+    using Warpers for Warpers.Registry;
+    using Universes for Universes.Registry;
 
     /**
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
-        _checkUniverseOwner(universeId, _msgSender());
+        _universeRegistry.checkUniverseOwner(universeId, _msgSender());
         _;
     }
 
@@ -70,7 +72,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make sure the function is called for the active listing.
      */
     modifier listed(uint256 listingId) {
-        _checkListed(listingId);
+        _listingRegistry.checkListed(listingId);
         _;
     }
 
@@ -78,7 +80,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @dev Modifier to make sure that the warper has been registered beforehand.
      */
     modifier registeredWarper(address warper) {
-        _checkRegisteredWarper(warper);
+        _warperRegistry.checkRegisteredWarper(warper);
         _;
     }
 
@@ -101,13 +103,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         __UUPSUpgradeable_init();
 
         // todo perform interface checks?
-        _protocol = ProtocolConfig(
-            IACL(acl),
-            IWarperPresetFactory(warperPresetFactory),
-            IUniverseToken(universeToken),
-            IERC20Upgradeable(baseToken),
-            rentalFeePercent
-        );
+        _aclContract = IACL(acl);
+        _protocol = Protocol.Info({baseToken: IERC20Upgradeable(baseToken), rentalFeePercent: rentalFeePercent});
+
+        _warperRegistry.presetFactory = IWarperPresetFactory(warperPresetFactory);
+        _universeRegistry.token = IUniverseToken(universeToken);
     }
 
     /**
@@ -126,7 +126,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         )
     {
         // Check if asset listing is active.
-        _checkListed(params.listingId);
+        _listingRegistry.checkListed(params.listingId);
 
         // Find selected listing.
         Listings.Info storage listing = _listingRegistry.listings[params.listingId];
@@ -137,7 +137,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (listing.paused) revert Listings.ListingIsPaused();
 
         // Find selected warper.
-        Warpers.Info storage warper = _warpers[params.warper];
+        Warpers.Info storage warper = _warperRegistry.warpers[params.warper];
 
         // Check whether the warper is not paused.
         if (warper.paused) revert Warpers.WarperIsPaused();
@@ -182,7 +182,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // todo: pay to Universe
         // todo: pay to Protocol
 
-        // todo: warp original asset (mint warper)
+        // todo: warp original asset (mint warper via controller.warp(asset, renter))
 
         uint32 startTime = _blockTimestamp();
         uint32 endTime = startTime + params.rentalPeriod;
@@ -190,13 +190,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // todo: update listing lock time
         _listingRegistry.listings[params.listingId].addLock(endTime);
 
-        Rentings.Agreement memory rentalAgreement = Rentings.Agreement(
-            params.listingId,
-            params.warper,
-            params.renter,
-            startTime,
-            endTime
-        );
+        //todo: hash AssetId to associate warper rental (pass to renting registry)
+
+        Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
+            listingId: params.listingId,
+            warper: params.warper,
+            renter: params.renter,
+            startTime: startTime,
+            endTime: endTime
+        });
 
         uint256 rentalId = _rentingRegistry.add(rentalAgreement);
 
@@ -240,12 +242,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IUniverseManager
      */
-    function createUniverse(string calldata name) external returns (uint256) {
-        IUniverseToken universeToken = _protocol.universeToken;
-        uint256 tokenId = universeToken.mint(_msgSender(), name);
-        emit UniverseCreated(tokenId, universeToken.universeName(tokenId));
+    function createUniverse(UniverseParams calldata params) external returns (uint256) {
+        uint256 universeId = _universeRegistry.token.mint(_msgSender(), params.name);
+        _universeRegistry.add(universeId, Universes.Universe(params.rentalFeePercent));
 
-        return tokenId;
+        emit UniverseCreated(universeId, params.name);
+
+        return universeId;
     }
 
     /**
@@ -259,7 +262,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             string memory universeName
         )
     {
-        IUniverseToken universeToken = _protocol.universeToken;
+        IUniverseToken universeToken = _universeRegistry.token;
         name = universeToken.name();
         symbol = universeToken.symbol();
         universeName = universeToken.universeName(universeId);
@@ -272,8 +275,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         uint256 universeId,
         address original,
         bytes32 presetId
-    ) external onlyUniverseOwner(universeId) returns (address) {
-        return _registerWarper(universeId, _deployWarperWithData(original, presetId, bytes("")));
+    ) external onlyUniverseOwner(universeId) returns (address warper) {
+        address warper = _deployWarperWithData(original, presetId, bytes(""));
+        _registerWarper(universeId, warper, true);
     }
 
     /**
@@ -284,20 +288,17 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         address original,
         bytes32 presetId,
         bytes calldata presetData
-    ) external onlyUniverseOwner(universeId) returns (address) {
+    ) external onlyUniverseOwner(universeId) returns (address warper) {
         if (presetData.length == 0) revert EmptyPresetData();
-
-        return _registerWarper(universeId, _deployWarperWithData(original, presetId, presetData));
+        address warper = _deployWarperWithData(original, presetId, presetData);
+        _registerWarper(universeId, warper, true);
     }
 
     /**
      * @inheritdoc IListingManager
      */
-    function registerListingStrategy(bytes4 strategyId, ListingStrategyConfig calldata config) external onlyAdmin {
-        _checkValidListingController(address(config.controller));
-        if (_isRegisteredListingStrategy(strategyId)) revert ListingStrategyIsAlreadyRegistered(strategyId);
-
-        _listingStrategies[strategyId] = config;
+    function registerListingStrategy(bytes4 strategyId, Listings.StrategyInfo calldata config) external onlyAdmin {
+        _listingRegistry.registerStrategy(strategyId, config);
         //todo: event
     }
 
@@ -305,17 +306,16 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IListingManager
      */
     function setListingController(bytes4 strategyId, address controller) external onlySupervisor {
-        _checkValidListingController(controller);
-        _listingStrategies[strategyId].controller = IListingController(controller);
+        _listingRegistry.setListingStrategyController(strategyId, controller);
         //todo: event
     }
 
     /**
      * @inheritdoc IListingManager
      */
-    function listingStrategy(bytes4 strategyId) external view returns (ListingStrategyConfig memory) {
-        _checkListingStrategySupport(strategyId);
-        return _listingStrategies[strategyId];
+    function listingStrategy(bytes4 strategyId) external view returns (Listings.StrategyInfo memory) {
+        _listingRegistry.checkListingStrategySupport(strategyId);
+        return _listingRegistry.strategies[strategyId];
     }
 
     /**
@@ -330,7 +330,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         _assetRegistry.checkAssetClassSupport(asset.id.class);
 
         // Check that listing strategy is supported.
-        _checkListingStrategySupport(params.strategy);
+        _listingRegistry.checkListingStrategySupport(params.strategy);
 
         // Transfer asset from lister account to the vault.
         _assetRegistry.transferAssetToVault(asset, _msgSender());
@@ -390,7 +390,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function pauseWarper(address warper) external onlyWarperAdmin(warper) {
-        _warpers[warper].pause();
+        _warperRegistry.warpers[warper].pause();
         emit WarperPaused(warper);
     }
 
@@ -398,7 +398,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function unpauseWarper(address warper) external onlyWarperAdmin(warper) {
-        _warpers[warper].unpause();
+        _warperRegistry.warpers[warper].unpause();
         emit WarperUnpaused(warper);
     }
 
@@ -413,14 +413,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function warperPresetFactory() external view returns (address) {
-        return address(_protocol.warperPresetFactory);
+        return address(_warperRegistry.presetFactory);
     }
 
     /**
      * @inheritdoc IWarperManager
      */
     function universeWarpers(uint256 universeId) external view returns (address[] memory) {
-        return _universes[universeId].warpers.values();
+        return _warperRegistry.universeWarpers[universeId].values();
     }
 
     /**
@@ -434,14 +434,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc IWarperManager
      */
     function isWarperAdmin(address warper, address account) external view registeredWarper(warper) returns (bool) {
-        return _isUniverseOwner(_warpers[warper].universeId, account);
+        return _universeRegistry.isUniverseOwner(_warperRegistry.warpers[warper].universeId, account);
     }
 
     /**
      * @inheritdoc IWarperManager
      */
     function warperInfo(address warper) external view registeredWarper(warper) returns (Warpers.Info memory) {
-        return _warpers[warper];
+        return _warperRegistry.warpers[warper];
     }
 
     /**
@@ -455,7 +455,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @inheritdoc AccessControlled
      */
     function _acl() internal view override returns (IACL) {
-        return _protocol.acl;
+        return _aclContract;
     }
 
     /**
@@ -480,21 +480,26 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         );
 
         // Deploy new warper instance from preset via warper preset factory.
-        return _protocol.warperPresetFactory.deployPreset(presetId, initCall);
+        return _warperRegistry.presetFactory.deployPreset(presetId, initCall);
     }
 
     /**
      * @dev Performs warper registration.
      * @param universeId The universe ID.
      * @param warper The warper address.
+     * @param paused Indicates whether the warper should stay paused after registration.
      */
-    function _registerWarper(uint256 universeId, address warper) internal returns (address) {
+    function _registerWarper(
+        uint256 universeId,
+        address warper,
+        bool paused
+    ) internal {
         // Check that warper asset class is supported.
         bytes4 assetClass = IWarper(warper).__assetClass();
         _assetRegistry.checkAssetClassSupport(assetClass);
 
         // Check that warper is not already registered.
-        if (_isRegisteredWarper(warper)) revert WarperIsAlreadyRegistered(warper);
+        _warperRegistry.checkNotRegisteredWarper(warper);
 
         // Check that warper has correct metahub reference.
         address warperMetahub = IWarper(warper).__metahub();
@@ -507,16 +512,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         //todo: check warper count against limits to prevent uncapped enumeration.
 
-        // Create warper main registration record.
-        // Associate warper with the universe and current asset class controller,
-        // to maintain backward compatibility in case of controller generation upgrade.
-        // The warper is disabled by default.
-        _warpers[warper] = Warpers.Info({universeId: universeId, controller: controller, paused: false});
+        // Register warper. The warper is paused by default.
+        _warperRegistry.add(warper, Warpers.Info({universeId: universeId, controller: controller, paused: paused}));
 
-        // Associate the warper with the universe.
-        _universes[universeId].warpers.add(warper);
-
-        // Associate the original asset with the the warper with.
+        // Associate the original asset with the the warper.
         address original = IWarper(warper).__original();
         _assetRegistry.assets[original].warpers.add(warper); // todo: lib
 
@@ -527,49 +526,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         }
 
         emit WarperRegistered(universeId, original, warper);
-
-        return warper;
-    }
-
-    /**
-     * @dev Returns Universe NFT owner.
-     * @param universeId Universe ID.
-     * @return Universe owner.
-     */
-    function _universeOwner(uint256 universeId) internal view returns (address) {
-        return IERC721Upgradeable(address(_protocol.universeToken)).ownerOf(universeId);
-    }
-
-    /**
-     * @dev Checks listing registration by ID.
-     * @param listingId Listing ID.
-     */
-    function _isRegisteredListing(uint256 listingId) internal view returns (bool) {
-        return _listingRegistry.listings[listingId].lister != address(0); // todo: lib
-    }
-
-    /**
-     * @dev Checks warper registration by address.
-     * @param warper Warper address.
-     */
-    function _isRegisteredWarper(address warper) internal view returns (bool) {
-        return _warpers[warper].universeId != 0;
-    }
-
-    /**
-     * @dev Throws if listing strategy is not supported.
-     * @param strategyId Listing strategy ID.
-     */
-    function _checkListingStrategySupport(bytes4 strategyId) internal view {
-        if (!_isRegisteredListingStrategy(strategyId)) revert UnsupportedListingStrategy(strategyId);
-    }
-
-    /**
-     * @dev Throws if warper is not registered.
-     * @param warper Warper address.
-     */
-    function _checkRegisteredWarper(address warper) internal view {
-        if (!_isRegisteredWarper(warper)) revert WarperIsNotRegistered(warper);
     }
 
     /**
@@ -578,50 +534,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
      * @param account The address that's expected to be the warpers universe owner.
      */
     function _checkWarperAdmin(address warper, address account) internal view {
-        _checkUniverseOwner(_warpers[warper].universeId, account);
-    }
-
-    /**
-     * @dev Throws if the universe owner is not the provided account address.
-     * @param universeId Universe ID.
-     * @param account The address of the expected owner.
-     */
-    function _checkUniverseOwner(uint256 universeId, address account) internal view {
-        if (_isUniverseOwner(universeId, account)) revert AccountIsNotUniverseOwner(account);
-    }
-
-    /**
-     * @dev Returns `true` if the universe owner is the supplied account address.
-     * @param universeId Universe ID.
-     * @param account The address of the expected owner.
-     */
-    function _isUniverseOwner(uint256 universeId, address account) internal view returns (bool) {
-        return (account != _universeOwner(universeId));
-    }
-
-    /**
-     * @dev Throws if provided address is not a valid listing controller.
-     * @param controller Listing controller address.
-     */
-    function _checkValidListingController(address controller) internal view {
-        if (!controller.supportsInterface(type(IListingController).interfaceId))
-            revert InvalidListingControllerInterface();
-    }
-
-    /**
-     * @dev Throws if listing is not registered or has been already delisted.
-     * @param listingId Listing ID.
-     */
-    function _checkListed(uint256 listingId) internal view {
-        if (!_listingRegistry.listings[listingId].listed()) revert NotListed(listingId); //todo: lib
-    }
-
-    /**
-     * @dev Checks listing strategy registration by ID.
-     * @param strategyId Listing strategy ID.
-     */
-    function _isRegisteredListingStrategy(bytes4 strategyId) internal view returns (bool) {
-        return address(_listingStrategies[strategyId].controller) != address(0);
+        _universeRegistry.checkUniverseOwner(_warperRegistry.warpers[warper].universeId, account);
     }
 
     /**
@@ -644,14 +557,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
             uint256 total
         )
     {
+        // Calculate lister base fee.
         // Resolve listing controller to calculate lister fee based on selected listing strategy.
-        IListingController listingController = _listingStrategies[listingParams.strategy].controller;
-
-        // Calculate base lister fee.
+        IListingController listingController = _listingRegistry.strategies[listingParams.strategy].controller;
         listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
 
-        // Calculate universe fee.
-        universeBaseFee = (listerBaseFee * _universes[warper.universeId].rentalFeePercent) / 10_000;
+        // Calculate universe base fee.
+        uint16 universeRentalFeePercent = _universeRegistry.universes[warper.universeId].rentalFeePercent;
+        universeBaseFee = (listerBaseFee * universeRentalFeePercent) / 10_000;
 
         // Calculate protocol fee.
         protocolFee = (listerBaseFee * _protocol.rentalFeePercent) / 10_000;

@@ -6,18 +6,6 @@ import "./Warpers.sol";
 
 interface IWarperManager {
     /**
-     * @dev Thrown when performing action or accessing data of an unknown warper.
-     * @param warper Warper address.
-     */
-    error WarperIsNotRegistered(address warper);
-
-    /**
-     * @dev Thrown upon attempting to register a warper twice.
-     * @param warper Duplicate warper address.
-     */
-    error WarperIsAlreadyRegistered(address warper);
-
-    /**
      * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
      * @param actual Metahub address returned by warper.
      * @param required Required metahub address.

@@ -19,7 +19,7 @@ export function shouldBehaveLikeUniverseManager(): void {
         const universeName = 'Universe One';
         const universeId = 1;
 
-        await expect(metahub.createUniverse(universeName))
+        await expect(metahub.createUniverse({ name: universeName, rentalFeePercent: 1000 }))
           .to.emit(metahub, 'UniverseCreated')
           .withArgs(universeId, universeName);
       });
@@ -30,7 +30,7 @@ export function shouldBehaveLikeUniverseManager(): void {
       const universeId = 1;
 
       beforeEach(async () => {
-        await metahub.createUniverse(universeName);
+        await metahub.createUniverse({ name: universeName, rentalFeePercent: 1000 });
       });
 
       it('can retrieve universe name', async () => {
