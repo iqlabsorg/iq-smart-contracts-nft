@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import "../../metahub/IMetahub.sol";
 import "../Warper.sol";
 import "./IERC721Warper.sol";
-import "../../metahub/IMetahub.sol";
+import "./IERC721WarperController.sol";
 
 /**
  * @title Warper for the ERC721 token contract
@@ -45,8 +46,8 @@ contract ERC721Warper is IERC721Warper, Warper {
      */
     function balanceOf(address owner) public view virtual override returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
-
-        return IMetahub(_metahub()).warperActiveRentalCount(address(this), owner);
+        IERC721WarperController warperController = _warperController();
+        return warperController.activeRentalCount(_metahub(), address(this), owner);
     }
 
     /**
@@ -60,14 +61,15 @@ contract ERC721Warper is IERC721Warper, Warper {
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
         // Special rent-sate handling
         {
-            address metahubAddress = _metahub();
-            IRentingManager.WarperRentalStatus rentalStatus = IMetahub(metahubAddress).getWarperRentalStatus(
+            IERC721WarperController warperController = _warperController();
+            IRentingManager.RentalStatus rentalStatus = warperController.rentalStatus(
+                _metahub(),
                 address(this),
                 tokenId
             );
-            if (rentalStatus == IRentingManager.WarperRentalStatus.NOT_MINTED)
-                revert OwnerQueryForNonexistentToken(tokenId);
-            if (rentalStatus == IRentingManager.WarperRentalStatus.MINTED) return metahubAddress;
+
+            if (rentalStatus == IRentingManager.RentalStatus.NOT_MINTED) revert OwnerQueryForNonexistentToken(tokenId);
+            if (rentalStatus == IRentingManager.RentalStatus.MINTED) return _metahub();
         }
 
         // `rentalStatus` is now WarperRentalStatus.RENTED
@@ -311,4 +313,13 @@ contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId
     ) internal virtual onlyMetahub {}
+
+    /**
+     * @dev Get the associated warper controller.
+     */
+    function _warperController() internal view returns (IERC721WarperController) {
+        address metahubAddress = _metahub();
+        Assets.ClassConfig memory assetClassConfig = IMetahub(metahubAddress).assetClassConfig(Assets.ERC721);
+        return IERC721WarperController(assetClassConfig.controller);
+    }
 }

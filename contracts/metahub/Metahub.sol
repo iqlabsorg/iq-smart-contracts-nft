@@ -584,13 +584,20 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     /**
      * @inheritdoc IRentingManager
      */
-    function warperActiveRentalCount(address warper, address account) external view returns (uint256 count) {
-        _rentingRegistry.renterActiveRentalCountByWarper(account, warper);
+    function warperActiveRentalCount(bytes32 assetHash, address renter) external view returns (uint256 count) {
+        // TODO: does this ^ API need to change?
+        // TODO: uncomment the line below once renting registry can process the incoming data
+        // _rentingRegistry.renterActiveRentalCountByWarper(renter, assetHash);
     }
 
-    //todo implement the real implementation here
-    function getWarperRentalStatus(address warper, uint256 tokenId) external view returns (WarperRentalStatus) {
-        return WarperRentalStatus.RENTED;
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function warperRentalStatus(bytes32 assetHash) external view returns (IRentingManager.RentalStatus) {
+        // TODO: does this ^ API need to change?
+
+        //todo implement the real implementation here
+        return IRentingManager.RentalStatus.RENTED;
     }
 
     /**

@@ -22,7 +22,7 @@ export function shouldBehaveLikeOwnerOf(): void {
   describe('ownerOf', () => {
     context('when the token has never been rented', () => {
       beforeEach(() => {
-        metahub.getWarperRentalStatus.returns(WarperRentalStatus.NOT_MINTED);
+        metahub.warperRentalStatus.returns(WarperRentalStatus.NOT_MINTED);
       });
 
       it('reverts', async () => {
@@ -34,7 +34,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('when the token has been minted but currently has not been rented', () => {
       beforeEach(() => {
-        metahub.getWarperRentalStatus.returns(WarperRentalStatus.MINTED);
+        metahub.warperRentalStatus.returns(WarperRentalStatus.MINTED);
       });
 
       it('returns metahub address', async () => {
@@ -44,7 +44,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('when the token is currently rented', () => {
       beforeEach(() => {
-        metahub.getWarperRentalStatus.returns(WarperRentalStatus.RENTED);
+        metahub.warperRentalStatus.returns(WarperRentalStatus.RENTED);
       });
 
       it('returns the current owner of the token', async () => {

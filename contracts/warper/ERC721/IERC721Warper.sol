@@ -14,4 +14,10 @@ interface IERC721Warper is IWarper, IERC721 {
     error TokenIsAlreadyMinted(uint256 tokenId);
     error TransferToTheZeroAddress();
     error MethodNotAllowed();
+
+    function mint(
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) external;
 }

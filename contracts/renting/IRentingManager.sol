@@ -17,7 +17,7 @@ interface IRentingManager {
      */
     error CallerIsNotRenter();
 
-    enum WarperRentalStatus {
+    enum RentalStatus {
         NOT_MINTED,
         MINTED,
         RENTED
@@ -25,19 +25,18 @@ interface IRentingManager {
 
     /**
      * @dev Get the amount of currently active rentals for a given user for a warper.
-     * @param warper Warper address.
-     * @param account Account address.
+     * @param assetHash AssetId hash.
+     * @param renter The renter account address.
      * @return Amount of active rentals.
      */
-    function warperActiveRentalCount(address warper, address account) external view returns (uint256);
+    function warperActiveRentalCount(bytes32 assetHash, address renter) external view returns (uint256);
 
     /**
-     * @dev Get the rental status for a token on a given warper.
-     * @param warper Warper address.
-     * @param tokenId Account address.
+     * @dev Get the rental status of a given asset.
+     * @param assetHash AssetId hash.
      * @return The warpers rental state.
      */
-    function getWarperRentalStatus(address warper, uint256 tokenId) external view returns (WarperRentalStatus);
+    function warperRentalStatus(bytes32 assetHash) external view returns (RentalStatus);
 
     /**
      * @dev Evaluates renting params and returns rental fee breakdown.

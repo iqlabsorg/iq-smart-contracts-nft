@@ -21,6 +21,11 @@ library Assets {
     bytes4 public constant ERC721 = bytes4(keccak256("ERC721"));
     bytes4 public constant ERC1155 = bytes4(keccak256("ERC1155"));
 
+    bytes32 constant ASSET_ID_TYPEHASH = keccak256("AssetId(bytes4 assetClass,bytes data)");
+
+    bytes32 constant ASSET_TYPEHASH =
+        keccak256("Asset(AssetType assetType,uint256 value)AssetId(bytes4 assetClass,bytes data)");
+
     /**
      * @dev Thrown upon attempting to register an asset class twice.
      * @param assetClass Duplicate asset class ID.
@@ -208,5 +213,13 @@ library Assets {
         bytes4 controllerAssetClass = IAssetController(controller).assetClass();
         if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
         self.classes[assetClass].controller = controller;
+    }
+
+    function hash(AssetId memory assetId) internal pure returns (bytes32) {
+        return keccak256(abi.encode(ASSET_ID_TYPEHASH, assetId.class, keccak256(assetId.data)));
+    }
+
+    function hash(Asset memory asset) internal pure returns (bytes32) {
+        return keccak256(abi.encode(ASSET_TYPEHASH, hash(asset.id), asset.value));
     }
 }

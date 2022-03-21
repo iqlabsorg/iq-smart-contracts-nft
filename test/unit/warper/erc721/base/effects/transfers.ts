@@ -53,7 +53,7 @@ export function shouldBehaveTransfer(): void {
       context('when rented', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.getWarperRentalStatus.returns(WarperRentalStatus.RENTED);
+          metahub.warperRentalStatus.returns(WarperRentalStatus.RENTED);
         });
 
         it('transfers the ownership of the given token ID', async () => {
@@ -64,7 +64,7 @@ export function shouldBehaveTransfer(): void {
       context('when minted (but not rented)', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.getWarperRentalStatus.returns(WarperRentalStatus.MINTED);
+          metahub.warperRentalStatus.returns(WarperRentalStatus.MINTED);
         });
 
         it('does not change the ownership', async () => {
@@ -75,7 +75,7 @@ export function shouldBehaveTransfer(): void {
       context('when not minted', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.getWarperRentalStatus.returns(WarperRentalStatus.NOT_MINTED);
+          metahub.warperRentalStatus.returns(WarperRentalStatus.NOT_MINTED);
         });
 
         it('does not change the ownership', async () => {
