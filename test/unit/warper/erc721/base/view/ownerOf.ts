@@ -2,6 +2,7 @@ import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ERC721Warper, Metahub } from '../../../../../../typechain';
+import { AddressZero } from '../../../../../shared/types';
 import { WarperRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveLikeOwnerOf(): void {
@@ -15,6 +16,11 @@ export function shouldBehaveLikeOwnerOf(): void {
     nftTokenOwner = this.signers.unnamed[0];
     metahub = this.mocks.metahub;
     erc721Warper = this.contracts.erc721Warper;
+
+    metahub.assetClassConfig.returns({
+      vault: AddressZero,
+      controller: this.contracts.erc721WarperController.address,
+    });
 
     await erc721Warper.connect(metahub.wallet).mint(nftTokenOwner.address, mintedTokenId, '0x');
   });

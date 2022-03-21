@@ -6,6 +6,7 @@ import {
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
   ERC721Warper,
+  ERC721WarperController__factory,
   IWarperPreset,
   Metahub,
   Metahub__factory,
@@ -22,6 +23,9 @@ export async function unitFixtureERC721WarperConfigurable() {
   // Deploy original asset mock.
   const oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
 
+  // Deploy ERC721 Warper controller.
+  const erc721WarperController = await new ERC721WarperController__factory(deployer).deploy();
+
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
 
@@ -37,15 +41,14 @@ export async function unitFixtureERC721WarperConfigurable() {
   // Set balance to the MetaHub account so we can perform the minting operation here
   await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
 
-  return { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper };
+  return { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper, erc721WarperController };
 }
 
 export function unitTestWarpers(): void {
   describe('ERC721Warper Configurable', function () {
     beforeEach(async function () {
-      const { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper } = await this.loadFixture(
-        unitFixtureERC721WarperConfigurable,
-      );
+      const { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper, erc721WarperController } =
+        await this.loadFixture(unitFixtureERC721WarperConfigurable);
       this.mocks.assets.erc721 = oNFT;
       this.mocks.assets.erc20 = erc20Token;
       this.mocks.metahub = metahub;
@@ -53,6 +56,7 @@ export function unitTestWarpers(): void {
       this.contracts.erc721Warper = erc721Warper as unknown as ERC721Warper;
       this.contracts.warperPreset = uninitializedErc721Warper as unknown as IWarperPreset;
       this.contracts.warper = erc721Warper as unknown as Warper;
+      this.contracts.erc721WarperController = erc721WarperController;
     });
 
     shouldBehaveLikeWarper();

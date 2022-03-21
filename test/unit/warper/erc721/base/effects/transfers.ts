@@ -5,7 +5,7 @@ import { BigNumber, BigNumberish, BytesLike, ContractTransaction, Signer } from 
 import { Address } from 'hardhat-deploy/dist/types';
 import { ERC721ReceiverMock, ERC721ReceiverMock__factory, ERC721Warper, Metahub } from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
-import { WarperRentalStatus } from '../../../../../shared/utils';
+import { AssetClass, solidityId, WarperRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {
@@ -30,6 +30,11 @@ export function shouldBehaveTransfer(): void {
       deployer = this.signers.named['deployer'];
 
       [approved, operator, stranger] = this.signers.unnamed;
+
+      metahub.assetClassConfig.returns({
+        vault: AddressZero,
+        controller: this.contracts.erc721WarperController.address,
+      });
 
       // Mint
       await warper.connect(this.mocks.metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');

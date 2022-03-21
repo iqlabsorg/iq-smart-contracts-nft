@@ -17,6 +17,7 @@ import {
   ERC721AssetVault,
   Warper,
   IAssetController,
+  ERC721WarperController,
 } from '../../typechain';
 import { ACL } from '../../typechain/ACL';
 
@@ -34,6 +35,7 @@ export interface Contracts {
   universeToken: UniverseToken;
   warperPresetFactory: WarperPresetFactory;
   erc721assetVault: ERC721AssetVault;
+  erc721WarperController: ERC721WarperController;
   assetController: IAssetController;
   warper: Warper;
   erc721Warper: ERC721Warper;
