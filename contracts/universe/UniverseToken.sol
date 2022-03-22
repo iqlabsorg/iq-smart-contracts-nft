@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/interfaces/IERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-// import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../Errors.sol";
 import "./IUniverseToken.sol";
-import "../acl/AccessControlled.sol";
+import "../acl/AccessControlledUpgradeable.sol";
 import "../acl/IACL.sol";
 
-contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, AccessControlled {
-    using Counters for Counters.Counter;
+contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, AccessControlledUpgradeable {
+    using CountersUpgradeable for CountersUpgradeable.Counter;
 
     // ID counter.
-    Counters.Counter private _tokenIdTracker;
+    CountersUpgradeable.Counter private _tokenIdTracker;
 
     // Metahub address.
     address private _metahub;
@@ -65,14 +64,19 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
     }
 
     /**
-     * @inheritdoc IERC165
+     * @inheritdoc IERC165Upgradeable
      */
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721Upgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721Upgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
         return interfaceId == type(IUniverseToken).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**
-     * @inheritdoc AccessControlled
+     * @inheritdoc AccessControlledUpgradeable
      */
     function _acl() internal virtual override returns (IACL) {
         return IACL(_aclContract);

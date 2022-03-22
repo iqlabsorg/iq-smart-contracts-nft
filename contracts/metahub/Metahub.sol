@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeab
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
-import "../acl/AccessControlled.sol";
+import "../acl/AccessControlledUpgradeable.sol";
 import "../asset/IAssetController.sol";
 import "../asset/IAssetVault.sol";
 import "../warper/Warpers.sol";
@@ -28,7 +28,7 @@ import "./MetahubStorage.sol";
 import "./Protocol.sol";
 
 // todo: review lib imports
-contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, MetahubStorage {
+contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUpgradeable, MetahubStorage {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using AddressUpgradeable for address;
     using ERC165CheckerUpgradeable for address;
@@ -483,7 +483,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
-     * @inheritdoc AccessControlled
+     * @inheritdoc AccessControlledUpgradeable
      */
     function _acl() internal view override returns (IACL) {
         return _aclContract;

@@ -9,6 +9,7 @@ import {
   Metahub__factory,
   UniverseToken__factory,
   WarperPresetFactory__factory,
+  UniverseToken,
 } from '../../../typechain';
 import { wait } from '../../shared/utils';
 
@@ -47,8 +48,15 @@ export async function unitFixtureMetahub() {
 
   // Deploy Universe token.
   const baseToken = await new ERC20Mock__factory(nftCreator).deploy('Stablecoin', 'STBL', 18, 100_000_000);
-  const universeTokenFactory = new UniverseToken__factory(deployer);
-  const universeToken = await universeTokenFactory.deploy(metahub.address);
+  const universeToken = (await upgrades.deployProxy(new UniverseToken__factory(deployer), [], {
+    kind: 'uups',
+    initializer: false,
+    unsafeAllow: ['delegatecall'],
+  })) as UniverseToken;
+
+  // Initialize Universe token.
+  await wait(universeToken.initialize(metahub.address, acl.address));
+
   // Initialize Metahub.
   await wait(
     metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address, baseToken.address, 100),

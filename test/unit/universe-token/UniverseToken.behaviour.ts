@@ -1,6 +1,5 @@
 import { shouldBehaveLikeMint } from './effects/mint';
 import { shouldBehaveLikeCorrectInterfaceSupport } from './views/interfaceSupport';
-import { shouldBehaveLikeCorrectOwner } from './views/owner';
 import { shouldBehaveLikeCorrectTokenName } from './views/tokenName';
 import { shouldBehaveLikeCorrectTokenSymbol } from './views/tokenSymbol';
 import { shouldBehaveLikeUniverseName } from './views/universeName';
@@ -13,7 +12,6 @@ export function shouldBehaveLikeUniverseToken(): void {
     shouldBehaveLikeUniverseName();
     shouldBehaveLikeCorrectTokenName();
     shouldBehaveLikeCorrectTokenSymbol();
-    shouldBehaveLikeCorrectOwner();
     shouldBehaveLikeCorrectInterfaceSupport();
   });
 

@@ -1,6 +1,7 @@
 import { smock } from '@defi-wonderland/smock';
-import hre, { ethers } from 'hardhat';
-import { Metahub, Metahub__factory, UniverseToken, UniverseToken__factory } from '../../../typechain';
+import hre, { ethers, upgrades } from 'hardhat';
+import { ACL__factory, Metahub, Metahub__factory, UniverseToken, UniverseToken__factory } from '../../../typechain';
+import { wait } from '../../shared/utils';
 import { shouldBehaveLikeUniverseToken } from './UniverseToken.behaviour';
 
 export async function unitFixtureUniverseTokenMock() {
@@ -10,9 +11,18 @@ export async function unitFixtureUniverseTokenMock() {
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
 
+  // Deploy ACL
+  const acl = await new ACL__factory(deployer).deploy();
+
   // Deploy Universe token.
-  const universeTokenFactory = new UniverseToken__factory(deployer);
-  const universeToken = await universeTokenFactory.deploy(metahub.address);
+  const universeToken = (await upgrades.deployProxy(new UniverseToken__factory(deployer), [], {
+    kind: 'uups',
+    initializer: false,
+    unsafeAllow: ['delegatecall'],
+  })) as UniverseToken;
+
+  // Initialize Universe token.
+  await wait(universeToken.initialize(metahub.address, acl.address));
 
   // Set balance to the MetaHub account so we can perform the minting operation here
   await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
