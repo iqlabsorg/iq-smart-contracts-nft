@@ -3,19 +3,24 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+// import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../Errors.sol";
 import "./IUniverseToken.sol";
+import "../acl/AccessControlled.sol";
+import "../acl/IACL.sol";
 
-contract UniverseToken is IUniverseToken, ERC721, Ownable {
+contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, AccessControlled {
     using Counters for Counters.Counter;
 
     // ID counter.
     Counters.Counter private _tokenIdTracker;
 
     // Metahub address.
-    address private immutable _metahub;
+    address private _metahub;
+    address private _aclContract;
 
     // Mapping from token ID to universe name.
     mapping(uint256 => string) private _universeNames;
@@ -30,8 +35,16 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
         _;
     }
 
-    constructor(address metahub) ERC721("IQVerse", "IQV") Ownable() {
+    /**
+     * @dev UniverseToken initializer.
+     * @param metahub Warper preset factory address.
+     */
+    function initialize(address metahub, address acl) external initializer {
+        __UUPSUpgradeable_init();
+        __ERC721_init("IQVerse", "IQV");
+
         _metahub = metahub;
+        _aclContract = acl;
     }
 
     /**
@@ -54,7 +67,16 @@ contract UniverseToken is IUniverseToken, ERC721, Ownable {
     /**
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721Upgradeable, IERC165) returns (bool) {
         return interfaceId == type(IUniverseToken).interfaceId || super.supportsInterface(interfaceId);
     }
+
+    /**
+     * @inheritdoc AccessControlled
+     */
+    function _acl() internal virtual override returns (IACL) {
+        return IACL(_aclContract);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal virtual override onlyAdmin {}
 }
