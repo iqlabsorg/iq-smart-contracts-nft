@@ -10,7 +10,17 @@ import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
 
 // Enable tasks
-import './tasks';
+// NOTE: https://github.com/dethcrypto/TypeChain/issues/371
+// eslint-disable-next-line
+import('./tasks').catch(e =>
+  console.log(
+    `
+Cannot load tasks. Need to generate typechain types.
+This is the expected behaviour on first time setup.`,
+    `Missing type trace: ${e.toString()}`,
+  ),
+);
+
 // Enable test assertions
 import './test/assertions';
 

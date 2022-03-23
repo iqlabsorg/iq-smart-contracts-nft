@@ -11,7 +11,7 @@
   "license": "MIT",
   "author": "IQ Labs (https://iqlabs.org/)",
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile",
     "compile:clean": "hardhat clean",
     "coverage": "hardhat coverage",
     "dev": "hardhat node --watch",

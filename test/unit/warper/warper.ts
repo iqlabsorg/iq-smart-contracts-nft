@@ -2,6 +2,8 @@ import { smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import hre, { ethers } from 'hardhat';
 import {
+  AssetClassRegistry,
+  AssetClassRegistry__factory,
   ERC20Mock__factory,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
@@ -28,6 +30,7 @@ export async function unitFixtureERC721WarperConfigurable() {
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
+  const assetClassRegistry = await smock.fake<AssetClassRegistry>(AssetClassRegistry__factory);
 
   // Deploy preset.
   const erc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
@@ -41,17 +44,33 @@ export async function unitFixtureERC721WarperConfigurable() {
   // Set balance to the MetaHub account so we can perform the minting operation here
   await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
 
-  return { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper, erc721WarperController };
+  return {
+    erc721Warper,
+    metahub,
+    oNFT,
+    erc20Token,
+    uninitializedErc721Warper,
+    erc721WarperController,
+    assetClassRegistry,
+  };
 }
 
 export function unitTestWarpers(): void {
   describe('ERC721Warper Configurable', function () {
     beforeEach(async function () {
-      const { erc721Warper, metahub, oNFT, erc20Token, uninitializedErc721Warper, erc721WarperController } =
-        await this.loadFixture(unitFixtureERC721WarperConfigurable);
+      const {
+        erc721Warper,
+        metahub,
+        assetClassRegistry,
+        oNFT,
+        erc20Token,
+        uninitializedErc721Warper,
+        erc721WarperController,
+      } = await this.loadFixture(unitFixtureERC721WarperConfigurable);
       this.mocks.assets.erc721 = oNFT;
       this.mocks.assets.erc20 = erc20Token;
       this.mocks.metahub = metahub;
+      this.mocks.assetClassRegistry = assetClassRegistry;
       this.contracts.presets.erc721Configurable = erc721Warper;
       this.contracts.erc721Warper = erc721Warper as unknown as ERC721Warper;
       this.contracts.warperPreset = uninitializedErc721Warper as unknown as IWarperPreset;

@@ -1,6 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import {
+  AssetClassRegistry,
   ERC721,
   ERC721AssetController,
   ERC721AssetController__factory,
@@ -22,6 +23,7 @@ export function shouldBehaveLikeListingManager(): void {
     let erc721Vault: ERC721AssetVaultMock;
     let erc721Controller: ERC721AssetController;
     let originalAsset: ERC721Mock;
+    let assetClassRegistry: AssetClassRegistry;
 
     let deployer: SignerWithAddress;
     let nftCreator: SignerWithAddress;
@@ -33,11 +35,12 @@ export function shouldBehaveLikeListingManager(): void {
       erc721Controller = await new ERC721AssetController__factory(deployer).deploy();
       erc721Vault = await new ERC721AssetVaultMock__factory(deployer).deploy();
 
-      await this.contracts.metahub.registerAssetClass(AssetClass.ERC721, {
+      await this.contracts.assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
         controller: erc721Controller.address,
         vault: erc721Vault.address,
       });
 
+      assetClassRegistry = this.contracts.assetClassRegistry;
       originalAsset = this.mocks.assets.erc721;
       metahub = this.contracts.metahub as unknown as IListingManager;
     });

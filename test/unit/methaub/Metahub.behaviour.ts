@@ -1,4 +1,3 @@
-import { shouldBehaveLikeAssetClassManager } from './asset-class-manager/AssetClassManager.behaviour';
 import { shouldBehaveLikeListingManager } from './listing-manager/ListingManager.behaviour';
 import { shouldBehaveLikeRentingManager } from './renting-manager/RentingManager.behaviour';
 import { shouldBehaveLikeUniverseManager } from './universe-manager/UniverseManager.behaviour';
@@ -14,5 +13,4 @@ export function shouldBehaveLikeMetahub(): void {
   shouldBehaveLikeUniverseManager();
   shouldBehaveLikeRentingManager();
   shouldBehaveLikeListingManager();
-  shouldBehaveLikeAssetClassManager();
 }

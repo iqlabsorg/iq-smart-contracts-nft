@@ -3,7 +3,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, BytesLike, ContractTransaction, Signer } from 'ethers';
 import { Address } from 'hardhat-deploy/dist/types';
-import { ERC721ReceiverMock, ERC721ReceiverMock__factory, ERC721Warper, Metahub } from '../../../../../../typechain';
+import {
+  AssetClassRegistry,
+  ERC721ReceiverMock,
+  ERC721ReceiverMock__factory,
+  ERC721Warper,
+  Metahub,
+} from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
 import { AssetClass, solidityId, AssetRentalStatus } from '../../../../../shared/utils';
 
@@ -14,6 +20,7 @@ export function shouldBehaveTransfer(): void {
     let deployer: SignerWithAddress;
 
     let metahub: FakeContract<Metahub>;
+    let assetClassRegistry: FakeContract<AssetClassRegistry>;
     let operator: SignerWithAddress;
     let stranger: SignerWithAddress;
     let approved: SignerWithAddress;
@@ -25,13 +32,14 @@ export function shouldBehaveTransfer(): void {
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
+      assetClassRegistry = this.mocks.assetClassRegistry;
       warper = this.contracts.erc721Warper;
       assetOwner = this.signers.named['assetOwner'];
       deployer = this.signers.named['deployer'];
 
       [approved, operator, stranger] = this.signers.unnamed;
 
-      metahub.assetClassConfig.returns({
+      assetClassRegistry.assetClassConfig.returns({
         vault: AddressZero,
         controller: this.contracts.erc721WarperController.address,
       });

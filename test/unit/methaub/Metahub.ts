@@ -1,11 +1,10 @@
+import hre, { ethers, upgrades } from 'hardhat';
 import { formatBytes32String } from 'ethers/lib/utils';
-import { ethers, upgrades } from 'hardhat';
 import {
   ERC20Mock__factory,
   ACL__factory,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
-  Metahub,
   Metahub__factory,
   UniverseToken__factory,
   WarperPresetFactory__factory,
@@ -13,9 +12,9 @@ import {
   AssetClassRegistry__factory,
   AssetClassRegistry,
 } from '../../../typechain';
-import { wait } from '../../shared/utils';
 
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
+import { wait } from '../../../tasks';
 
 export async function unitFixtureMetahub() {
   // Resolve primary roles
@@ -31,53 +30,34 @@ export async function unitFixtureMetahub() {
   await originalAsset.mint(nftCreator.address, 1);
   await originalAsset.mint(nftCreator.address, 2);
 
-  // Deploy warper preset factory
-  const warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
-
   // Deploy and register warper preset
   const warperImpl = await new ERC721PresetConfigurable__factory(deployer).deploy();
-  await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
+  const baseToken = await new ERC20Mock__factory(nftCreator).deploy('Stablecoin', 'STBL', 18, 100_000_000);
 
-  // Deploy ACL
-  const acl = await new ACL__factory(deployer).deploy();
+  const deployedACL = await hre.run('deploy:acl');
 
   // Deploy Asset Class Registry.
-  const assetClassRegistry = (await upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [acl.address], {
+  // TODO move to a deploy script
+  const assetClassRegistry = (await upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [], {
     kind: 'uups',
-    initializer: 'intialize(address)',
+    initializer: false,
   })) as AssetClassRegistry;
+  await wait(assetClassRegistry.initialize(deployedACL));
 
-  // Deploy Metahub
-  const metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [], {
-    kind: 'uups',
-    initializer: false,
-    unsafeAllow: ['delegatecall'],
-  })) as Metahub;
-
-  // Deploy Universe token.
-  const baseToken = await new ERC20Mock__factory(nftCreator).deploy('Stablecoin', 'STBL', 18, 100_000_000);
-  const universeToken = (await upgrades.deployProxy(new UniverseToken__factory(deployer), [], {
-    kind: 'uups',
-    initializer: false,
-    unsafeAllow: ['delegatecall'],
-  })) as UniverseToken;
-
-  // Initialize Universe token.
-  await wait(universeToken.initialize(metahub.address, acl.address));
-
-  // Initialize Metahub.
-  await wait(
-    metahub.initialize({
-      warperPresetFactory: warperPresetFactory.address,
-      assetClassRegistry: assetClassRegistry.address,
-      universeToken: universeToken.address,
-      acl: acl.address,
-      baseToken: baseToken.address,
-      rentalFeePercent: 100,
-    }),
-  );
+  const deployedAddresses = await hre.run('deploy:metahub-family', {
+    acl: deployedACL,
+    assetClassRegistry: assetClassRegistry.address,
+    baseToken: baseToken.address,
+    rentalFeePercent: 100,
+  });
+  const acl = new ACL__factory(deployer).attach(deployedACL);
+  const metahub = new Metahub__factory(deployer).attach(deployedAddresses.metahub);
+  const universeToken = new UniverseToken__factory(deployer).attach(deployedAddresses.universeToken);
+  const warperPresetFactory = new WarperPresetFactory__factory(deployer).attach(deployedAddresses.warperPresetFactory);
+  await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
 
   return {
+    assetClassRegistry,
     universeToken,
     originalAsset,
     warperPresetFactory,
@@ -90,11 +70,11 @@ export const warperPresetId = formatBytes32String('ERC721Basic');
 export function unitTestMetahub(): void {
   describe('Metahub', function () {
     beforeEach(async function () {
-      const { metahub, originalAsset, universeToken, warperPresetFactory, acl } = await this.loadFixture(
-        unitFixtureMetahub,
-      );
+      const { metahub, originalAsset, universeToken, warperPresetFactory, acl, assetClassRegistry } =
+        await this.loadFixture(unitFixtureMetahub);
       this.mocks.assets.erc721 = originalAsset;
       this.contracts.metahub = metahub;
+      this.contracts.assetClassRegistry = assetClassRegistry;
       this.contracts.universeToken = universeToken;
       this.contracts.warperPresetFactory = warperPresetFactory;
       this.contracts.acl = acl;

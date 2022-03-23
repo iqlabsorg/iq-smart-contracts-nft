@@ -18,6 +18,7 @@ import {
   Warper,
   IAssetController,
   ERC721WarperController,
+  AssetClassRegistry,
 } from '../../typechain';
 import { ACL } from '../../typechain/ACL';
 
@@ -32,6 +33,7 @@ declare module 'mocha' {
 
 export interface Contracts {
   metahub: Metahub;
+  assetClassRegistry: AssetClassRegistry;
   universeToken: UniverseToken;
   warperPresetFactory: WarperPresetFactory;
   erc721assetVault: ERC721AssetVault;
@@ -48,6 +50,7 @@ export interface Contracts {
 
 export interface Mocks {
   metahub: FakeContract<Metahub>;
+  assetClassRegistry: FakeContract<AssetClassRegistry>;
   assetsLib: AssetsMock;
   assets: {
     erc721: ERC721Mock;

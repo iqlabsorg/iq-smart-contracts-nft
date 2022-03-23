@@ -1,20 +1,25 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721AssetController, ERC721AssetController__factory, IAssetClassManager } from '../../../../typechain';
+import {
+  ERC721AssetController,
+  ERC721AssetController__factory,
+  IAssetClassRegistry,
+  IAssetClassRegistry__factory,
+} from '../../../../typechain';
 import { AddressZero } from '../../../shared/types';
 import { AssetClass } from '../../../shared/utils';
 
 /**
- * The metahub contract behaves like IAssetClassManager
+ * The assetClassRegistry contract behaves like IAssetClassRegistry
  */
-export function shouldBehaveLikeAssetClassManager(): void {
-  describe('IAssetClassManager', function () {
-    let metahub: IAssetClassManager;
+export function shouldBehaveLikeAssetClassRegistry(): void {
+  describe('IAssetClassRegistry', function () {
+    let assetClassRegistry: IAssetClassRegistry;
     let deployer: SignerWithAddress;
 
     beforeEach(function () {
       deployer = this.signers.named['deployer'];
-      metahub = this.contracts.metahub as unknown as IAssetClassManager;
+      assetClassRegistry = IAssetClassRegistry__factory.connect(this.contracts.assetClassRegistry.address, deployer);
     });
 
     describe('Asset Controller Management', () => {
@@ -25,8 +30,8 @@ export function shouldBehaveLikeAssetClassManager(): void {
 
       describe('setAssetClassController', () => {
         it('allows to add asset class controller', async () => {
-          await expect(metahub.setAssetClassController(AssetClass.ERC721, erc721controller.address))
-            .to.emit(metahub, 'AssetClassControllerChanged')
+          await expect(assetClassRegistry.setAssetClassController(AssetClass.ERC721, erc721controller.address))
+            .to.emit(assetClassRegistry, 'AssetClassControllerChanged')
             .withArgs(AssetClass.ERC721, erc721controller.address);
         });
       });
@@ -34,11 +39,11 @@ export function shouldBehaveLikeAssetClassManager(): void {
       describe('get assetClassConfig', () => {
         context('config exists', () => {
           beforeEach(async () => {
-            await metahub.setAssetClassController(AssetClass.ERC721, erc721controller.address);
+            await assetClassRegistry.setAssetClassController(AssetClass.ERC721, erc721controller.address);
           });
 
           it('returns the config structure', async () => {
-            await expect(metahub.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
+            await expect(assetClassRegistry.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
               controller: erc721controller.address,
               vault: AddressZero,
             });
@@ -47,7 +52,7 @@ export function shouldBehaveLikeAssetClassManager(): void {
 
         context('config does not exist', () => {
           it('returns empty fields', async () => {
-            await expect(metahub.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
+            await expect(assetClassRegistry.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
               controller: AddressZero,
               vault: AddressZero,
             });

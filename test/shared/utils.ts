@@ -2,6 +2,7 @@ import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction } from 'ethers';
 import { IUniverseManager, IWarperManager, Metahub, WarperPresetFactory } from '../../typechain';
 import { Assets, WarperRegisteredEvent } from '../../typechain/Metahub';
+import { wait } from '../../tasks';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 
@@ -16,10 +17,6 @@ export const ListingStrategy = {
 };
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
-
-export async function wait(txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> {
-  return (await txPromise).wait();
-}
 
 export async function mineBlock(timestamp = 0): Promise<unknown> {
   return await ethers.provider.send('evm_mine', timestamp > 0 ? [timestamp] : []);

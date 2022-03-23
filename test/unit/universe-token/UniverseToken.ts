@@ -1,7 +1,7 @@
 import { smock } from '@defi-wonderland/smock';
 import hre, { ethers, upgrades } from 'hardhat';
+import { wait } from '../../../tasks';
 import { ACL__factory, Metahub, Metahub__factory, UniverseToken, UniverseToken__factory } from '../../../typechain';
-import { wait } from '../../shared/utils';
 import { shouldBehaveLikeUniverseToken } from './UniverseToken.behaviour';
 
 export async function unitFixtureUniverseTokenMock() {
