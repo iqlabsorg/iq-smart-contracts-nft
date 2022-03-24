@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ERC721Warper, Metahub } from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
-import { WarperRentalStatus } from '../../../../../shared/utils';
+import { AssetRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveLikeOwnerOf(): void {
   const mintedTokenId = 445566;
@@ -17,10 +17,7 @@ export function shouldBehaveLikeOwnerOf(): void {
     metahub = this.mocks.metahub;
     erc721Warper = this.contracts.erc721Warper;
 
-    metahub.assetClassConfig.returns({
-      vault: AddressZero,
-      controller: this.contracts.erc721WarperController.address,
-    });
+    metahub.warperController.returns(this.contracts.erc721WarperController.address);
 
     await erc721Warper.connect(metahub.wallet).mint(nftTokenOwner.address, mintedTokenId, '0x');
   });
@@ -28,7 +25,7 @@ export function shouldBehaveLikeOwnerOf(): void {
   describe('ownerOf', () => {
     context('when the token has never been rented', () => {
       beforeEach(() => {
-        metahub.warperRentalStatus.returns(WarperRentalStatus.NOT_MINTED);
+        metahub.assetRentalStatus.returns(AssetRentalStatus.NONE);
       });
 
       it('reverts', async () => {
@@ -40,7 +37,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('when the token has been minted but currently has not been rented', () => {
       beforeEach(() => {
-        metahub.warperRentalStatus.returns(WarperRentalStatus.MINTED);
+        metahub.assetRentalStatus.returns(AssetRentalStatus.AVAILABLE);
       });
 
       it('returns metahub address', async () => {
@@ -50,7 +47,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('when the token is currently rented', () => {
       beforeEach(() => {
-        metahub.warperRentalStatus.returns(WarperRentalStatus.RENTED);
+        metahub.assetRentalStatus.returns(AssetRentalStatus.RENTED);
       });
 
       it('returns the current owner of the token', async () => {

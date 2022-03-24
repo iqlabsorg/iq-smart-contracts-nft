@@ -43,14 +43,18 @@ library Warpers {
         bool paused;
     }
 
-    // TODO: docs
+    /**
+     * @dev Puts the warper on pause.
+     */
     function pause(Info storage self) internal {
         if (self.paused) revert WarperIsPaused();
 
         self.paused = true;
     }
 
-    // TODO: docs
+    /**
+     * @dev Lifts the warper pause.
+     */
     function unpause(Info storage self) internal {
         if (!self.paused) revert WarperIsNotPaused();
 
@@ -90,7 +94,9 @@ library Warpers {
         if (self.isRegisteredWarper(warper)) revert WarperIsAlreadyRegistered(warper);
     }
 
-    //todo: docs
+    /**
+     * @dev Performs warper registration.
+     */
     function add(
         Registry storage self,
         address warperAddress,
@@ -103,7 +109,9 @@ library Warpers {
         self.universeWarpers[warper.universeId].add(warperAddress);
     }
 
-    //todo: docs
+    /**
+     * @dev Removes warper data from the registry.
+     */
     function remove(Registry storage self, address warper) internal {
         uint256 universeId = self.warpers[warper].universeId;
         self.universeWarpers[universeId].remove(warper);

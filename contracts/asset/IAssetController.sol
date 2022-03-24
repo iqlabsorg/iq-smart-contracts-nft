@@ -55,8 +55,11 @@ interface IAssetController {
     function returnAssetFromVault(Assets.Asset memory asset, address vault) external;
 
     /**
-     * @dev Decodes asset structure and returns token address.
-     * @return Token contract address.
+     * @dev Decodes asset ID structure and returns collection identifier.
+     * The collection ID is byte32 value which is calculated based on the asset class.
+     * For example, ERC721 collection can be identified by address only,
+     * but for ERC1155 it should be calculated based on address and token ID.
+     * @return Collection ID.
      */
-    function getToken(Assets.Asset memory asset) external pure returns (address);
+    function collectionId(Assets.AssetId memory assetId) external pure returns (bytes32);
 }

@@ -17,26 +17,20 @@ interface IRentingManager {
      */
     error CallerIsNotRenter();
 
-    enum RentalStatus {
-        NOT_MINTED,
-        MINTED,
-        RENTED
-    }
-
     /**
-     * @dev Get the amount of currently active rentals for a given user for a warper.
-     * @param assetHash AssetId hash.
+     * @dev Returns token amount from specific collection rented by particular account.
+     * @param warpedCollectionId Warped collection ID.
      * @param renter The renter account address.
-     * @return Amount of active rentals.
+     * @return Rented value.
      */
-    function warperActiveRentalCount(bytes32 assetHash, address renter) external view returns (uint256);
+    function collectionRentedValue(bytes32 warpedCollectionId, address renter) external view returns (uint256);
 
     /**
-     * @dev Get the rental status of a given asset.
-     * @param assetHash AssetId hash.
-     * @return The warpers rental state.
+     * @dev Returns the rental status of a given warped asset.
+     * @param warpedAssetId Warped asset ID.
+     * @return The asset rental status.
      */
-    function warperRentalStatus(bytes32 assetHash) external view returns (RentalStatus);
+    function assetRentalStatus(Assets.AssetId calldata warpedAssetId) external view returns (Rentings.RentalStatus);
 
     /**
      * @dev Evaluates renting params and returns rental fee breakdown.

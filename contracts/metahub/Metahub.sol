@@ -158,17 +158,19 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         if (_msgSender() != params.renter) revert CallerIsNotRenter();
 
         // Estimate renting.
-        (
-            uint256 listerBaseFee,
-            uint256 listerPremium,
-            uint256 universeBaseFee,
-            uint256 universePremium,
-            uint256 protocolFee,
-            uint256 totalRentalFee
-        ) = estimateRent(params);
+        {
+            (
+                uint256 listerBaseFee,
+                uint256 listerPremium,
+                uint256 universeBaseFee,
+                uint256 universePremium,
+                uint256 protocolFee,
+                uint256 totalRentalFee
+            ) = estimateRent(params);
 
-        // Ensure no rental fee payment slippage.
-        if (totalRentalFee > maxPaymentAmount) revert RentalPriceSlippage();
+            // Ensure no rental fee payment slippage.
+            if (totalRentalFee > maxPaymentAmount) revert RentalPriceSlippage();
+        }
 
         //        uint256 listerFee = listerBaseFee + listerPremium;
         //        uint256 universeFee = universeBaseFee + universePremium;
@@ -176,43 +178,65 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
         // Find selected listing.
         Listings.Info storage listing = _listingRegistry.listings[params.listingId];
 
-        // Handle payments.
-        //        _protocol.baseToken.safeTransferFrom(_msgSender(), listing.lister, listerFee);
+        // todo: check if warper has ever been minted, then transfer existing warper or warp the original asset
+        {
+            (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warperRegistry
+                .warpers[params.warper]
+                .controller
+                .warp(listing.asset, params.warper, params.renter);
 
-        // todo: pay to Universe
-        // todo: pay to Protocol
+            // todo: warp original asset (mint warper via controller.warp(asset, renter))
 
-        // todo: warp original asset (mint warper via controller.warp(asset, renter))
+            // Handle payments.
+            //        _protocol.baseToken.safeTransferFrom(_msgSender(), listing.lister, listerFee);
+            // todo: pay to Universe
+            // todo: pay to Protocol
 
-        uint32 startTime = _blockTimestamp();
-        uint32 endTime = startTime + params.rentalPeriod;
+            uint32 startTime = _blockTimestamp();
+            uint32 endTime = startTime + params.rentalPeriod;
 
-        // todo: update listing lock time
-        _listingRegistry.listings[params.listingId].addLock(endTime);
+            // todo: update listing lock time
+            //            _listingRegistry.listings[params.listingId].addLock(endTime);
 
-        //todo: hash AssetId to associate warper rental (pass to renting registry)
+            //todo: hash AssetId to associate warper rental (pass to renting registry)
 
-        Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
-            listingId: params.listingId,
-            warper: params.warper,
-            renter: params.renter,
-            startTime: startTime,
-            endTime: endTime
-        });
+            Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
+                warpedAsset: warpedAsset,
+                collectionId: collectionId,
+                listingId: params.listingId,
+                renter: params.renter,
+                startTime: startTime,
+                endTime: endTime
+            });
 
-        uint256 rentalId = _rentingRegistry.add(rentalAgreement);
+            uint256 rentalId = _rentingRegistry.add(rentalAgreement);
 
-        //todo: clean up x2 expired rental agreements
-        // todo: emit AssetRented event
+            //todo: clean up x2 expired rental agreements
+            // todo: emit AssetRented event
 
-        return rentalId;
+            return rentalId;
+        }
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function collectionRentedValue(bytes32 warpedCollectionId, address renter) external view returns (uint256) {
+        return _rentingRegistry.collectionRentedValue(renter, warpedCollectionId);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function assetRentalStatus(Assets.AssetId calldata warpedAssetId) external view returns (Rentings.RentalStatus) {
+        return _rentingRegistry.assetRentalStatus(warpedAssetId);
     }
 
     /**
      * @inheritdoc IAssetClassManager
      */
     function registerAssetClass(bytes4 assetClass, Assets.ClassConfig calldata config) external onlyAdmin {
-        _assetRegistry.registerAssetClass(assetClass, config);
+        _assetRegistry.addAssetClass(assetClass, config);
         emit AssetClassRegistered(assetClass, address(config.controller), address(config.vault));
     }
 
@@ -445,6 +469,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
+     * @inheritdoc IWarperManager
+     */
+    function warperController(address warper) external view returns (address) {
+        return address(_warperRegistry.warpers[warper].controller);
+    }
+
+    /**
      * @inheritdoc IMetahub
      */
     function baseToken() external view returns (address) {
@@ -521,7 +552,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
 
         // Register the original asset if it is seen for the first time.
         if (!_assetRegistry.isRegisteredAsset(original)) {
-            _assetRegistry.registerAsset(assetClass, original);
+            _assetRegistry.addAsset(assetClass, original);
             // todo: emit event AssetRegistered(asset);
         }
 
@@ -582,26 +613,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlled, 
     }
 
     /**
-     * @inheritdoc IRentingManager
-     */
-    function warperActiveRentalCount(bytes32 assetHash, address renter) external view returns (uint256 count) {
-        // TODO: does this ^ API need to change?
-        // TODO: uncomment the line below once renting registry can process the incoming data
-        // _rentingRegistry.renterActiveRentalCountByWarper(renter, assetHash);
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function warperRentalStatus(bytes32 assetHash) external view returns (IRentingManager.RentalStatus) {
-        // TODO: does this ^ API need to change?
-
-        //todo implement the real implementation here
-        return IRentingManager.RentalStatus.RENTED;
-    }
-
-    /**
-     * @dev Returns the block timestamp truncated to 32 bits, i.e. mod 2**32.
+     * @dev Returns the block timestamp truncated to 32 bits.
      */
     function _blockTimestamp() internal view virtual returns (uint32) {
         return uint32(block.timestamp);

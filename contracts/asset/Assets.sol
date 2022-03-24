@@ -11,6 +11,7 @@ import "./IAssetVault.sol";
 library Assets {
     using Address for address;
     using Assets for Registry;
+    using Assets for Asset;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
@@ -21,9 +22,9 @@ library Assets {
     bytes4 public constant ERC721 = bytes4(keccak256("ERC721"));
     bytes4 public constant ERC1155 = bytes4(keccak256("ERC1155"));
 
-    bytes32 constant ASSET_ID_TYPEHASH = keccak256("AssetId(bytes4 assetClass,bytes data)");
+    bytes32 public constant ASSET_ID_TYPEHASH = keccak256("AssetId(bytes4 assetClass,bytes data)");
 
-    bytes32 constant ASSET_TYPEHASH =
+    bytes32 public constant ASSET_TYPEHASH =
         keccak256("Asset(AssetType assetType,uint256 value)AssetId(bytes4 assetClass,bytes data)");
 
     /**
@@ -58,6 +59,21 @@ library Assets {
     }
 
     /**
+     * @dev Calculates Asset ID hash
+     */
+    function hash(AssetId memory assetId) internal pure returns (bytes32) {
+        return keccak256(abi.encode(ASSET_ID_TYPEHASH, assetId.class, keccak256(assetId.data)));
+    }
+
+    /**
+     * @dev Extracts token contract address from the Asset ID structure.
+     * The address is the common attribute for all assets regardless of their asset class.
+     */
+    function token(AssetId memory self) internal pure returns (address) {
+        return abi.decode(self.data, (address));
+    }
+
+    /**
      * @dev Uniformed structure to describe arbitrary asset (token) and its value.
      * @param id Asset ID structure.
      * @param value Asset value (amount).
@@ -65,6 +81,21 @@ library Assets {
     struct Asset {
         AssetId id;
         uint256 value;
+    }
+
+    /**
+     * @dev Calculates Asset hash
+     */
+    function hash(Asset memory asset) internal pure returns (bytes32) {
+        return keccak256(abi.encode(ASSET_TYPEHASH, hash(asset.id), asset.value));
+    }
+
+    /**
+     * @dev Extracts token contract address from the Asset structure.
+     * The address is the common attribute for all assets regardless of their asset class.
+     */
+    function token(Asset memory self) internal pure returns (address) {
+        return abi.decode(self.id.data, (address));
     }
 
     /**
@@ -102,7 +133,7 @@ library Assets {
     /**
      * @dev Registers new asset.
      */
-    function registerAsset(
+    function addAsset(
         Registry storage self,
         bytes4 assetClass,
         address asset
@@ -153,14 +184,16 @@ library Assets {
         return address(self.classes[assetClass].controller) != address(0);
     }
 
-    // TODO: docs
+    /**
+     * @dev Transfers an asset to the vault using associated controller.
+     */
     function transferAssetToVault(
         Registry storage self,
         Assets.Asset memory asset,
         address from
     ) internal {
         // Extract token address from asset struct and check whether the asset is supported.
-        address token = IAssetController(self.classes[asset.id.class].controller).getToken(asset);
+        address token = asset.token();
         self.checkAssetSupport(token); //todo: check this before calling the function
 
         // Transfer asset to the class asset specific vault.
@@ -171,9 +204,11 @@ library Assets {
         );
     }
 
-    // TODO: docs
+    /**
+     * @dev Transfers an asset from the vault using associated controller.
+     */
     function returnAssetFromVault(Registry storage self, Assets.Asset memory asset) internal {
-        address token = IAssetController(self.classes[asset.id.class].controller).getToken(asset);
+        address token = asset.token();
         address assetController = address(self.assets[token].controller);
         address assetVault = address(self.assets[token].vault);
 
@@ -183,7 +218,7 @@ library Assets {
     }
 
     //todo: docs
-    function registerAssetClass(
+    function addAssetClass(
         Registry storage self,
         bytes4 assetClass,
         ClassConfig memory classConfig
@@ -213,13 +248,5 @@ library Assets {
         bytes4 controllerAssetClass = IAssetController(controller).assetClass();
         if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
         self.classes[assetClass].controller = controller;
-    }
-
-    function hash(AssetId memory assetId) internal pure returns (bytes32) {
-        return keccak256(abi.encode(ASSET_ID_TYPEHASH, assetId.class, keccak256(assetId.data)));
-    }
-
-    function hash(Asset memory asset) internal pure returns (bytes32) {
-        return keccak256(abi.encode(ASSET_TYPEHASH, hash(asset.id), asset.value));
     }
 }

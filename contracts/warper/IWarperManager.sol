@@ -100,6 +100,13 @@ interface IWarperManager {
     function warperInfo(address warperInfo) external view returns (Warpers.Info memory);
 
     /**
+     * @dev Returns warper controller address.
+     * @param warper Warper address.
+     * @return Current controller.
+     */
+    function warperController(address warper) external view returns (address);
+
+    /**
      * @dev Puts the warper on pause.
      * Emits a {WarperPaused} event.
      * @param warper Address.

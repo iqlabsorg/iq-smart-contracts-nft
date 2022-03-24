@@ -5,7 +5,7 @@ import { BigNumber, BigNumberish, BytesLike, ContractTransaction, Signer } from 
 import { Address } from 'hardhat-deploy/dist/types';
 import { ERC721ReceiverMock, ERC721ReceiverMock__factory, ERC721Warper, Metahub } from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
-import { AssetClass, solidityId, WarperRentalStatus } from '../../../../../shared/utils';
+import { AssetClass, solidityId, AssetRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {
@@ -58,7 +58,7 @@ export function shouldBehaveTransfer(): void {
       context('when rented', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.warperRentalStatus.returns(WarperRentalStatus.RENTED);
+          metahub.assetRentalStatus.returns(AssetRentalStatus.RENTED);
         });
 
         it('transfers the ownership of the given token ID', async () => {
@@ -66,10 +66,10 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when minted (but not rented)', () => {
+      context('when available for renting', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.warperRentalStatus.returns(WarperRentalStatus.MINTED);
+          metahub.assetRentalStatus.returns(AssetRentalStatus.AVAILABLE);
         });
 
         it('does not change the ownership', async () => {
@@ -80,7 +80,7 @@ export function shouldBehaveTransfer(): void {
       context('when not minted', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.warperRentalStatus.returns(WarperRentalStatus.NOT_MINTED);
+          metahub.assetRentalStatus.returns(AssetRentalStatus.NONE);
         });
 
         it('does not change the ownership', async () => {

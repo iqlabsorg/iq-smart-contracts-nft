@@ -18,24 +18,24 @@ export function shouldBehaveLikeBalanceOf(): void {
 
   describe('balanceOf', () => {
     context('when the given address has rented some tokens', () => {
-      const activeRentalCount = 10;
+      const collectionRentedValue = 10;
       beforeEach(() => {
-        metahub.warperActiveRentalCount.returns(activeRentalCount);
+        metahub.collectionRentedValue.returns(collectionRentedValue);
       });
 
       it('returns the amount of tokens owned by the given address', async () => {
-        await expect(erc721Warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(activeRentalCount);
+        await expect(erc721Warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(collectionRentedValue);
       });
     });
 
     context('when the given address has not rented any tokens', () => {
-      const activeRentalCount = 0;
+      const collectionRentedValue = 0;
       beforeEach(() => {
-        metahub.warperActiveRentalCount.returns(activeRentalCount);
+        metahub.collectionRentedValue.returns(collectionRentedValue);
       });
 
       it('returns 0', async () => {
-        await expect(erc721Warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(activeRentalCount);
+        await expect(erc721Warper.balanceOf(nftTokenOwner.address)).to.eventually.equal(collectionRentedValue);
       });
     });
 
