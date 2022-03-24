@@ -8,26 +8,14 @@ import "./IWarper.sol";
 
 interface IWarperController is IAssetController {
     /**
+     * @dev Thrown if warper interface is not compatible with the controller.
+     */
+    error InvalidWarperInterface();
+
+    /**
      * @dev Thrown upon attempting to use the warper with an asset different from the one expected by the warper.
      */
     error InvalidAssetForWarper(address warper, address expectedAsset, address providedAsset);
-
-    //todo: docs
-    error AssetIsNotRentable(string reason);
-
-    /**
-     * @dev Thrown when the current time is not withing the warper availability period.
-     */
-    error WarperIsNotAvailableForRenting(
-        uint256 currentTime,
-        uint32 availabilityPeriodStart,
-        uint32 availabilityPeriodEnd
-    );
-
-    /**
-     * @dev Thrown when the requested rental period is not withing the warper allowed rental period range.
-     */
-    error WarperRentalPeriodIsOutOfRange(uint32 requestedRentalPeriod, uint32 minRentalPeriod, uint32 maxRentalPeriod);
 
     /**
      * @dev Takes an existing asset and then mints a warper token representing it.
@@ -49,7 +37,12 @@ interface IWarperController is IAssetController {
      * @param warper Warper whose interface we must validate.
      * @return bool - `true` if warper is supported.
      */
-    function isCompatibleWarper(IWarper warper) external view returns (bool);
+    function isCompatibleWarper(address warper) external view returns (bool);
+
+    /**
+     * @dev Throws if provided warper is not compatible with the controller.
+     */
+    function checkCompatibleWarper(address warper) external view;
 
     /**
      * @dev Validates renting params taking into account various warper mechanics.

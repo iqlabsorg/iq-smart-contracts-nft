@@ -539,7 +539,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         IWarperController controller = IWarperController(_assetRegistry.classes[assetClass].controller);
 
         // Ensure warper compatibility with the current generation of asset controller.
-        if (!controller.isCompatibleWarper(IWarper(warper))) revert InvalidWarperInterface();
+        controller.checkCompatibleWarper(warper);
 
         //todo: check warper count against limits to prevent uncapped enumeration.
 

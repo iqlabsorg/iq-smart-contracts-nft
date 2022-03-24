@@ -16,8 +16,15 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
     /**
      * @inheritdoc IWarperController
      */
-    function isCompatibleWarper(IWarper warper) external view returns (bool) {
-        return warper.supportsInterface(type(IERC721Warper).interfaceId);
+    function isCompatibleWarper(address warper) public view returns (bool) {
+        return IWarper(warper).supportsInterface(type(IERC721Warper).interfaceId);
+    }
+
+    /**
+     * @inheritdoc IWarperController
+     */
+    function checkCompatibleWarper(address warper) external view {
+        if (!isCompatibleWarper(warper)) revert InvalidWarperInterface();
     }
 
     /**
@@ -38,7 +45,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         if (supportedMechanics[0]) {
             (uint32 start, uint32 end) = IAvailabilityPeriodMechanics(warper).__availabilityPeriodRange();
             if (block.timestamp < start || block.timestamp > end) {
-                revert WarperIsNotAvailableForRenting(block.timestamp, start, end);
+                revert IAvailabilityPeriodMechanics.WarperIsNotAvailableForRenting(block.timestamp, start, end);
             }
         }
 
@@ -46,7 +53,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         if (supportedMechanics[1]) {
             (uint32 min, uint32 max) = IRentalPeriodMechanics(warper).__rentalPeriodRange();
             if (rentingParams.rentalPeriod < min || rentingParams.rentalPeriod > max) {
-                revert WarperRentalPeriodIsOutOfRange(rentingParams.rentalPeriod, min, max);
+                revert IRentalPeriodMechanics.WarperRentalPeriodIsOutOfRange(rentingParams.rentalPeriod, min, max);
             }
         }
 
@@ -58,7 +65,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
                 tokenId,
                 asset.value
             );
-            if (!isRentable) revert AssetIsNotRentable(errorMessage);
+            if (!isRentable) revert IAssetRentabilityMechanics.AssetIsNotRentable(errorMessage);
         }
     }
 

@@ -3,6 +3,11 @@ pragma solidity ^0.8.11;
 
 interface IAssetRentabilityMechanics {
     /**
+     * @dev Thrown when the asset renting is rejected by warper due to the `reason`.
+     */
+    error AssetIsNotRentable(string reason);
+
+    /**
      * Returns information if an asset is rentable.
      * @param renter The address of the renter.
      * @param tokenId The token ID.

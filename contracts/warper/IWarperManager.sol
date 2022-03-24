@@ -13,11 +13,6 @@ interface IWarperManager {
     error WarperHasIncorrectMetahubReference(address actual, address required);
 
     /**
-     * @dev Thrown if warper interface is not compatible with the controller.
-     */
-    error InvalidWarperInterface();
-
-    /**
      * @dev Emitted when a new warper is registered.
      * @param universeId Universe ID.
      * @param original Original asset contract address.

@@ -3,6 +3,15 @@ pragma solidity ^0.8.11;
 
 interface IAvailabilityPeriodMechanics {
     /**
+     * @dev Thrown when the current time is not withing the warper availability period.
+     */
+    error WarperIsNotAvailableForRenting(
+        uint256 currentTime,
+        uint32 availabilityPeriodStart,
+        uint32 availabilityPeriodEnd
+    );
+
+    /**
      * @dev Returns warper availability period starting time.
      * @return Unix timestamp after which the warper is rentable.
      */

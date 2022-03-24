@@ -3,6 +3,11 @@ pragma solidity ^0.8.11;
 
 interface IRentalPeriodMechanics {
     /**
+     * @dev Thrown when the requested rental period is not withing the warper allowed rental period range.
+     */
+    error WarperRentalPeriodIsOutOfRange(uint32 requestedRentalPeriod, uint32 minRentalPeriod, uint32 maxRentalPeriod);
+
+    /**
      * @dev Returns warper minimal rental period.
      * @return Time is seconds.
      */
