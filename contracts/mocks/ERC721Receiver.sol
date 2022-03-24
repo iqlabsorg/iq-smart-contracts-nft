@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/b0cf6fbb7a70f31527f36579ad644e1cf12fdf4e/contracts/mocks/ERC721ReceiverMock.sol
 
-pragma solidity ^0.8.10;
+pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
