@@ -67,7 +67,7 @@ interface IListingManager {
      * @param strategyId Listing strategy ID.
      * @param config Listing strategy configuration.
      */
-    function registerListingStrategy(bytes4 strategyId, Listings.StrategyInfo calldata config) external;
+    function registerListingStrategy(bytes4 strategyId, Listings.Strategy calldata config) external;
 
     /**
      * @dev Sets listing strategy controller.
@@ -81,7 +81,7 @@ interface IListingManager {
      * @param strategyId Listing strategy ID.
      * @return Listing strategy information.
      */
-    function listingStrategy(bytes4 strategyId) external view returns (Listings.StrategyInfo memory);
+    function listingStrategy(bytes4 strategyId) external view returns (Listings.Strategy memory);
 
     /**
      * @dev Performs new asset listing.
@@ -131,5 +131,5 @@ interface IListingManager {
      * @param listingId Listing ID.
      * @return Listing details.
      */
-    function listingInfo(uint256 listingId) external view returns (Listings.Info memory);
+    function listingInfo(uint256 listingId) external view returns (Listings.Listing memory);
 }

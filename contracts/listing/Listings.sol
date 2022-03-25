@@ -12,7 +12,7 @@ library Listings {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using Listings for Registry;
-    using Listings for Info;
+    using Listings for Listing;
 
     /*
      * @dev Listing strategy identifiers to be used across the system:
@@ -34,7 +34,9 @@ library Listings {
      */
     error ListingIsNotPaused();
 
-    //todo: docs
+    /**
+     * @dev Thrown when attempting to lock the listed asset for the period longer than the lister allowed.
+     */
     error MaxLockPeriodExceeded();
 
     /**
@@ -77,7 +79,7 @@ library Listings {
     }
 
     /**
-     * @dev Listing info structure.
+     * @dev Listing structure.
      * @param lister Lister account address.
      * @param asset Listed asset structure.
      * @param params Listing strategy parameters.
@@ -86,7 +88,7 @@ library Listings {
      * @param delisted Indicates whether the asset is delisted.
      * @param paused Indicates whether the listing is paused.
      */
-    struct Info {
+    struct Listing {
         address lister; // todo: move after params
         Assets.Asset asset;
         Params params;
@@ -99,7 +101,7 @@ library Listings {
     /**
      * @dev Puts the listing on pause.
      */
-    function pause(Info storage self) internal {
+    function pause(Listing storage self) internal {
         if (self.paused) revert ListingIsPaused();
 
         self.paused = true;
@@ -108,7 +110,7 @@ library Listings {
     /**
      * @dev Lifts the listing pause.
      */
-    function unpause(Info storage self) internal {
+    function unpause(Listing storage self) internal {
         if (!self.paused) revert ListingIsNotPaused();
 
         self.paused = false;
@@ -117,7 +119,7 @@ library Listings {
     /**
      * Determines whether the listing is active.
      */
-    function listed(Info storage self) internal view returns (bool) {
+    function listed(Listing storage self) internal view returns (bool) {
         return self.lister != address(0) && !self.delisted;
     }
 
@@ -125,7 +127,7 @@ library Listings {
      * @dev Extends listing lock time.
      * Does not modify the state if current lock time is larger.
      */
-    function addLock(Info storage self, uint32 unlockTimestamp) internal {
+    function addLock(Listing storage self, uint32 unlockTimestamp) internal {
         // Listing is already locked till later time, no need to extend locking period.
         if (self.lockedTill >= unlockTimestamp) return;
         // Try to extend listing lock.
@@ -134,8 +136,11 @@ library Listings {
         self.lockedTill = unlockTimestamp;
     }
 
-    // todo: docs
-    struct ListerInfo {
+    /**
+     * @dev Listing related data associated with the specific account.
+     * @param listingIndex The set of listing IDs.
+     */
+    struct Lister {
         EnumerableSetUpgradeable.UintSet listingIndex;
     }
 
@@ -143,7 +148,7 @@ library Listings {
      * @dev Listing strategy information.
      * @param controller Listing controller address.
      */
-    struct StrategyInfo {
+    struct Strategy {
         IListingController controller;
     }
 
@@ -156,16 +161,16 @@ library Listings {
      */
     struct Registry {
         CountersUpgradeable.Counter idTracker; // todo: reduce size
-        mapping(uint256 => Info) listings;
-        mapping(address => ListerInfo) listers;
-        mapping(bytes4 => StrategyInfo) strategies;
+        mapping(uint256 => Listing) listings;
+        mapping(address => Lister) listers;
+        mapping(bytes4 => Strategy) strategies;
     }
 
     /**
-     * @dev Saves new listing information under new ID.
+     * @dev Registers new listing.
      * @return listingId New listing ID.
      */
-    function add(Registry storage self, Info memory listing) internal returns (uint256 listingId) {
+    function add(Registry storage self, Listing memory listing) internal returns (uint256 listingId) {
         // Generate new listing ID.
         self.idTracker.increment();
         listingId = self.idTracker.current();
@@ -176,7 +181,7 @@ library Listings {
     }
 
     /**
-     * @dev Removes listing information.
+     * @dev Removes listing data.
      * @param listingId The ID of the listing to be deleted.
      */
     function remove(Registry storage self, uint256 listingId) internal {
@@ -187,18 +192,22 @@ library Listings {
         delete self.listings[listingId];
     }
 
-    //todo: docs
+    /**
+     * @dev Adds new listing strategy to the registry.
+     */
     function registerStrategy(
         Registry storage self,
         bytes4 strategyId,
-        StrategyInfo calldata config
+        Strategy calldata config
     ) internal {
         checkValidListingController(address(config.controller));
         if (self.isRegisteredListingStrategy(strategyId)) revert ListingStrategyIsAlreadyRegistered(strategyId);
         self.strategies[strategyId] = config;
     }
 
-    //todo: docs
+    /**
+     * @dev Stores new controller address for the listing strategy.
+     */
     function setListingStrategyController(
         Registry storage self,
         bytes4 strategyId,

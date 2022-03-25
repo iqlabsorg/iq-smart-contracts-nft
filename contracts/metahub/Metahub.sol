@@ -37,7 +37,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     using Assets for Assets.Asset;
     using Assets for Assets.Info;
     using Assets for Assets.Registry;
-    using Listings for Listings.Info;
+    using Listings for Listings.Listing;
     using Listings for Listings.Registry;
     using Rentings for Rentings.Registry;
     using Warpers for Warpers.Info;
@@ -129,7 +129,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _listingRegistry.checkListed(params.listingId);
 
         // Find selected listing.
-        Listings.Info storage listing = _listingRegistry.listings[params.listingId];
+        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
 
         //todo: validate max lock time
 
@@ -176,7 +176,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         //        uint256 universeFee = universeBaseFee + universePremium;
 
         // Find selected listing.
-        Listings.Info storage listing = _listingRegistry.listings[params.listingId];
+        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
 
         // todo: check if warper has ever been minted, then transfer existing warper or warp the original asset
         {
@@ -321,7 +321,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IListingManager
      */
-    function registerListingStrategy(bytes4 strategyId, Listings.StrategyInfo calldata config) external onlyAdmin {
+    function registerListingStrategy(bytes4 strategyId, Listings.Strategy calldata config) external onlyAdmin {
         _listingRegistry.registerStrategy(strategyId, config);
         //todo: event
     }
@@ -337,7 +337,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IListingManager
      */
-    function listingStrategy(bytes4 strategyId) external view returns (Listings.StrategyInfo memory) {
+    function listingStrategy(bytes4 strategyId) external view returns (Listings.Strategy memory) {
         _listingRegistry.checkListingStrategySupport(strategyId);
         return _listingRegistry.strategies[strategyId];
     }
@@ -360,7 +360,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _assetRegistry.transferAssetToVault(asset, _msgSender());
 
         // Register listing.
-        Listings.Info memory listing = Listings.Info(_msgSender(), asset, params, maxLockPeriod, 0, false, false);
+        Listings.Listing memory listing = Listings.Listing(_msgSender(), asset, params, maxLockPeriod, 0, false, false);
         uint256 listingId = _listingRegistry.add(listing);
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
@@ -372,7 +372,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IListingManager
      */
     function delistAsset(uint256 listingId) external listed(listingId) onlyLister(listingId) {
-        Listings.Info storage listing = _listingRegistry.listings[listingId];
+        Listings.Listing storage listing = _listingRegistry.listings[listingId];
         listing.delisted = true;
         emit AssetDelisted(listingId, listing.lister, listing.lockedTill);
     }
@@ -381,7 +381,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IListingManager
      */
     function withdrawAsset(uint256 listingId) external onlyLister(listingId) {
-        Listings.Info memory listing = _listingRegistry.listings[listingId];
+        Listings.Listing memory listing = _listingRegistry.listings[listingId];
         // Check whether the asset can be returned to the owner.
         if (_blockTimestamp() < listing.lockedTill) revert AssetIsLocked();
 
@@ -429,7 +429,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IListingManager
      */
-    function listingInfo(uint256 listingId) external view returns (Listings.Info memory) {
+    function listingInfo(uint256 listingId) external view returns (Listings.Listing memory) {
         return _listingRegistry.listings[listingId];
     }
 
