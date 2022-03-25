@@ -11,19 +11,9 @@ task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `Warper
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     // Delete the previous deployment
-    await hre.deployments.delete('UniverseToken_Proxy');
-    await hre.deployments.delete('UniverseToken_Implementation');
     await hre.deployments.delete('WarperPresetFactory');
     await hre.deployments.delete('Metahub_Proxy');
     await hre.deployments.delete('Metahub_Implementation');
-
-    // Deploy Universe token.
-    const universeToken = (await hre.upgrades.deployProxy(new UniverseToken__factory(deployer), [], {
-      kind: 'uups',
-      initializer: false,
-      unsafeAllow: ['delegatecall'],
-    })) as UniverseToken;
-    console.log('Deployed UniverseToken', universeToken.address);
 
     // Deploy warper preset factory.
     const warperPresetFactory = await hre.deployments.deploy('WarperPresetFactory', {
@@ -41,9 +31,12 @@ task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `Warper
     })) as Metahub;
     console.log('Deployed Metahub', metahub.address);
 
-    // Initialize Universe token.
-    await wait(universeToken.initialize(metahub.address, acl));
-    console.log('Initialized Universe token');
+    // Deploy Universe token
+    const deployedUniverseToken = await hre.run('deploy:universe-token', {
+      aclAddress: acl,
+      metahub: metahub.address,
+    });
+    const universeToken = new UniverseToken__factory(deployer).attach(deployedUniverseToken);
 
     // Initializing Metahub.
     await wait(

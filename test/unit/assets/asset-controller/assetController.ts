@@ -1,6 +1,6 @@
+import hre, { ethers } from 'hardhat';
 import { smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import { ethers } from 'hardhat';
 import {
   ERC721AssetController__factory,
   ERC721Mock__factory,
@@ -19,16 +19,22 @@ export async function unitFixtureERC721AssetsController() {
   const nftCreator = await ethers.getNamedSigner('nftCreator');
 
   // Deploy original asset mock.
-  const oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
+  const deployedERC721Mock = await hre.run('deploy:mock:ERC721', {
+    name: 'Test ERC721',
+    symbol: 'ONFT',
+  });
+  const oNFT = new ERC721Mock__factory(nftCreator).attach(deployedERC721Mock);
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
 
   // Deploy preset.
-  const erc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
+  const deployedERC721PresetConfigurable = await hre.run('deploy:erc721-preset-configurable');
+  const erc721Warper = new ERC721PresetConfigurable__factory(deployer).attach(deployedERC721PresetConfigurable);
   await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
 
-  const erc721AssetController = await new ERC721AssetController__factory(deployer).deploy();
+  const deployedERC721AssetController = await hre.run('deploy:erc721-asset-controller');
+  const erc721AssetController = new ERC721AssetController__factory(deployer).attach(deployedERC721AssetController);
 
   return {
     originalNft: oNFT,

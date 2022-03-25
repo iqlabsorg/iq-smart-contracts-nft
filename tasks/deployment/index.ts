@@ -1,4 +1,7 @@
 import './acl';
 import './metahub';
 import './mocks';
-import './erc721-preset-configurable';
+import './presets';
+import './vaults';
+import './controllers';
+import './universe-token';

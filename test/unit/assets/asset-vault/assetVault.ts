@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { ACL__factory, ERC721AssetVault__factory, ERC721Mock__factory } from '../../../../typechain';
 import { shouldBehaveLikeAssetVault } from './assetVault.behaviour';
 import { shouldBehaveLikeERC721AssetVault } from './ERC721AssetVault.behaviour';
@@ -8,12 +8,22 @@ export async function unitFixtureERC721AssetsVault() {
   const deployer = await ethers.getNamedSigner('deployer');
   const operator = await ethers.getNamedSigner('operator');
 
-  const acl = await new ACL__factory(deployer).deploy();
+  const deployedACL = await hre.run('deploy:acl');
 
-  const vault = await new ERC721AssetVault__factory(deployer).deploy(operator.address, acl.address);
-  const asset = await new ERC721Mock__factory(deployer).deploy('Test ERC721', 'ONFT');
+  const deployedERC721AssetVault = await hre.run('deploy:erc721-asset-vault', {
+    operator: operator.address,
+    acl: deployedACL,
+  });
+  const deployedERC721 = await hre.run('deploy:mock:ERC721', {
+    symbol: 'Test ERC721',
+    name: 'ONFT',
+  });
 
-  return { vault, asset, acl };
+  return {
+    vault: new ERC721AssetVault__factory(deployer).attach(deployedERC721AssetVault),
+    asset: new ERC721Mock__factory(deployer).attach(deployedERC721),
+    acl: new ACL__factory(deployer).attach(deployedACL),
+  };
 }
 
 export function unitTestAssetVault(): void {

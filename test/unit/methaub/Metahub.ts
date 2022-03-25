@@ -22,17 +22,27 @@ export async function unitFixtureMetahub() {
   const nftCreator = await ethers.getNamedSigner('nftCreator');
 
   // Deploy original NFT
-  const erc721Factory = new ERC721Mock__factory(nftCreator);
-  const originalAsset = await erc721Factory.deploy('Test ERC721', 'ONFT');
-  await originalAsset.deployed();
+  const deployedERC721Mock = await hre.run('deploy:mock:ERC721', {
+    name: 'Test ERC721',
+    symbol: 'ONFT',
+  });
+  const originalAsset = new ERC721Mock__factory(nftCreator).attach(deployedERC721Mock);
 
   // Mint some NFT to deployer
   await originalAsset.mint(nftCreator.address, 1);
   await originalAsset.mint(nftCreator.address, 2);
 
   // Deploy and register warper preset
-  const warperImpl = await new ERC721PresetConfigurable__factory(deployer).deploy();
-  const baseToken = await new ERC20Mock__factory(nftCreator).deploy('Stablecoin', 'STBL', 18, 100_000_000);
+  const deployedERC721PresetConfigurable = await hre.run('deploy:erc721-preset-configurable');
+  const warperImpl = new ERC721PresetConfigurable__factory(deployer).attach(deployedERC721PresetConfigurable);
+
+  const deployedBaseToken = await hre.run('deploy:mock:ERC20', {
+    name: 'Test ERC721',
+    symbol: 'ONFT',
+    decimals: 18,
+    totalSupply: 100_000_000,
+  });
+  const baseToken = new ERC20Mock__factory(nftCreator).attach(deployedBaseToken);
 
   const deployedACL = await hre.run('deploy:acl');
 
