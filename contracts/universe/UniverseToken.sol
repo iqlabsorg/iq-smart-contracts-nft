@@ -35,6 +35,7 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
     }
 
     /**
+     * @dev Constructor that gets called for the implementation contract.
      * @custom:oz-upgrades-unsafe-allow constructor
      */
     constructor() initializer {}
