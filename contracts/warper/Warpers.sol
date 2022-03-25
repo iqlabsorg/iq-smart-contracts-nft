@@ -37,7 +37,7 @@ library Warpers {
      * @param controller Warper asset controller.
      * @param paused Indicates whether the warper is paused.
      */
-    struct Info {
+    struct Warper {
         uint256 universeId;
         IWarperController controller;
         bool paused;
@@ -46,7 +46,7 @@ library Warpers {
     /**
      * @dev Puts the warper on pause.
      */
-    function pause(Info storage self) internal {
+    function pause(Warper storage self) internal {
         if (self.paused) revert WarperIsPaused();
 
         self.paused = true;
@@ -55,7 +55,7 @@ library Warpers {
     /**
      * @dev Lifts the warper pause.
      */
-    function unpause(Info storage self) internal {
+    function unpause(Warper storage self) internal {
         if (!self.paused) revert WarperIsNotPaused();
 
         self.paused = false;
@@ -69,7 +69,7 @@ library Warpers {
      */
     struct Registry {
         IWarperPresetFactory presetFactory;
-        mapping(address => Warpers.Info) warpers;
+        mapping(address => Warpers.Warper) warpers;
         mapping(uint256 => EnumerableSetUpgradeable.AddressSet) universeWarpers;
     }
 
@@ -100,7 +100,7 @@ library Warpers {
     function add(
         Registry storage self,
         address warperAddress,
-        Info memory warper
+        Warper memory warper
     ) internal {
         // todo: check if not registered
         // Create warper main registration record.

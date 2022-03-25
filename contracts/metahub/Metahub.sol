@@ -40,7 +40,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     using Listings for Listings.Listing;
     using Listings for Listings.Registry;
     using Rentings for Rentings.Registry;
-    using Warpers for Warpers.Info;
+    using Warpers for Warpers.Warper;
     using Warpers for Warpers.Registry;
     using Universes for Universes.Registry;
 
@@ -137,7 +137,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         if (listing.paused) revert Listings.ListingIsPaused();
 
         // Find selected warper.
-        Warpers.Info storage warper = _warperRegistry.warpers[params.warper];
+        Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
 
         // Check whether the warper is not paused.
         if (warper.paused) revert Warpers.WarperIsPaused();
@@ -464,7 +464,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IWarperManager
      */
-    function warperInfo(address warper) external view registeredWarper(warper) returns (Warpers.Info memory) {
+    function warperInfo(address warper) external view registeredWarper(warper) returns (Warpers.Warper memory) {
         return _warperRegistry.warpers[warper];
     }
 
@@ -544,7 +544,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         //todo: check warper count against limits to prevent uncapped enumeration.
 
         // Register warper. The warper is paused by default.
-        _warperRegistry.add(warper, Warpers.Info({universeId: universeId, controller: controller, paused: paused}));
+        _warperRegistry.add(warper, Warpers.Warper({universeId: universeId, controller: controller, paused: paused}));
 
         // Associate the original asset with the the warper.
         address original = IWarper(warper).__original();
@@ -573,7 +573,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function _calculateRentalFee(
         Assets.Asset memory asset,
-        Warpers.Info memory warper,
+        Warpers.Warper memory warper,
         Listings.Params memory listingParams,
         Rentings.Params memory rentingParams
     )
