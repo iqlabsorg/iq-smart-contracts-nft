@@ -59,7 +59,13 @@ export async function unitFixtureMetahub() {
 
   // Initialize Metahub.
   await wait(
-    metahub.initialize(warperPresetFactory.address, universeToken.address, acl.address, baseToken.address, 100),
+    metahub.initialize({
+      warperPresetFactory: warperPresetFactory.address,
+      universeToken: universeToken.address,
+      acl: acl.address,
+      baseToken: baseToken.address,
+      rentalFeePercent: 100,
+    }),
   );
 
   return {

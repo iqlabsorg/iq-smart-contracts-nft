@@ -9,10 +9,10 @@ contract ERC20Mock is ERC20 {
     constructor(
         string memory name,
         string memory symbol,
-        uint8 decimals,
+        uint8 decimals_,
         uint256 totalSupply
     ) ERC20(name, symbol) {
-        _decimals = decimals;
+        _decimals = decimals_;
         _mint(msg.sender, totalSupply);
     }
 

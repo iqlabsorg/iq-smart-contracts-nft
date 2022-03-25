@@ -114,11 +114,11 @@ contract WarperPresetFactory is Ownable, IWarperPresetFactory {
      */
     function presets() external view returns (WarperPreset[] memory) {
         uint256 length = _presetIds.length();
-        WarperPreset[] memory presets = new WarperPreset[](length);
+        WarperPreset[] memory warperPresets = new WarperPreset[](length);
         for (uint256 i = 0; i < length; i++) {
-            presets[i] = _presets[_presetIds.at(i)];
+            warperPresets[i] = _presets[_presetIds.at(i)];
         }
-        return presets;
+        return warperPresets;
     }
 
     /**

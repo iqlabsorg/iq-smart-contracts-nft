@@ -35,6 +35,7 @@ interface IUniverseManager {
      */
     function universe(uint256 universeId)
         external
+        view
         returns (
             string memory name,
             string memory symbol,

@@ -24,8 +24,8 @@ contract WarperPresetMock is IWarperPreset, Warper {
         return _initValue;
     }
 
-    function setExtraValue(uint256 extraValue) external {
-        _extraValue = extraValue;
+    function setExtraValue(uint256 value) external {
+        _extraValue = value;
     }
 
     function extraValue() external view returns (uint256) {

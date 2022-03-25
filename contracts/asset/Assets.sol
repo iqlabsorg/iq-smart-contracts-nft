@@ -193,12 +193,12 @@ library Assets {
         address from
     ) internal {
         // Extract token address from asset struct and check whether the asset is supported.
-        address token = asset.token();
-        self.checkAssetSupport(token); //todo: check this before calling the function
+        address assetToken = asset.token();
+        self.checkAssetSupport(assetToken); //todo: check this before calling the function
 
         // Transfer asset to the class asset specific vault.
-        address assetController = address(self.assets[token].controller);
-        address assetVault = address(self.assets[token].vault);
+        address assetController = address(self.assets[assetToken].controller);
+        address assetVault = address(self.assets[assetToken].vault);
         assetController.functionDelegateCall(
             abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, from, assetVault)
         );
@@ -208,9 +208,9 @@ library Assets {
      * @dev Transfers an asset from the vault using associated controller.
      */
     function returnAssetFromVault(Registry storage self, Assets.Asset memory asset) internal {
-        address token = asset.token();
-        address assetController = address(self.assets[token].controller);
-        address assetVault = address(self.assets[token].vault);
+        address assetToken = asset.token();
+        address assetController = address(self.assets[assetToken].controller);
+        address assetVault = address(self.assets[assetToken].vault);
 
         assetController.functionDelegateCall(
             abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, assetVault)

@@ -32,17 +32,17 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
 
     /**
      * @dev Constructor.
-     * @param metahub Metahub address.
-     * @param acl ACL address.
+     * @param metahubContract Metahub contract address.
+     * @param aclContract ACL contract address.
      */
-    constructor(address metahub, address acl) {
+    constructor(address metahubContract, address aclContract) {
         _recovery = false;
 
         // todo validate interface
-        _metahub = metahub;
+        _metahub = metahubContract;
 
         // todo validate interface
-        _aclContract = IACL(acl);
+        _aclContract = IACL(aclContract);
     }
 
     /**

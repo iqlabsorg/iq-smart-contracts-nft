@@ -18,7 +18,7 @@ contract FixedPriceListingController is ListingController {
      */
     function calculateRentalFee(Listings.Params calldata strategyParams, Rentings.Params calldata rentingParams)
         external
-        view
+        pure
         returns (uint256)
     {
         uint256 baseRate = _decodeStrategyParams(strategyParams);
@@ -30,7 +30,7 @@ contract FixedPriceListingController is ListingController {
      * @param params Encoded listing strategy params.
      * @return baseRate Asset renting base rate (base tokens per second).
      */
-    function _decodeStrategyParams(Listings.Params memory params) internal pure virtual returns (uint256 baseRate) {
+    function _decodeStrategyParams(Listings.Params memory params) internal pure returns (uint256 baseRate) {
         _checkStrategy(params.strategy);
         return abi.decode(params.data, (uint256));
     }

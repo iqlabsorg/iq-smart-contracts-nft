@@ -89,25 +89,31 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     constructor() initializer {}
 
-    /** // todo: docs
-     * @dev Metahub initializer.
+    /**
+     * @dev Metahub initialization params.
      * @param warperPresetFactory Warper preset factory address.
      */
-    function initialize(
-        address warperPresetFactory,
-        address universeToken,
-        address acl,
-        address baseToken,
-        uint16 rentalFeePercent
-    ) external initializer {
+    struct MetahubInitParams {
+        IWarperPresetFactory warperPresetFactory;
+        IUniverseToken universeToken;
+        IACL acl;
+        IERC20Upgradeable baseToken;
+        uint16 rentalFeePercent;
+    }
+
+    /**
+     * @dev Metahub initializer.
+     * @param params Initialization params.
+     */
+    function initialize(MetahubInitParams calldata params) external initializer {
         __UUPSUpgradeable_init();
 
         // todo perform interface checks?
-        _aclContract = IACL(acl);
-        _protocol = Protocol.Info({baseToken: IERC20Upgradeable(baseToken), rentalFeePercent: rentalFeePercent});
+        _aclContract = params.acl;
+        _protocol = Protocol.Info({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
 
-        _warperRegistry.presetFactory = IWarperPresetFactory(warperPresetFactory);
-        _universeRegistry.token = IUniverseToken(universeToken);
+        _warperRegistry.presetFactory = params.warperPresetFactory;
+        _universeRegistry.token = params.universeToken;
     }
 
     /**
@@ -280,6 +286,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function universe(uint256 universeId)
         external
+        view
         returns (
             string memory name,
             string memory symbol,
@@ -300,7 +307,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         address original,
         bytes32 presetId
     ) external onlyUniverseOwner(universeId) returns (address warper) {
-        address warper = _deployWarperWithData(original, presetId, bytes(""));
+        warper = _deployWarperWithData(original, presetId, bytes(""));
         _registerWarper(universeId, warper, true);
     }
 
@@ -314,7 +321,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         bytes calldata presetData
     ) external onlyUniverseOwner(universeId) returns (address warper) {
         if (presetData.length == 0) revert EmptyPresetData();
-        address warper = _deployWarperWithData(original, presetId, presetData);
+        warper = _deployWarperWithData(original, presetId, presetData);
         _registerWarper(universeId, warper, true);
     }
 

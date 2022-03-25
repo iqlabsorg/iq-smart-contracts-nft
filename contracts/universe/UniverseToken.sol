@@ -49,11 +49,11 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
     /**
      * @inheritdoc IUniverseToken
      */
-    function mint(address to, string calldata universeName) external onlyMetahub returns (uint256 tokenId) {
+    function mint(address to, string calldata name) external onlyMetahub returns (uint256 tokenId) {
         _tokenIdTracker.increment();
         tokenId = _tokenIdTracker.current();
         _safeMint(to, tokenId);
-        _universeNames[tokenId] = universeName;
+        _universeNames[tokenId] = name;
     }
 
     /**
