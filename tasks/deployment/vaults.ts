@@ -8,7 +8,6 @@ task('deploy:erc721-asset-vault', 'Deploy ERC721 Asset Vault')
     undefined,
     types.string,
   )
-
   .setAction(async ({ acl, operator }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 

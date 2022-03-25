@@ -6,9 +6,8 @@ export async function unitFixtureWarperPresetFactory() {
   // Resolve primary roles
   const deployer = await ethers.getNamedSigner('deployer');
 
-  const warperImplFactory = new WarperPresetMock__factory(deployer);
-  const warperImplMock1 = await warperImplFactory.deploy();
-  const warperImplMock2 = await warperImplFactory.deploy();
+  const warperImplMock1 = new WarperPresetMock__factory(deployer).attach(await hre.run('deploy:mock:warper-preset'));
+  const warperImplMock2 = new WarperPresetMock__factory(deployer).attach(await hre.run('deploy:mock:warper-preset'));
 
   const deployedWarperFactory = await hre.run('deploy:warper-preset-factory');
 

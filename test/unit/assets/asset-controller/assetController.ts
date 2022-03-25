@@ -19,11 +19,12 @@ export async function unitFixtureERC721AssetsController() {
   const nftCreator = await ethers.getNamedSigner('nftCreator');
 
   // Deploy original asset mock.
-  const deployedERC721Mock = await hre.run('deploy:mock:ERC721', {
-    name: 'Test ERC721',
-    symbol: 'ONFT',
-  });
-  const oNFT = new ERC721Mock__factory(nftCreator).attach(deployedERC721Mock);
+  const oNFT = new ERC721Mock__factory(nftCreator).attach(
+    await hre.run('deploy:mock:ERC721', {
+      name: 'Test ERC721',
+      symbol: 'ONFT',
+    }),
+  );
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);

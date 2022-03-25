@@ -10,19 +10,20 @@ export async function unitFixtureERC721AssetsVault() {
 
   const deployedACL = await hre.run('deploy:acl');
 
-  const deployedERC721AssetVault = await hre.run('deploy:erc721-asset-vault', {
-    operator: operator.address,
-    acl: deployedACL,
-  });
-  const deployedERC721 = await hre.run('deploy:mock:ERC721', {
-    symbol: 'Test ERC721',
-    name: 'ONFT',
-  });
-
   return {
-    vault: new ERC721AssetVault__factory(deployer).attach(deployedERC721AssetVault),
-    asset: new ERC721Mock__factory(deployer).attach(deployedERC721),
-    acl: new ACL__factory(deployer).attach(deployedACL),
+    vault: new ERC721AssetVault__factory(deployer).attach(
+      await hre.run('deploy:erc721-asset-vault', {
+        operator: operator.address,
+        acl: deployedACL,
+      }),
+    ),
+    asset: new ERC721Mock__factory(deployer).attach(
+      await hre.run('deploy:mock:ERC721', {
+        symbol: 'Test ERC721',
+        name: 'ONFT',
+      }),
+    ),
+    acl: new ACL__factory(deployer).attach(await hre.run('deploy:acl')),
   };
 }
 

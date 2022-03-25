@@ -19,7 +19,6 @@ task('deploy:mock:ERC20', 'Deploy an ERC20 contract')
       args: [name, symbol, decimals, parseEther(totalSupply.toString())],
       log: true,
     });
-    console.log('ERC20Mock deployed', deployment.address);
     return deployment.address;
   });
 
@@ -36,8 +35,20 @@ task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
       args: [name, symbol],
       log: true,
     });
-    console.log('ERC721Mock deployed', deployment.address);
     return deployment.address;
   });
+
+task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAction(async (_args, hre) => {
+  const deployer = await hre.ethers.getNamedSigner('deployer');
+
+  await hre.deployments.delete('WarperPresetMock');
+
+  const deployment = await hre.deployments.deploy('WarperPresetMock', {
+    from: deployer.address,
+    args: [],
+    log: true,
+  });
+  return deployment.address;
+});
 
 export {};

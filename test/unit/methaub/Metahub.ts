@@ -22,29 +22,32 @@ export async function unitFixtureMetahub() {
   const nftCreator = await ethers.getNamedSigner('nftCreator');
 
   // Deploy original NFT
-  const deployedERC721Mock = await hre.run('deploy:mock:ERC721', {
-    name: 'Test ERC721',
-    symbol: 'ONFT',
-  });
-  const originalAsset = new ERC721Mock__factory(nftCreator).attach(deployedERC721Mock);
+  const originalAsset = new ERC721Mock__factory(nftCreator).attach(
+    await hre.run('deploy:mock:ERC721', {
+      name: 'Test ERC721',
+      symbol: 'ONFT',
+    }),
+  );
 
   // Mint some NFT to deployer
   await originalAsset.mint(nftCreator.address, 1);
   await originalAsset.mint(nftCreator.address, 2);
 
   // Deploy and register warper preset
-  const deployedERC721PresetConfigurable = await hre.run('deploy:erc721-preset-configurable');
-  const warperImpl = new ERC721PresetConfigurable__factory(deployer).attach(deployedERC721PresetConfigurable);
+  const warperImpl = new ERC721PresetConfigurable__factory(deployer).attach(
+    await hre.run('deploy:erc721-preset-configurable'),
+  );
 
-  const deployedBaseToken = await hre.run('deploy:mock:ERC20', {
-    name: 'Test ERC721',
-    symbol: 'ONFT',
-    decimals: 18,
-    totalSupply: 100_000_000,
-  });
-  const baseToken = new ERC20Mock__factory(nftCreator).attach(deployedBaseToken);
+  const baseToken = new ERC20Mock__factory(nftCreator).attach(
+    await hre.run('deploy:mock:ERC20', {
+      name: 'Test ERC721',
+      symbol: 'ONFT',
+      decimals: 18,
+      totalSupply: 100_000_000,
+    }),
+  );
 
-  const deployedACL = await hre.run('deploy:acl');
+  const acl = new ACL__factory(deployer).attach(await hre.run('deploy:acl'));
 
   // Deploy Asset Class Registry.
   // TODO move to a deploy script
@@ -52,15 +55,14 @@ export async function unitFixtureMetahub() {
     kind: 'uups',
     initializer: false,
   })) as AssetClassRegistry;
-  await wait(assetClassRegistry.initialize(deployedACL));
+  await wait(assetClassRegistry.initialize(acl.address));
 
   const deployedAddresses = await hre.run('deploy:metahub-family', {
-    acl: deployedACL,
+    acl: acl.address,
     assetClassRegistry: assetClassRegistry.address,
     baseToken: baseToken.address,
     rentalFeePercent: 100,
   });
-  const acl = new ACL__factory(deployer).attach(deployedACL);
   const metahub = new Metahub__factory(deployer).attach(deployedAddresses.metahub);
   const universeToken = new UniverseToken__factory(deployer).attach(deployedAddresses.universeToken);
   const warperPresetFactory = new WarperPresetFactory__factory(deployer).attach(deployedAddresses.warperPresetFactory);

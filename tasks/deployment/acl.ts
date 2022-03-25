@@ -11,7 +11,6 @@ task('deploy:acl', 'Deploy the `ACL` contract').setAction(async (_args, hre) => 
     args: [],
     log: true,
   });
-  console.log('Deployed ACL', deployment.address);
   return deployment.address;
 });
 
