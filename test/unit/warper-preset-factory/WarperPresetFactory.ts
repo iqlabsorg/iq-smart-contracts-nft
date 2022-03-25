@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { WarperPresetFactory__factory, WarperPresetMock__factory } from '../../../typechain';
 import { shouldBehaveWarperPresetFactory } from './WarperPresetFactory.behaviour';
 
@@ -10,12 +10,12 @@ export async function unitFixtureWarperPresetFactory() {
   const warperImplMock1 = await warperImplFactory.deploy();
   const warperImplMock2 = await warperImplFactory.deploy();
 
-  const warperPresetFactory = await new WarperPresetFactory__factory(deployer).deploy();
+  const deployedWarperFactory = await hre.run('deploy:warper-preset-factory');
 
   return {
     warperImplMock1,
     warperImplMock2,
-    warperPresetFactory,
+    warperPresetFactory: new WarperPresetFactory__factory(deployer).attach(deployedWarperFactory),
   };
 }
 

@@ -23,23 +23,41 @@ export async function unitFixtureERC721WarperConfigurable() {
   const nftCreator = await ethers.getNamedSigner('nftCreator');
 
   // Deploy original asset mock.
-  const oNFT = await new ERC721Mock__factory(nftCreator).deploy('Test ERC721', 'ONFT');
+  const oNFT = new ERC721Mock__factory(nftCreator).attach(
+    await hre.run('deploy:mock:ERC721', {
+      name: 'Test ERC721',
+      symbol: 'ONFT',
+    }),
+  );
 
   // Deploy ERC721 Warper controller.
-  const erc721WarperController = await new ERC721WarperController__factory(deployer).deploy();
+  const erc721WarperController = new ERC721WarperController__factory(deployer).attach(
+    await hre.run('deploy:erc721-warper-controller'),
+  );
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
   const assetClassRegistry = await smock.fake<AssetClassRegistry>(AssetClassRegistry__factory);
 
   // Deploy preset.
-  const erc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
+  const erc721Warper = new ERC721PresetConfigurable__factory(deployer).attach(
+    await hre.run('deploy:erc721-preset-configurable'),
+  );
   await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
 
-  const uninitializedErc721Warper = await new ERC721PresetConfigurable__factory(deployer).deploy();
+  const uninitializedErc721Warper = new ERC721PresetConfigurable__factory(deployer).attach(
+    await hre.run('deploy:erc721-preset-configurable'),
+  );
 
   // Deploy erc20 token
-  const erc20Token = await new ERC20Mock__factory(nftCreator).deploy('Random ERC20', 'TST', 18, 1);
+  const erc20Token = new ERC20Mock__factory(nftCreator).attach(
+    await hre.run('deploy:mock:ERC20', {
+      name: 'Random ERC20',
+      symbol: 'TST',
+      decimals: 18,
+      totalSupply: 1,
+    }),
+  );
 
   // Set balance to the MetaHub account so we can perform the minting operation here
   await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);

@@ -23,7 +23,7 @@ task('deploy:mock:ERC20', 'Deploy an ERC20 contract')
     return deployment.address;
   });
 
-task('deploy:mock:ERC721', 'Deploy an ERC20 contract')
+task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
   .addParam('name', 'name of the mock token', 'TEST', types.string)
   .addParam('symbol', 'symbol of the mock token', 'TT', types.string)
   .setAction(async ({ name, symbol }, hre) => {
