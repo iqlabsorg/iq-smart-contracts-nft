@@ -18,4 +18,11 @@ interface IUniverseToken is IERC721MetadataUpgradeable {
      * @return Universe name.
      */
     function universeName(uint256 tokenId) external view returns (string memory);
+
+    /**
+     * @dev Update the universe name.
+     * @param tokenId The unique identifier for the universe.
+     * @param name The universe name to set.
+     */
+    function setUniverseName(uint256 tokenId, string memory name) external;
 }

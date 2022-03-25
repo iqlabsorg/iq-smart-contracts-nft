@@ -251,6 +251,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IUniverseManager
      */
+    function setUniverseName(uint256 universeId, string memory universeName) external onlyUniverseOwner(universeId) {
+        _universeRegistry.token.setUniverseName(universeId, universeName);
+    }
+
+    /**
+     * @inheritdoc IUniverseManager
+     */
     function universe(uint256 universeId)
         external
         view

@@ -60,6 +60,17 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
         tokenId = _tokenIdTracker.current();
         _safeMint(to, tokenId);
         _universeNames[tokenId] = name;
+
+        // todo Emit event
+    }
+
+    /**
+     * @inheritdoc IUniverseToken
+     */
+    function setUniverseName(uint256 tokenId, string memory name) external onlyMetahub {
+        _universeNames[tokenId] = name;
+
+        // todo Emit event
     }
 
     /**

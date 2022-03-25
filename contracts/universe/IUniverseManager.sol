@@ -27,6 +27,13 @@ interface IUniverseManager {
     function createUniverse(UniverseParams calldata params) external returns (uint256);
 
     /**
+     * @dev Update the universe name.
+     * @param universeId The unique identifier for the universe.
+     * @param universeName The universe name to set.
+     */
+    function setUniverseName(uint256 universeId, string memory universeName) external;
+
+    /**
      * @dev Aggregate and return Universe data.
      * @param universeId Universe-specific ID.
      * @return name The name of the Universe contract.
