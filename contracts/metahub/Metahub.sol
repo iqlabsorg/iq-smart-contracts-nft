@@ -89,12 +89,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     constructor() initializer {}
 
-    /**
+    /** todo: docs
      * @dev Metahub initialization params.
      * @param warperPresetFactory Warper preset factory address.
      */
     struct MetahubInitParams {
         IWarperPresetFactory warperPresetFactory;
+        IAssetClassRegistry assetClassRegistry;
         IUniverseToken universeToken;
         IACL acl;
         IERC20Upgradeable baseToken;
@@ -109,9 +110,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         __UUPSUpgradeable_init();
 
         _aclContract = params.acl;
-        _protocol = Protocol.Info({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
+        _protocol = Protocol.Config({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
 
         _warperRegistry.presetFactory = params.warperPresetFactory;
+        _assetRegistry.classRegistry = params.assetClassRegistry;
         _universeRegistry.token = params.universeToken;
     }
 
@@ -232,37 +234,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function assetRentalStatus(Assets.AssetId calldata warpedAssetId) external view returns (Rentings.RentalStatus) {
         return _rentingRegistry.assetRentalStatus(warpedAssetId);
-    }
-
-    /**
-     * @inheritdoc IAssetClassManager
-     */
-    function registerAssetClass(bytes4 assetClass, Assets.ClassConfig calldata config) external onlyAdmin {
-        _assetRegistry.registerAssetClass(assetClass, config);
-        emit AssetClassRegistered(assetClass, address(config.controller), address(config.vault));
-    }
-
-    /**
-     * @inheritdoc IAssetClassManager
-     */
-    function setAssetClassVault(bytes4 assetClass, address vault) external onlyAdmin {
-        _assetRegistry.setAssetClassVault(assetClass, vault);
-        emit AssetClassVaultChanged(assetClass, vault);
-    }
-
-    /**
-     * @inheritdoc IAssetClassManager
-     */
-    function setAssetClassController(bytes4 assetClass, address controller) external onlyAdmin {
-        _assetRegistry.setAssetClassController(assetClass, controller);
-        emit AssetClassControllerChanged(assetClass, controller);
-    }
-
-    /**
-     * @inheritdoc IAssetClassManager
-     */
-    function assetClassConfig(bytes4 assetClass) external view returns (Assets.ClassConfig memory) {
-        return _assetRegistry.classes[assetClass];
     }
 
     /**
@@ -536,7 +507,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         address warperMetahub = IWarper(warper).__metahub();
         if (warperMetahub != address(this)) revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
 
-        IWarperController controller = IWarperController(_assetRegistry.classes[assetClass].controller);
+        IWarperController controller = IWarperController(_assetRegistry.assetClassController(assetClass));
 
         // Register warper.
         _warperRegistry.register(

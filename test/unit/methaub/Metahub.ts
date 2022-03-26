@@ -10,6 +10,8 @@ import {
   UniverseToken__factory,
   WarperPresetFactory__factory,
   UniverseToken,
+  AssetClassRegistry__factory,
+  AssetClassRegistry,
 } from '../../../typechain';
 import { wait } from '../../shared/utils';
 
@@ -39,6 +41,12 @@ export async function unitFixtureMetahub() {
   // Deploy ACL
   const acl = await new ACL__factory(deployer).deploy();
 
+  // Deploy Asset Class Registry.
+  const assetClassRegistry = (await upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [acl.address], {
+    kind: 'uups',
+    initializer: 'intialize(address)',
+  })) as AssetClassRegistry;
+
   // Deploy Metahub
   const metahub = (await upgrades.deployProxy(new Metahub__factory(deployer), [], {
     kind: 'uups',
@@ -61,6 +69,7 @@ export async function unitFixtureMetahub() {
   await wait(
     metahub.initialize({
       warperPresetFactory: warperPresetFactory.address,
+      assetClassRegistry: assetClassRegistry.address,
       universeToken: universeToken.address,
       acl: acl.address,
       baseToken: baseToken.address,

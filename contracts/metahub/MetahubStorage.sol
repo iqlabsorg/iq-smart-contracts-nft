@@ -17,7 +17,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Protocol configuration.
      */
-    Protocol.Info internal _protocol;
+    Protocol.Config internal _protocol;
 
     /**
      * @dev Universe registry contains the data about all registered universes and their settings.

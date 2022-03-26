@@ -19,7 +19,7 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
 
     // Metahub address.
     address private _metahub;
-    address private _aclContract;
+    IACL private _aclContract;
 
     // Mapping from token ID to universe name.
     mapping(uint256 => string) private _universeNames;
@@ -35,6 +35,11 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
     }
 
     /**
+     * @custom:oz-upgrades-unsafe-allow constructor
+     */
+    constructor() initializer {}
+
+    /**
      * @dev UniverseToken initializer.
      * @param metahub Warper preset factory address.
      */
@@ -43,7 +48,7 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
         __ERC721_init("IQVerse", "IQV");
 
         _metahub = metahub;
-        _aclContract = acl;
+        _aclContract = IACL(acl);
     }
 
     /**
@@ -78,9 +83,12 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
     /**
      * @inheritdoc AccessControlledUpgradeable
      */
-    function _acl() internal virtual override returns (IACL) {
-        return IACL(_aclContract);
+    function _acl() internal override returns (IACL) {
+        return _aclContract;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal virtual override onlyAdmin {}
+    /**
+     * @inheritdoc UUPSUpgradeable
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }

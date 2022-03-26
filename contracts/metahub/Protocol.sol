@@ -9,7 +9,7 @@ library Protocol {
      * @param baseToken ERC20 contract. Used as the price denominator.
      * @param rentalFeePercent The fixed part of the total rental fee paid to protocol.
      */
-    struct Info {
+    struct Config {
         IERC20Upgradeable baseToken;
         uint16 rentalFeePercent;
     }

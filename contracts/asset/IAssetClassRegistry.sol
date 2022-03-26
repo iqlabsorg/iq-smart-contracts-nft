@@ -4,7 +4,13 @@ pragma solidity 0.8.13;
 import "./IAssetController.sol";
 import "./IAssetVault.sol";
 
-interface IAssetClassManager {
+interface IAssetClassRegistry {
+    /**
+     * @dev Thrown upon attempting to register an asset class twice.
+     * @param assetClass Duplicate asset class ID.
+     */
+    error AssetClassIsAlreadyRegistered(bytes4 assetClass);
+
     /**
      * @dev Emitted when the asset class controller is registered.
      * @param assetClass Asset class ID.
@@ -28,11 +34,21 @@ interface IAssetClassManager {
     event AssetClassVaultChanged(bytes4 indexed assetClass, address indexed newVault);
 
     /**
+     * @dev Asset class configuration.
+     * @param vault Asset class vault.
+     * @param controller Asset class controller.
+     */
+    struct ClassConfig {
+        address vault;
+        address controller;
+    }
+
+    /**
      * @dev Registers new asset class.
      * @param assetClass Asset class ID.
      * @param config Asset class initial configuration.
      */
-    function registerAssetClass(bytes4 assetClass, Assets.ClassConfig calldata config) external;
+    function registerAssetClass(bytes4 assetClass, ClassConfig calldata config) external;
 
     /**
      * @dev Sets asset class vault.
@@ -50,6 +66,14 @@ interface IAssetClassManager {
 
     /**
      * @dev Returns asset class configuration.
+     * @param assetClass Asset class ID.
+     * @return Asset class configuration.
      */
-    function assetClassConfig(bytes4 assetClass) external view returns (Assets.ClassConfig memory);
+    function assetClassConfig(bytes4 assetClass) external view returns (ClassConfig memory);
+
+    /**
+     * @dev Checks asset class support.
+     * @param assetClass Asset class ID.
+     */
+    function isRegisteredAssetClass(bytes4 assetClass) external view returns (bool);
 }

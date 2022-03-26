@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "../Errors.sol";
 import "./IAssetController.sol";
 import "./IAssetVault.sol";
+import "./IAssetClassRegistry.sol";
 
 library Assets {
     using Address for address;
@@ -27,12 +28,6 @@ library Assets {
 
     bytes32 public constant ASSET_TYPEHASH =
         keccak256("Asset(AssetType assetType,uint256 value)AssetId(bytes4 assetClass,bytes data)");
-
-    /**
-     * @dev Thrown upon attempting to register an asset class twice.
-     * @param assetClass Duplicate asset class ID.
-     */
-    error AssetClassIsAlreadyRegistered(bytes4 assetClass);
 
     /**
      * @dev Thrown when the asset class is not registered or deprecated.
@@ -117,22 +112,12 @@ library Assets {
     }
 
     /**
-     * @dev Asset class configuration.
-     * @param controller Asset class controller.
-     * @param vault Asset class vault.
-     */
-    struct ClassConfig {
-        IAssetVault vault;
-        address controller;
-    }
-
-    /**
      * @dev Asset registry.
-     * @param classes Mapping from asset class ID to the asset class configuration.
+     * @param classRegistry Asset class registry contract.
      * @param assets Mapping from asset address to the asset configuration.
      */
     struct Registry {
-        mapping(bytes4 => ClassConfig) classes;
+        IAssetClassRegistry classRegistry;
         mapping(address => AssetConfig) assets;
     }
 
@@ -144,8 +129,9 @@ library Assets {
         bytes4 assetClass,
         address asset
     ) internal {
-        self.assets[asset].vault = self.classes[assetClass].vault;
-        self.assets[asset].controller = IAssetController(self.classes[assetClass].controller);
+        IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
+        self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
+        self.assets[asset].controller = IAssetController(assetClassConfig.controller);
     }
 
     /**
@@ -189,16 +175,15 @@ library Assets {
      * @param assetClass Asset class ID.
      */
     function checkAssetClassSupport(Registry storage self, bytes4 assetClass) internal view {
-        if (!self.isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
+        if (!self.classRegistry.isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
     }
 
     /**
-     * @dev Checks asset class support.
+     * @dev Returns controller for asset class.
      * @param assetClass Asset class ID.
      */
-    function isRegisteredAssetClass(Registry storage self, bytes4 assetClass) internal view returns (bool) {
-        // The registered asset must have controller.
-        return address(self.classes[assetClass].controller) != address(0);
+    function assetClassController(Registry storage self, bytes4 assetClass) internal view returns (address) {
+        return self.classRegistry.assetClassConfig(assetClass).controller;
     }
 
     /**
@@ -243,44 +228,5 @@ library Assets {
         assetController.functionDelegateCall(
             abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, assetVault)
         );
-    }
-
-    /**
-     * @dev Registers new supported asset class.
-     */
-    function registerAssetClass(
-        Registry storage self,
-        bytes4 assetClass,
-        ClassConfig memory classConfig
-    ) internal {
-        //todo: validate interfaces
-        if (self.isRegisteredAssetClass(assetClass)) revert AssetClassIsAlreadyRegistered(assetClass);
-        self.classes[assetClass] = classConfig;
-    }
-
-    /**
-     * @dev Sets new asset class vault address.
-     */
-    function setAssetClassVault(
-        Registry storage self,
-        bytes4 assetClass,
-        address vault
-    ) internal {
-        bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
-        if (vaultAssetClass != assetClass) revert AssetClassMismatch(vaultAssetClass, assetClass);
-        self.classes[assetClass].vault = IAssetVault(vault);
-    }
-
-    /**
-     * @dev Sets new asset class controller address.
-     */
-    function setAssetClassController(
-        Registry storage self,
-        bytes4 assetClass,
-        address controller
-    ) internal {
-        bytes4 controllerAssetClass = IAssetController(controller).assetClass();
-        if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
-        self.classes[assetClass].controller = controller;
     }
 }
