@@ -12,6 +12,7 @@ library Assets {
     using Address for address;
     using Assets for Registry;
     using Assets for Asset;
+    using Assets for AssetId;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
@@ -44,6 +45,11 @@ library Assets {
      * @param asset Asset address.
      */
     error UnsupportedAsset(address asset);
+
+    /**
+     * @dev Thrown upon attempting to use the warper which is not registered for the provided asset.
+     */
+    error IncompatibleAssetWarper(address asset, address warper);
 
     /**
      * @dev Communicates asset identification information.
@@ -104,7 +110,7 @@ library Assets {
      * @param vault Asset vault.
      * @param warpers Set of warper addresses registered for the asset.
      */
-    struct Info {
+    struct AssetConfig {
         IAssetController controller;
         IAssetVault vault;
         EnumerableSetUpgradeable.AddressSet warpers;
@@ -123,11 +129,11 @@ library Assets {
     /**
      * @dev Asset registry.
      * @param classes Mapping from asset class ID to the asset class configuration.
-     * @param assets Mapping from asset address to the asset details.
+     * @param assets Mapping from asset address to the asset configuration.
      */
     struct Registry {
         mapping(bytes4 => ClassConfig) classes;
-        mapping(address => Info) assets;
+        mapping(address => AssetConfig) assets;
     }
 
     /**
@@ -140,6 +146,17 @@ library Assets {
     ) internal {
         self.assets[asset].vault = self.classes[assetClass].vault;
         self.assets[asset].controller = IAssetController(self.classes[assetClass].controller);
+    }
+
+    /**
+     * @dev Registers new `warper` that supports the `asset`.
+     */
+    function addAssetWarper(
+        Registry storage self,
+        address asset,
+        address warper
+    ) internal returns (bool) {
+        return self.assets[asset].warpers.add(warper);
     }
 
     /**
@@ -185,6 +202,18 @@ library Assets {
     }
 
     /**
+     * @dev Throws if the `warper` is not registered for the `asset`.
+     */
+    function checkCompatibleWarper(
+        Registry storage self,
+        Assets.AssetId memory assetId,
+        address warper
+    ) internal view {
+        address assetToken = assetId.token();
+        if (!self.assets[assetToken].warpers.contains(warper)) revert IncompatibleAssetWarper(assetToken, warper);
+    }
+
+    /**
      * @dev Transfers an asset to the vault using associated controller.
      */
     function transferAssetToVault(
@@ -194,7 +223,6 @@ library Assets {
     ) internal {
         // Extract token address from asset struct and check whether the asset is supported.
         address assetToken = asset.token();
-        self.checkAssetSupport(assetToken); //todo: check this before calling the function
 
         // Transfer asset to the class asset specific vault.
         address assetController = address(self.assets[assetToken].controller);
@@ -217,8 +245,10 @@ library Assets {
         );
     }
 
-    //todo: docs
-    function addAssetClass(
+    /**
+     * @dev Registers new supported asset class.
+     */
+    function registerAssetClass(
         Registry storage self,
         bytes4 assetClass,
         ClassConfig memory classConfig
@@ -228,7 +258,9 @@ library Assets {
         self.classes[assetClass] = classConfig;
     }
 
-    //todo: docs
+    /**
+     * @dev Sets new asset class vault address.
+     */
     function setAssetClassVault(
         Registry storage self,
         bytes4 assetClass,
@@ -239,7 +271,9 @@ library Assets {
         self.classes[assetClass].vault = IAssetVault(vault);
     }
 
-    //todo: docs
+    /**
+     * @dev Sets new asset class controller address.
+     */
     function setAssetClassController(
         Registry storage self,
         bytes4 assetClass,

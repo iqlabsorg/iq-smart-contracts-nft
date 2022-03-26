@@ -6,11 +6,12 @@ import "../../Errors.sol";
 import "../IAssetController.sol";
 import "../Assets.sol";
 import "./ERC721AssetVault.sol";
+import "../utils/DelegateContext.sol";
 
 /**
  * @title Asset controller for the ERC721 tokens
  */
-contract ERC721AssetController is IAssetController {
+contract ERC721AssetController is IAssetController, DelegateContext {
     using Assets for Assets.AssetId;
 
     /**
@@ -32,7 +33,7 @@ contract ERC721AssetController is IAssetController {
         Assets.Asset memory asset,
         address assetOwner,
         address vault
-    ) external {
+    ) external onlyDelegatecall {
         //todo: check vault interface
         _transferAsset(asset, assetOwner, vault, "");
     }
@@ -40,7 +41,7 @@ contract ERC721AssetController is IAssetController {
     /**
      * @inheritdoc IAssetController
      */
-    function returnAssetFromVault(Assets.Asset memory asset, address vault) external {
+    function returnAssetFromVault(Assets.Asset memory asset, address vault) external onlyDelegatecall {
         _validateAsset(asset);
         // Decode asset ID to extract identification data.
         (address token, uint256 tokenId) = _decodeAssetId(asset.id);
@@ -55,7 +56,7 @@ contract ERC721AssetController is IAssetController {
         address from,
         address to,
         bytes memory data
-    ) external {
+    ) external onlyDelegatecall {
         _transferAsset(asset, from, to, data);
     }
 

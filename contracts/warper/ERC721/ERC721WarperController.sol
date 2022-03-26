@@ -32,7 +32,13 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
      */
     function validateRentingParams(Assets.Asset calldata asset, Rentings.Params calldata rentingParams) external view {
         _validateAsset(asset);
+
+        // Ensure the warped asset is not rented.
         address warper = rentingParams.warper;
+        (, uint256 tokenId) = _decodeAssetId(asset.id);
+        if (rentalStatus(IWarper(warper).__metahub(), warper, tokenId) == Rentings.RentalStatus.RENTED) {
+            revert AlreadyRented();
+        }
 
         // Analyse warper functionality by checking the supported mechanics.
         bytes4[] memory mechanics = new bytes4[](3);
@@ -59,7 +65,6 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
 
         // Handle asset rentability mechanics.
         if (supportedMechanics[2]) {
-            (, uint256 tokenId) = _decodeAssetId(asset.id);
             (bool isRentable, string memory errorMessage) = IAssetRentabilityMechanics(warper).isRentableAsset(
                 rentingParams.renter,
                 tokenId,
@@ -103,20 +108,23 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         Assets.Asset calldata asset,
         address warper,
         address to
-    ) external returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
+    ) external onlyDelegatecall returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
         _validateAsset(asset);
         (address original, uint256 tokenId) = _decodeAssetId(asset.id);
         // Make sure the correct warper is used for the asset.
-        address warperOriginal = IWarper(warper).__original();
-        if (original != warperOriginal) revert InvalidAssetForWarper(warper, warperOriginal, original);
-
-        // Mint warper.
-        IERC721Warper(warper).mint(to, tokenId, new bytes(0));
+        if (original != IWarper(warper).__original()) revert InvalidAssetForWarper(warper, original);
 
         // Encode warped asset. The tokenId of the warped asset is identical to the original one,
         // but the address is changed to warper contract.
-        collectionId = _collectionId(warper);
         warpedAsset = Assets.Asset(_encodeAssetId(warper, tokenId), asset.value);
+        collectionId = _collectionId(warper);
+
+        // If the warped asset has never been rented before, create new instance, otherwise transfer existing one.
+        if (rentalStatus(address(this), warper, tokenId) == Rentings.RentalStatus.NONE) {
+            IERC721Warper(warper).mint(to, tokenId, new bytes(0));
+        } else {
+            _transferAsset(warpedAsset, address(this), to, new bytes(0));
+        }
     }
 
     /**
@@ -126,7 +134,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         address metahub,
         address warper,
         address renter
-    ) external view returns (uint256) {
+    ) public view returns (uint256) {
         return IRentingManager(metahub).collectionRentedValue(_collectionId(warper), renter);
     }
 
@@ -137,7 +145,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         address metahub,
         address warper,
         uint256 tokenId
-    ) external view returns (Rentings.RentalStatus) {
+    ) public view returns (Rentings.RentalStatus) {
         return IRentingManager(metahub).assetRentalStatus(_encodeAssetId(warper, tokenId));
     }
 }

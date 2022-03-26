@@ -37,7 +37,7 @@ library Listings {
     /**
      * @dev Thrown when attempting to lock the listed asset for the period longer than the lister allowed.
      */
-    error MaxLockPeriodExceeded();
+    error InvalidLockPeriod(uint32 period);
 
     /**
      * @dev Thrown when listing controller is dos not implement the required interface.
@@ -124,15 +124,34 @@ library Listings {
     }
 
     /**
+     * @dev Throws if the listing is paused.
+     */
+    function checkNotPaused(Listing storage self) internal view {
+        if (self.paused) revert ListingIsPaused();
+    }
+
+    /*
+     * @dev Validates lock period.
+     */
+    function isValidLockPeriod(Listing storage self, uint32 lockPeriod) internal view returns (bool) {
+        return (lockPeriod > 0 && lockPeriod <= self.maxLockPeriod);
+    }
+
+    /**
+     * @dev Throws if the lock period is not valid.
+     */
+    function checkValidLockPeriod(Listing storage self, uint32 lockPeriod) internal view {
+        if (!self.isValidLockPeriod(lockPeriod)) revert InvalidLockPeriod(lockPeriod);
+    }
+
+    /**
      * @dev Extends listing lock time.
      * Does not modify the state if current lock time is larger.
      */
     function addLock(Listing storage self, uint32 unlockTimestamp) internal {
         // Listing is already locked till later time, no need to extend locking period.
         if (self.lockedTill >= unlockTimestamp) return;
-        // Try to extend listing lock.
-        uint32 lockPeriod = unlockTimestamp - uint32(block.timestamp);
-        if (lockPeriod > self.maxLockPeriod) revert MaxLockPeriodExceeded();
+        // Extend listing lock.
         self.lockedTill = unlockTimestamp;
     }
 
@@ -170,7 +189,7 @@ library Listings {
      * @dev Registers new listing.
      * @return listingId New listing ID.
      */
-    function add(Registry storage self, Listing memory listing) internal returns (uint256 listingId) {
+    function register(Registry storage self, Listing memory listing) internal returns (uint256 listingId) {
         // Generate new listing ID.
         self.idTracker.increment();
         listingId = self.idTracker.current();

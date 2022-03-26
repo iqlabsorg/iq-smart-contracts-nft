@@ -15,7 +15,12 @@ interface IWarperController is IAssetController {
     /**
      * @dev Thrown upon attempting to use the warper with an asset different from the one expected by the warper.
      */
-    error InvalidAssetForWarper(address warper, address expectedAsset, address providedAsset);
+    error InvalidAssetForWarper(address warper, address asset);
+
+    /**
+     * @dev Thrown upon attempting to rent a warped asset which is already rented.
+     */
+    error AlreadyRented();
 
     /**
      * @dev Takes an existing asset and then mints a warper token representing it.

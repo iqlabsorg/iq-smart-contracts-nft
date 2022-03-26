@@ -62,6 +62,13 @@ library Warpers {
     }
 
     /**
+     * @dev Throws if the warper is paused.
+     */
+    function checkNotPaused(Warper storage self) internal view {
+        if (self.paused) revert WarperIsPaused();
+    }
+
+    /**
      * @dev Warper registry.
      * @param presetFactory Warper preset factory contract.
      * @param warpers Mapping from a warper address to the warper details.
@@ -97,12 +104,18 @@ library Warpers {
     /**
      * @dev Performs warper registration.
      */
-    function add(
+    function register(
         Registry storage self,
         address warperAddress,
         Warper memory warper
     ) internal {
-        // todo: check if not registered
+        // Check that warper is not already registered.
+        self.checkNotRegisteredWarper(warperAddress);
+
+        // Ensure warper compatibility with the current generation of asset controller.
+        warper.controller.checkCompatibleWarper(warperAddress);
+        //todo: check warper count against limits to prevent uncapped enumeration.
+
         // Create warper main registration record.
         self.warpers[warperAddress] = warper;
         // Associate the warper with the universe.

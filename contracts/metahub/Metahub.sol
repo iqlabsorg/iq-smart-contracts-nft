@@ -30,12 +30,12 @@ import "./Protocol.sol";
 // todo: review lib imports
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUpgradeable, MetahubStorage {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    using AddressUpgradeable for address;
+    using Address for address;
     using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using Assets for Assets.Asset;
-    using Assets for Assets.Info;
+    using Assets for Assets.AssetConfig;
     using Assets for Assets.Registry;
     using Listings for Listings.Listing;
     using Listings for Listings.Registry;
@@ -108,7 +108,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     function initialize(MetahubInitParams calldata params) external initializer {
         __UUPSUpgradeable_init();
 
-        // todo perform interface checks?
         _aclContract = params.acl;
         _protocol = Protocol.Info({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
 
@@ -120,7 +119,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IRentingManager
      */
     function estimateRent(Rentings.Params calldata params)
-        public
+        external
         view
         returns (
             uint256 listerBaseFee,
@@ -131,29 +130,32 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             uint256 total
         )
     {
-        // Check if asset listing is active.
+        // Validate renting parameters.
+        (Listings.Listing storage listing, Warpers.Warper storage warper) = _validateRentingParams(params);
+        return _calculateRentalFee(listing.asset, warper, listing.params, params);
+    }
+
+    /**
+     * @dev Main renting request validation function.
+     */
+    function _validateRentingParams(Rentings.Params calldata params)
+        internal
+        view
+        returns (Listings.Listing storage listing, Warpers.Warper storage warper)
+    {
+        // Validate from the listing perspective.
         _listingRegistry.checkListed(params.listingId);
+        listing = _listingRegistry.listings[params.listingId];
+        listing.checkNotPaused();
+        listing.checkValidLockPeriod(params.rentalPeriod);
 
-        // Find selected listing.
-        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
+        // Validate from the original asset perspective.
+        _assetRegistry.checkCompatibleWarper(listing.asset.id, params.warper);
 
-        //todo: validate max lock time
-
-        // Check whether listing is not paused.
-        if (listing.paused) revert Listings.ListingIsPaused();
-
-        // Find selected warper.
-        Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
-
-        // Check whether the warper is not paused.
-        if (warper.paused) revert Warpers.WarperIsPaused();
-
-        // Check if the renting request can be fulfilled by selected warper.
-        Assets.Asset memory asset = listing.asset;
-        //todo: warper.validateRentingParams(asset, rentingParams)
-        warper.controller.validateRentingParams(asset, params);
-
-        return _calculateRentalFee(asset, warper, listing.params, params);
+        // Validate from the warper perspective.
+        warper = _warperRegistry.warpers[params.warper];
+        warper.checkNotPaused();
+        warper.controller.validateRentingParams(listing.asset, params);
     }
 
     /**
@@ -163,7 +165,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         // Message sender must match the renter address since the estimation might be renter specific.
         if (_msgSender() != params.renter) revert CallerIsNotRenter();
 
-        // Estimate renting.
+        // Validate renting parameters.
+        (Listings.Listing storage listing, Warpers.Warper storage warper) = _validateRentingParams(params);
+        Assets.Asset memory asset = listing.asset;
+
+        // todo: handle payments:
         {
             (
                 uint256 listerBaseFee,
@@ -172,56 +178,46 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
                 uint256 universePremium,
                 uint256 protocolFee,
                 uint256 totalRentalFee
-            ) = estimateRent(params);
+            ) = _calculateRentalFee(asset, warper, listing.params, params);
 
             // Ensure no rental fee payment slippage.
             if (totalRentalFee > maxPaymentAmount) revert RentalPriceSlippage();
+            uint256 listerFee = listerBaseFee + listerPremium;
+            uint256 universeFee = universeBaseFee + universePremium;
+
+            // todo: pay to Lister _protocol.baseToken.safeTransferFrom(_msgSender(), listing.lister, listerFee);
+            // todo: pay to Universe (accumulate)
+            // todo: pay to Protocol (accumulate)
         }
 
-        //        uint256 listerFee = listerBaseFee + listerPremium;
-        //        uint256 universeFee = universeBaseFee + universePremium;
+        // Warp it!
+        (bytes32 collectionId, Assets.Asset memory warpedAsset) = abi.decode(
+            address(warper.controller).functionDelegateCall(
+                abi.encodeWithSelector(IWarperController.warp.selector, listing.asset, params.warper, params.renter)
+            ),
+            (bytes32, Assets.Asset)
+        );
 
-        // Find selected listing.
-        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
+        uint32 blockTimestamp = uint32(block.timestamp);
+        Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
+            warpedAsset: warpedAsset,
+            collectionId: collectionId,
+            listingId: params.listingId,
+            renter: params.renter,
+            startTime: blockTimestamp,
+            endTime: blockTimestamp + params.rentalPeriod
+        });
 
-        // todo: check if warper has ever been minted, then transfer existing warper or warp the original asset
-        {
-            (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warperRegistry
-                .warpers[params.warper]
-                .controller
-                .warp(listing.asset, params.warper, params.renter);
+        // Update listing lock time.
+        _listingRegistry.listings[params.listingId].addLock(rentalAgreement.endTime);
 
-            // todo: warp original asset (mint warper via controller.warp(asset, renter))
+        // Register new rental agreement.
+        uint256 rentalId = _rentingRegistry.register(rentalAgreement);
 
-            // Handle payments.
-            //        _protocol.baseToken.safeTransferFrom(_msgSender(), listing.lister, listerFee);
-            // todo: pay to Universe
-            // todo: pay to Protocol
+        //todo: clean up x2 expired rental agreements
+        // todo: emit AssetRented event
 
-            uint32 startTime = _blockTimestamp();
-            uint32 endTime = startTime + params.rentalPeriod;
-
-            // todo: update listing lock time
-            //            _listingRegistry.listings[params.listingId].addLock(endTime);
-
-            //todo: hash AssetId to associate warper rental (pass to renting registry)
-
-            Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
-                warpedAsset: warpedAsset,
-                collectionId: collectionId,
-                listingId: params.listingId,
-                renter: params.renter,
-                startTime: startTime,
-                endTime: endTime
-            });
-
-            uint256 rentalId = _rentingRegistry.add(rentalAgreement);
-
-            //todo: clean up x2 expired rental agreements
-            // todo: emit AssetRented event
-
-            return rentalId;
-        }
+        return rentalId;
     }
 
     /**
@@ -242,7 +238,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IAssetClassManager
      */
     function registerAssetClass(bytes4 assetClass, Assets.ClassConfig calldata config) external onlyAdmin {
-        _assetRegistry.addAssetClass(assetClass, config);
+        _assetRegistry.registerAssetClass(assetClass, config);
         emit AssetClassRegistered(assetClass, address(config.controller), address(config.vault));
     }
 
@@ -307,7 +303,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         address original,
         bytes32 presetId
     ) external onlyUniverseOwner(universeId) returns (address warper) {
-        warper = _deployWarperWithData(original, presetId, bytes(""));
+        warper = _deployWarperWithData(original, presetId, new bytes(0));
         _registerWarper(universeId, warper, true);
     }
 
@@ -357,8 +353,8 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Listings.Params calldata params,
         uint32 maxLockPeriod
     ) external returns (uint256) {
-        // Check that listing asset class is supported.
-        _assetRegistry.checkAssetClassSupport(asset.id.class);
+        // Check that listing asset is supported.
+        _assetRegistry.checkAssetSupport(asset.token());
 
         // Check that listing strategy is supported.
         _listingRegistry.checkListingStrategySupport(params.strategy);
@@ -368,7 +364,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Register listing.
         Listings.Listing memory listing = Listings.Listing(_msgSender(), asset, params, maxLockPeriod, 0, false, false);
-        uint256 listingId = _listingRegistry.add(listing);
+        uint256 listingId = _listingRegistry.register(listing);
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
 
@@ -390,7 +386,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     function withdrawAsset(uint256 listingId) external onlyLister(listingId) {
         Listings.Listing memory listing = _listingRegistry.listings[listingId];
         // Check whether the asset can be returned to the owner.
-        if (_blockTimestamp() < listing.lockedTill) revert AssetIsLocked();
+        if (uint32(block.timestamp) < listing.lockedTill) revert AssetIsLocked();
 
         // Delete listing record.
         _listingRegistry.remove(listingId);
@@ -536,32 +532,26 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         bytes4 assetClass = IWarper(warper).__assetClass();
         _assetRegistry.checkAssetClassSupport(assetClass);
 
-        // Check that warper is not already registered.
-        _warperRegistry.checkNotRegisteredWarper(warper);
-
         // Check that warper has correct metahub reference.
         address warperMetahub = IWarper(warper).__metahub();
         if (warperMetahub != address(this)) revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
 
         IWarperController controller = IWarperController(_assetRegistry.classes[assetClass].controller);
 
-        // Ensure warper compatibility with the current generation of asset controller.
-        controller.checkCompatibleWarper(warper);
-
-        //todo: check warper count against limits to prevent uncapped enumeration.
-
-        // Register warper. The warper is paused by default.
-        _warperRegistry.add(warper, Warpers.Warper({universeId: universeId, controller: controller, paused: paused}));
-
-        // Associate the original asset with the the warper.
-        address original = IWarper(warper).__original();
-        _assetRegistry.assets[original].warpers.add(warper); // todo: lib
+        // Register warper.
+        _warperRegistry.register(
+            warper,
+            Warpers.Warper({universeId: universeId, controller: controller, paused: paused})
+        );
 
         // Register the original asset if it is seen for the first time.
+        address original = IWarper(warper).__original();
         if (!_assetRegistry.isRegisteredAsset(original)) {
             _assetRegistry.addAsset(assetClass, original);
             // todo: emit event AssetRegistered(asset);
         }
+        // Associate the original asset with the the warper.
+        _assetRegistry.addAssetWarper(original, warper);
 
         emit WarperRegistered(universeId, original, warper);
     }
@@ -617,12 +607,5 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Calculate TOTAL rental fee that will be paid by renter.
         total = listerBaseFee + listerPremium + universeBaseFee + universePremium + protocolFee;
-    }
-
-    /**
-     * @dev Returns the block timestamp truncated to 32 bits.
-     */
-    function _blockTimestamp() internal view virtual returns (uint32) {
-        return uint32(block.timestamp);
     }
 }

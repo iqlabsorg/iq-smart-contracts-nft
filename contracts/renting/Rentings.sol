@@ -60,7 +60,7 @@ library Rentings {
         return self.endTime > uint32(block.timestamp);
     }
 
-    function duration(Agreement storage self) internal view returns (uint32) {
+    function duration(Agreement memory self) internal pure returns (uint32) {
         return self.endTime - self.startTime;
     }
 
@@ -99,10 +99,9 @@ library Rentings {
     /**
      * @dev Performs new rental agreement registration.
      */
-    function add(Registry storage self, Agreement memory agreement) internal returns (uint256 rentalId) {
-        bytes32 assetId = agreement.warpedAsset.id.hash();
-
+    function register(Registry storage self, Agreement memory agreement) internal returns (uint256 rentalId) {
         // Make sure the there is no active rentals for the warper ID.
+        bytes32 assetId = agreement.warpedAsset.id.hash();
         uint256 latestRentalId = self.assets[assetId].latestRentalId;
         if (latestRentalId != 0 && self.agreements[latestRentalId].isEffective()) {
             revert RentalAgreementConflict(latestRentalId);
