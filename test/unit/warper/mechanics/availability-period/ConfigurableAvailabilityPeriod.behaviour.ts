@@ -2,15 +2,6 @@ import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
 import { ConfigurableAvailabilityPeriodExtension, Metahub } from '../../../../../typechain';
 
-declare module 'mocha' {
-  interface Context {
-    configurableAvailabilityPeriod: {
-      underTest: ConfigurableAvailabilityPeriodExtension;
-      metahub: FakeContract<Metahub>;
-    };
-  }
-}
-
 /**
  * TODO
  */
@@ -20,8 +11,8 @@ export function shouldBehaveLikeConfigurableAvailabilityPeriod(): void {
     let metahub: FakeContract<Metahub>;
 
     beforeEach(function () {
-      warper = this.configurableAvailabilityPeriod.underTest;
-      metahub = this.configurableAvailabilityPeriod.metahub;
+      warper = this.contracts.configurableAvailabilityPeriodExtension;
+      metahub = this.mocks.metahub;
 
       metahub.isWarperAdmin.returns(true);
     });

@@ -1,13 +1,5 @@
 import { IRentingManager } from '../../../../typechain';
 
-declare module 'mocha' {
-  interface Context {
-    rentingManager: {
-      underTest: IRentingManager;
-    };
-  }
-}
-
 /**
  * The metahub contract behaves like IWarperManager
  */
@@ -18,7 +10,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
       beforeEach(function () {
         // eslint-disable-next-line
-        ({ underTest: rentingManager } = this.rentingManager);
+        rentingManager = this.interfaces.iRentingManager;
       });
 
       it('todo'); // TODO

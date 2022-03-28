@@ -8,23 +8,20 @@ import {
   Metahub__factory,
   UniverseToken__factory,
   WarperPresetFactory__factory,
-  UniverseToken,
   AssetClassRegistry__factory,
-  AssetClassRegistry,
-  IListingManager,
-  IACL,
-  UUPSUpgradeable,
-  IRentingManager,
-  IUniverseManager,
-  IWarperManager,
-  IWarperPresetFactory,
   ERC721AssetController__factory,
-  ERC721AssetVaultMock__factory,
   ListingStrategyRegistry__factory,
+  IListingManager__factory,
+  IRentingManager__factory,
+  IUniverseManager__factory,
+  IWarperManager__factory,
+  ERC721AssetVault__factory,
+  UUPSUpgradeable__factory,
+  AssetClassRegistry,
+  ListingStrategyRegistry,
 } from '../../../typechain';
 
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
-import { wait } from '../../../tasks';
 
 export async function unitFixtureMetahub() {
   // Resolve primary roles
@@ -60,22 +57,14 @@ export async function unitFixtureMetahub() {
   const acl = new ACL__factory(deployer).attach(await hre.run('deploy:acl'));
 
   // Deploy Asset Class Registry.
-  // TODO move to a deploy script
-  const assetClassRegistry = (await upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [], {
-    kind: 'uups',
-    initializer: false,
-  })) as AssetClassRegistry;
-  await wait(assetClassRegistry.initialize(acl.address));
+  const assetClassRegistry = new AssetClassRegistry__factory(deployer).attach(
+    await hre.run('deploy:asset-class-registry', { acl: acl.address }),
+  );
 
   // Deploy Listing Strategy Registry
-  const listingStrategyRegistry = (await upgrades.deployProxy(
-    new ListingStrategyRegistry__factory(deployer),
-    [acl.address],
-    {
-      kind: 'uups',
-      initializer: 'initialize(address)',
-    },
-  )) as AssetClassRegistry;
+  const listingStrategyRegistry = new ListingStrategyRegistry__factory(deployer).attach(
+    await hre.run('deploy:listing-strategy-registry', { acl: acl.address }),
+  );
 
   const deployedAddresses = await hre.run('deploy:metahub-family', {
     acl: acl.address,
@@ -89,9 +78,8 @@ export async function unitFixtureMetahub() {
   const warperPresetFactory = new WarperPresetFactory__factory(deployer).attach(deployedAddresses.warperPresetFactory);
   await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
 
-  // TODO use deploy tasks
   const erc721Controller = await new ERC721AssetController__factory(deployer).deploy();
-  const erc721Vault = await new ERC721AssetVaultMock__factory(deployer).deploy();
+  const erc721Vault = await new ERC721AssetVault__factory(deployer).deploy(metahub.address, acl.address);
 
   return {
     assetClassRegistry,
@@ -112,38 +100,29 @@ export function unitTestMetahub(): void {
       const {
         acl,
         metahub,
-        erc721Controller,
-        erc721Vault,
         originalAsset,
         universeToken,
         warperPresetFactory,
         assetClassRegistry,
+        erc721Controller,
+        erc721Vault,
       } = await this.loadFixture(unitFixtureMetahub);
 
+      // Interfaces/Subclasses under test
+      this.interfaces.iListingManager = IListingManager__factory.connect(metahub.address, metahub.signer);
+      this.interfaces.iRentingManager = IRentingManager__factory.connect(metahub.address, metahub.signer);
+      this.interfaces.iUniverseManager = IUniverseManager__factory.connect(metahub.address, metahub.signer);
+      this.interfaces.iWarperManager = IWarperManager__factory.connect(metahub.address, metahub.signer);
+      this.contracts.uupsUpgradeable = UUPSUpgradeable__factory.connect(metahub.address, metahub.signer);
+
+      // Common dependencies
+      this.mocks.assets.erc721 = originalAsset;
+      this.contracts.erc721assetVault = erc721Vault;
+      this.contracts.erc721AssetController = erc721Controller;
       this.contracts.assetClassRegistry = assetClassRegistry;
-      this.listingManager = {
-        underTest: metahub as unknown as IListingManager,
-        erc721Controller: erc721Controller,
-        erc721Vault: erc721Vault,
-        originalAsset,
-      };
-      this.rentingManager = {
-        underTest: metahub as unknown as IRentingManager,
-      };
-      this.universeManager = {
-        underTest: metahub as unknown as IUniverseManager,
-        universeToken,
-      };
-      this.warperManager = {
-        underTest: metahub as unknown as IWarperManager,
-        universeId: undefined, // NOTE: Overriden later as not to pollute the global setup
-        originalAsset,
-        warperPresetFactory: warperPresetFactory as unknown as IWarperPresetFactory,
-      };
-      this.uupsUpgradeable = {
-        underTest: metahub as unknown as UUPSUpgradeable,
-        acl: acl as unknown as IACL,
-      };
+      this.contracts.universeToken = universeToken;
+      this.contracts.acl = acl;
+      this.contracts.warperPresetFactory = warperPresetFactory;
     });
 
     shouldBehaveLikeMetahub();

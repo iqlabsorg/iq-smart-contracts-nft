@@ -1,27 +1,20 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { upgrades } from 'hardhat';
-import { MetahubV2Mock, MetahubV2Mock__factory, UUPSUpgradeable, IACL } from '../../../../typechain';
+import { MetahubV2Mock, MetahubV2Mock__factory, UUPSUpgradeable, IACL, ACL } from '../../../../typechain';
 
-declare module 'mocha' {
-  interface Context {
-    uupsUpgradeable: {
-      underTest: UUPSUpgradeable;
-      acl: IACL;
-    };
-  }
-}
-
+// TODO make this generic so it can be re-used for multiple contracts
 export function shouldBehaveLikeUUPSUpgradeable(): void {
   describe('upgradeTo', function () {
     let upgradeable: UUPSUpgradeable;
-    let acl: IACL;
+    let acl: ACL;
 
     let deployer: SignerWithAddress;
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
-      ({ underTest: upgradeable, acl } = this.uupsUpgradeable);
+      upgradeable = this.contracts.uupsUpgradeable;
+      acl = this.contracts.acl;
 
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;

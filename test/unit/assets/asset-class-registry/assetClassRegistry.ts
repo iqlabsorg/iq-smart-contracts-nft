@@ -1,6 +1,6 @@
 import hre, { ethers, upgrades } from 'hardhat';
 import { wait } from '../../../../tasks';
-import { AssetClassRegistry, AssetClassRegistry__factory } from '../../../../typechain';
+import { AssetClassRegistry, AssetClassRegistry__factory, IAssetClassRegistry__factory } from '../../../../typechain';
 import { shouldBehaveLikeAssetClassRegistry } from './AssetClassRegistry.behaviour';
 
 async function unitFixtureAssetClassRegistry() {
@@ -8,22 +8,21 @@ async function unitFixtureAssetClassRegistry() {
   const deployer = await ethers.getNamedSigner('deployer');
   const deployedACL = await hre.run('deploy:acl');
 
-  // Deploy Asset Class Registry.
-  // TODO move to a deploy script
-  const assetClassRegistry = (await upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [], {
-    kind: 'uups',
-    initializer: false,
-  })) as AssetClassRegistry;
-  await wait(assetClassRegistry.initialize(deployedACL));
-
-  return { assetClassRegistry };
+  return {
+    assetClassRegistry: new AssetClassRegistry__factory(deployer).attach(
+      await hre.run('deploy:asset-class-registry', { acl: deployedACL }),
+    ),
+  };
 }
 
 export function unitTestAssetClassRegistry(): void {
-  describe('ERC721AssetVault', function () {
+  describe('Asset Class registry', function () {
     beforeEach(async function () {
       const { assetClassRegistry } = await this.loadFixture(unitFixtureAssetClassRegistry);
-      this.contracts.assetClassRegistry = assetClassRegistry;
+      this.interfaces.iAssetClassRegistry = IAssetClassRegistry__factory.connect(
+        assetClassRegistry.address,
+        assetClassRegistry.signer,
+      );
     });
 
     shouldBehaveLikeAssetClassRegistry();

@@ -1,17 +1,9 @@
+import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ContractTransaction, Signer } from 'ethers';
-import { IUniverseToken } from '../../../typechain';
+import { IUniverseToken, Metahub } from '../../../typechain';
 import { AddressZero } from '../../shared/types';
-
-declare module 'mocha' {
-  interface Context {
-    universeToken: {
-      underTest: IUniverseToken;
-      metahubSigner: Signer;
-    };
-  }
-}
 
 /**
  * Core functionality tests of public Universe Token
@@ -23,16 +15,17 @@ export function shouldBehaveLikeUniverseToken(): void {
     const universeName = 'Universe One';
 
     let universeToken: IUniverseToken;
-    let metahubSigner: Signer;
+    let metahub: FakeContract<Metahub>;
 
     let universeOwner: SignerWithAddress;
 
     beforeEach(async function () {
-      ({ underTest: universeToken, metahubSigner } = this.universeToken);
+      metahub = this.mocks.metahub;
+      universeToken = this.interfaces.iUniverseToken;
 
       universeOwner = this.signers.named['universeOwner'];
 
-      await universeToken.connect(metahubSigner).mint(universeOwner.address, universeName);
+      await universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName);
     });
     describe('View Functions', function () {
       describe('universeName', () => {
@@ -86,7 +79,7 @@ export function shouldBehaveLikeUniverseToken(): void {
           });
 
           it('metahub can mint', async () => {
-            await expect(universeToken.connect(metahubSigner).mint(universeOwner.address, universeName))
+            await expect(universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName))
               .to.emit(universeToken, 'Transfer')
               .withArgs(AddressZero, universeOwner.address, 2);
             await expect(universeToken.ownerOf(2)).to.eventually.eq(universeOwner.address);
@@ -95,7 +88,7 @@ export function shouldBehaveLikeUniverseToken(): void {
 
         context('when mint msg.sender is metahub', function () {
           beforeEach(async function () {
-            mintTx = await universeToken.connect(metahubSigner).mint(universeOwner.address, universeName);
+            mintTx = await universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName);
           });
 
           it('emits a Transfer event', function () {

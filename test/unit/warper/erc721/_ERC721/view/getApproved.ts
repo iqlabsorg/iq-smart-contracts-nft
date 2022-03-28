@@ -8,25 +8,31 @@ export function shouldBehaveLikeGetApproved(): void {
     const nonExistentTokenId = 42;
     const mintedTokenId = 4455666;
 
+    let erc721warper: ERC721Warper;
+    let metahub: FakeContract<Metahub>;
+    let assetOwner: SignerWithAddress;
+
     beforeEach(async function () {
-      await this.erc721Warper.underTest
-        .connect(this.erc721Warper.metahub.wallet)
-        .mint(this.signers.named['assetOwner'].address, mintedTokenId, '0x');
+      metahub = this.mocks.metahub;
+      assetOwner = this.signers.named['assetOwner'];
+      erc721warper = this.contracts.erc721Warper;
+
+      await erc721warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
     context('when token is not minted', () => {
-      it('reverts', async function () {
-        await expect(
-          this.erc721Warper.underTest.connect(this.signers.named['assetOwner']).getApproved(nonExistentTokenId),
-        ).to.be.revertedWith(`MethodNotAllowed()`);
+      it('reverts', async () => {
+        await expect(erc721warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWith(
+          `MethodNotAllowed()`,
+        );
       });
     });
 
     context('when token has been minted', () => {
-      it('reverts', async function () {
-        await expect(
-          this.erc721Warper.underTest.connect(this.signers.named['assetOwner']).getApproved(mintedTokenId),
-        ).to.be.revertedWith(`MethodNotAllowed()`);
+      it('reverts', async () => {
+        await expect(erc721warper.connect(assetOwner).getApproved(mintedTokenId)).to.be.revertedWith(
+          `MethodNotAllowed()`,
+        );
       });
     });
   });

@@ -9,11 +9,11 @@ export function shouldBehaveLikeDisablePreset(): void {
     let stranger: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.warperPresetFactory.underTest;
+      warperPresetFactory = this.interfaces.iWarperPresetFactory;
 
       [stranger] = this.signers.unnamed;
-      await warperPresetFactory.addPreset(presetId1, this.warperPresetFactory.warperPreset1.address);
-      await warperPresetFactory.addPreset(presetId2, this.warperPresetFactory.warperPreset2.address);
+      await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
+      await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
     });
 
     it('allows owner to disable preset', async () => {

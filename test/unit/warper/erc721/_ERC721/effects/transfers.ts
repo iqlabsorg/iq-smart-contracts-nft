@@ -8,22 +8,22 @@ import {
   ERC721ReceiverMock,
   ERC721ReceiverMock__factory,
   ERC721Warper,
+  ERC721WarperController,
   Metahub,
 } from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
-import { AssetClass, solidityId, AssetRentalStatus } from '../../../../../shared/utils';
+import { AssetRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {
     let warper: ERC721Warper;
+    let erc721WarperController: ERC721WarperController;
     let assetOwner: SignerWithAddress;
     let deployer: SignerWithAddress;
 
     let metahub: FakeContract<Metahub>;
     let assetClassRegistry: FakeContract<AssetClassRegistry>;
-    let operator: SignerWithAddress;
     let stranger: SignerWithAddress;
-    let approved: SignerWithAddress;
 
     const mintedTokenId = 445566;
     const nonExistentTokenId = 42;
@@ -31,17 +31,18 @@ export function shouldBehaveTransfer(): void {
     const RECEIVER_MAGIC_VALUE = '0x150b7a02';
 
     beforeEach(async function () {
-      assetClassRegistry = this.mocks.assetClassRegistry;
-      metahub = this.erc721Warper.metahub;
-      warper = this.erc721Warper.underTest;
       assetOwner = this.signers.named['assetOwner'];
       deployer = this.signers.named['deployer'];
+      metahub = this.mocks.metahub;
+      erc721WarperController = this.contracts.erc721WarperController;
+      warper = this.contracts.erc721Warper;
+      assetClassRegistry = this.mocks.assetClassRegistry;
 
-      [approved, operator, stranger] = this.signers.unnamed;
+      [, , stranger] = this.signers.unnamed;
 
       assetClassRegistry.assetClassConfig.returns({
         vault: AddressZero,
-        controller: this.erc721Warper.erc721WarperController.address,
+        controller: erc721WarperController.address,
       });
 
       // Mint

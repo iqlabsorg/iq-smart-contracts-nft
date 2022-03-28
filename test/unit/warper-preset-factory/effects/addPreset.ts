@@ -12,11 +12,11 @@ export function shouldBehaveLikeAddingANewPreset(): void {
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
-      warperPresetFactory = this.warperPresetFactory.underTest;
+      warperPresetFactory = this.interfaces.iWarperPresetFactory;
 
       [stranger] = this.signers.unnamed;
-      warperImpl1 = this.warperPresetFactory.warperPreset1;
-      warperImpl2 = this.warperPresetFactory.warperPreset2;
+      warperImpl1 = this.mocks.warperPreset[0];
+      warperImpl2 = this.mocks.warperPreset[1];
     });
 
     describe('When adding new warper preset', () => {

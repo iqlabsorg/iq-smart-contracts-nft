@@ -5,3 +5,4 @@ import './presets';
 import './vaults';
 import './controllers';
 import './universe-token';
+import './assets';

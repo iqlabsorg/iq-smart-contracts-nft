@@ -5,22 +5,28 @@ import { ERC721Warper } from '../../../../../../typechain';
 export function shouldBehaveLikeApprove(): void {
   describe('approve', function () {
     const tokenId = 42;
+    let erc721warper: ERC721Warper;
+    let assetOwner: SignerWithAddress;
+    let stranger: SignerWithAddress;
 
-    context('when calling `approve`', function () {
-      it('reverts', async function () {
-        await expect(
-          this.erc721Warper.underTest
-            .connect(this.signers.named['assetOwner'])
-            .approve(this.signers.unnamed[0].address, tokenId),
-        ).to.be.revertedWith('MethodNotAllowed()');
+    beforeEach(function () {
+      erc721warper = this.contracts.erc721Warper;
+
+      assetOwner = this.signers.named['assetOwner'];
+      [stranger] = this.signers.unnamed;
+    });
+
+    context('when calling `approve`', () => {
+      it('reverts', async () => {
+        await expect(erc721warper.connect(assetOwner).approve(stranger.address, tokenId)).to.be.revertedWith(
+          'MethodNotAllowed()',
+        );
       });
     });
 
     context('when calling `getApproved`', () => {
-      it('reverts', async function () {
-        await expect(
-          this.erc721Warper.underTest.connect(this.signers.named['assetOwner']).getApproved(tokenId),
-        ).to.be.revertedWith('MethodNotAllowed()');
+      it('reverts', async () => {
+        await expect(erc721warper.connect(assetOwner).getApproved(tokenId)).to.be.revertedWith('MethodNotAllowed()');
       });
     });
   });

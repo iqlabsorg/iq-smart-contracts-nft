@@ -14,14 +14,13 @@ export function shouldBehaveLikeDeployWarperPreset(): void {
     let deployer: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.warperPresetFactory.underTest;
+      warperPresetFactory = this.interfaces.iWarperPresetFactory;
 
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
-      await warperPresetFactory.addPreset(presetId1, this.warperPresetFactory.warperPreset1.address);
-      await warperPresetFactory.addPreset(presetId2, this.warperPresetFactory.warperPreset2.address);
-
-      warperImpl1 = this.warperPresetFactory.warperPreset1;
+      await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
+      await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
+      warperImpl1 = this.mocks.warperPreset[0];
     });
 
     it('allows anyone to deploy a warper from preset', async () => {

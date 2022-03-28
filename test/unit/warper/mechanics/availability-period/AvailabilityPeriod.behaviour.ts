@@ -1,14 +1,5 @@
 import { expect } from 'chai';
-import { IAvailabilityPeriodMechanics } from '../../../../../typechain';
 import { MaxUint32 } from '../../../../shared/utils';
-
-declare module 'mocha' {
-  interface Context {
-    availabilityPeriod: {
-      underTest: IAvailabilityPeriodMechanics;
-    };
-  }
-}
 
 /**
  * TODO
@@ -16,11 +7,11 @@ declare module 'mocha' {
 export function shouldBehaveLikeAvailabilityPeriod(): void {
   describe('Availability period', function () {
     it('__availabilityPeriodStart', async function () {
-      await expect(this.availabilityPeriod.underTest.__availabilityPeriodStart()).to.eventually.equal(0);
+      await expect(this.interfaces.availabilityPeriod.__availabilityPeriodStart()).to.eventually.equal(0);
     });
 
     it('__availabilityPeriodEnd', async function () {
-      await expect(this.availabilityPeriod.underTest.__availabilityPeriodEnd()).to.eventually.equal(MaxUint32);
+      await expect(this.interfaces.availabilityPeriod.__availabilityPeriodEnd()).to.eventually.equal(MaxUint32);
     });
   });
 }

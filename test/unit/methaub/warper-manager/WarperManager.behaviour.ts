@@ -1,20 +1,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { ERC721Mock, ERC721Mock__factory, IWarperManager, IWarperPresetFactory } from '../../../../typechain';
-import { deployWarper } from '../../../shared/utils';
+import { ERC721Mock, ERC721Mock__factory, IWarperManager, WarperPresetFactory } from '../../../../typechain';
+import { createUniverse, deployWarper } from '../../../shared/utils';
 import { warperPresetId } from '../Metahub';
-
-declare module 'mocha' {
-  interface Context {
-    warperManager: {
-      underTest: IWarperManager;
-      warperPresetFactory: IWarperPresetFactory;
-      originalAsset: ERC721Mock;
-      universeId?: BigNumber;
-    };
-  }
-}
 
 /**
  * The metahub contract behaves like IWarperManager
@@ -22,18 +11,23 @@ declare module 'mocha' {
 export function shouldBehaveLikeWarperManager(): void {
   describe('IWarperManager', function () {
     let warperManager: IWarperManager;
-    let warperPresetFactory: IWarperPresetFactory;
+    let warperPresetFactory: WarperPresetFactory;
     let originalAsset: ERC721Mock;
 
     let deployer: SignerWithAddress;
     let stranger: SignerWithAddress;
     let universeId: BigNumber;
 
-    beforeEach(function () {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      universeId = this.warperManager.universeId!;
-      ({ underTest: warperManager, warperPresetFactory, originalAsset } = this.warperManager);
+    beforeEach(async function () {
+      originalAsset = this.mocks.assets.erc721;
+      warperPresetFactory = this.contracts.warperPresetFactory;
+      warperManager = this.interfaces.iWarperManager;
 
+      // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
+      universeId = await createUniverse(this.interfaces.iUniverseManager, {
+        name: 'IQ Universe',
+        rentalFeePercent: 1000,
+      });
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
     });

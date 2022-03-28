@@ -6,19 +6,27 @@ import {
   AssetClassRegistry,
   AssetClassRegistry__factory,
   ConfigurableAvailabilityPeriodExtension,
+  ConfigurableAvailabilityPeriodExtension__factory,
   ConfigurableRentalPeriodExtension,
+  ConfigurableRentalPeriodExtension__factory,
   ERC20Mock__factory,
   ERC721,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
   ERC721Warper,
   ERC721WarperController__factory,
+  ERC721Warper__factory,
   IAvailabilityPeriodMechanics,
+  IAvailabilityPeriodMechanics__factory,
+  IERC165__factory,
   IRentalPeriodMechanics,
+  IRentalPeriodMechanics__factory,
   IWarperPreset,
+  IWarperPreset__factory,
   Metahub,
   Metahub__factory,
   Multicall,
+  Multicall__factory,
 } from '../../../typechain';
 import { AddressZero } from '../../shared/types';
 import { shouldBehavesLikeMulticall } from '../shared/Multicall.behaviour';
@@ -93,50 +101,36 @@ export function unitTestWarpers(): void {
         unitFixtureERC721WarperConfigurable,
       );
       this.mocks.assetClassRegistry = assetClassRegistry;
+      this.mocks.metahub = metahub;
+      this.contracts.erc721WarperController = erc721WarperController;
+      this.mocks.assets.erc721 = oNFT;
 
+      // Mechanics under test
+      this.interfaces.availabilityPeriod = IAvailabilityPeriodMechanics__factory.connect(
+        erc721Warper.address,
+        erc721Warper.signer,
+      );
+      this.interfaces.rentalPeriod = IRentalPeriodMechanics__factory.connect(erc721Warper.address, erc721Warper.signer);
+      this.contracts.configurableAvailabilityPeriodExtension = ConfigurableAvailabilityPeriodExtension__factory.connect(
+        erc721Warper.address,
+        erc721Warper.signer,
+      );
+      this.contracts.configurableRentalPeriodExtension = ConfigurableRentalPeriodExtension__factory.connect(
+        erc721Warper.address,
+        erc721Warper.signer,
+      );
+
+      // Warper interfaces
+      this.contracts.erc721Warper = ERC721Warper__factory.connect(erc721Warper.address, erc721Warper.signer);
+      this.interfaces.warperPreset = IWarperPreset__factory.connect(erc721Warper.address, erc721Warper.signer);
+      this.contracts.multicall = Multicall__factory.connect(erc721Warper.address, erc721Warper.signer);
       this.warper = {
-        underTest: erc721Warper as unknown as IWarperPreset,
-        originalAsset: oNFT as unknown as ERC721,
-        metahub: metahub as unknown as Metahub,
         forwarder: {
           call: () => {
             return ERC721Mock__factory.connect(erc721Warper.address, this.signers.unnamed[0]).symbol();
           },
           expected: await oNFT.symbol(),
         },
-      };
-
-      this.multicall = {
-        underTest: erc721Warper as unknown as Multicall,
-        call1: oNFT.interface.encodeFunctionData('mint', [this.signers.unnamed[0].address, 1]),
-        call2: oNFT.interface.encodeFunctionData('mint', [this.signers.unnamed[0].address, 22]),
-        call3: oNFT.interface.encodeFunctionData('mint', [this.signers.unnamed[0].address, 42]),
-        assert: async tx => {
-          await expect(tx).to.emit(oNFT, 'Transfer').withArgs(AddressZero, this.signers.unnamed[0].address, 1);
-          await expect(tx).to.emit(oNFT, 'Transfer').withArgs(AddressZero, this.signers.unnamed[0].address, 22);
-          await expect(tx).to.emit(oNFT, 'Transfer').withArgs(AddressZero, this.signers.unnamed[0].address, 42);
-        },
-      };
-
-      this.erc721Warper = {
-        erc721WarperController: erc721WarperController,
-        metahub: metahub,
-        underTest: erc721Warper as unknown as ERC721Warper,
-      };
-
-      this.rentalPeriod = {
-        underTest: erc721Warper as unknown as IRentalPeriodMechanics,
-      };
-      this.configurableRentalPeriod = {
-        underTest: erc721Warper as unknown as ConfigurableRentalPeriodExtension,
-        metahub: metahub,
-      };
-      this.availabilityPeriod = {
-        underTest: erc721Warper as unknown as IAvailabilityPeriodMechanics,
-      };
-      this.configurableAvailabilityPeriod = {
-        underTest: erc721Warper as unknown as ConfigurableAvailabilityPeriodExtension,
-        metahub: metahub,
       };
     });
 

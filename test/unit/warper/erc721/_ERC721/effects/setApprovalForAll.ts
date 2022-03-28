@@ -4,23 +4,30 @@ import { ERC721Warper } from '../../../../../../typechain';
 
 export function shouldBehaveLikeSetApprovalForAl(): void {
   describe('setApprovalForAll', () => {
+    let erc721warper: ERC721Warper;
+    let assetOwner: SignerWithAddress;
+    let operator: SignerWithAddress;
+
+    beforeEach(function () {
+      erc721warper = this.contracts.erc721Warper;
+
+      assetOwner = this.signers.named['assetOwner'];
+      operator = this.signers.named['operator'];
+    });
+
     context('when calling `isApprovedForAll`', () => {
-      it('reverts', async function () {
+      it('reverts', async () => {
         await expect(
-          this.erc721Warper.underTest
-            .connect(this.signers.named['assetOwner'])
-            .isApprovedForAll(this.signers.named['assetOwner'].address, this.signers.named['operator'].address),
+          erc721warper.connect(assetOwner).isApprovedForAll(assetOwner.address, operator.address),
         ).to.be.revertedWith('MethodNotAllowed()');
       });
     });
 
     context('when calling `setApprovalForAll`', () => {
-      it('reverts', async function () {
-        await expect(
-          this.erc721Warper.underTest
-            .connect(this.signers.named['assetOwner'])
-            .setApprovalForAll(this.signers.named['operator'].address, true),
-        ).to.be.revertedWith('MethodNotAllowed()');
+      it('reverts', async () => {
+        await expect(erc721warper.connect(assetOwner).setApprovalForAll(operator.address, true)).to.be.revertedWith(
+          'MethodNotAllowed()',
+        );
       });
     });
   });

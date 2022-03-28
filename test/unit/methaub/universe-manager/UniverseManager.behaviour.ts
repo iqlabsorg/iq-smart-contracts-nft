@@ -1,15 +1,6 @@
 import { expect } from 'chai';
 import { IUniverseManager, UniverseToken } from '../../../../typechain';
 
-declare module 'mocha' {
-  interface Context {
-    universeManager: {
-      underTest: IUniverseManager;
-      universeToken: UniverseToken;
-    };
-  }
-}
-
 /**
  * The metahub contract behaves like IWarperManager
  */
@@ -19,7 +10,8 @@ export function shouldBehaveLikeUniverseManager(): void {
     let universeToken: UniverseToken;
 
     beforeEach(function () {
-      ({ underTest: universeManager, universeToken } = this.universeManager);
+      universeManager = this.interfaces.iUniverseManager;
+      universeToken = this.contracts.universeToken;
     });
 
     context('createUniverse', () => {

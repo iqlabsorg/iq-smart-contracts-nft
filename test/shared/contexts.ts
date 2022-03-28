@@ -1,6 +1,6 @@
 import hre, { ethers } from 'hardhat';
 
-import type { Contracts, Mocks, Signers } from './types';
+import type { Contracts, Interfaces, Mocks, Signers } from './types';
 
 export function baseContext(description: string, testSuite: () => void): void {
   describe(description, function () {
@@ -8,6 +8,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       this.contracts = {
         presets: {},
       } as Contracts;
+      this.interfaces = {} as Interfaces;
       this.mocks = {
         assets: {},
       } as Mocks;

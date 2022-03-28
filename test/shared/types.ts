@@ -18,6 +18,22 @@ import {
   IAssetController,
   ERC721WarperController,
   AssetClassRegistry,
+  IACL,
+  IAssetClassRegistry,
+  IListingManager,
+  IRentingManager,
+  IUniverseManager,
+  IWarperManager,
+  UUPSUpgradeable,
+  ERC721AssetController,
+  IAvailabilityPeriodMechanics,
+  ConfigurableAvailabilityPeriodExtension,
+  ConfigurableRentalPeriodExtension,
+  IRentalPeriodMechanics,
+  Ownable,
+  Multicall,
+  IWarperPresetFactory,
+  IUniverseToken,
 } from '../../typechain';
 import { ACL } from '../../typechain/ACL';
 
@@ -26,6 +42,7 @@ declare module 'mocha' {
     contracts: Contracts;
     loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     mocks: Mocks;
+    interfaces: Interfaces;
     signers: Signers;
   }
 }
@@ -37,6 +54,7 @@ export interface Contracts {
   warperPresetFactory: WarperPresetFactory;
   erc721assetVault: ERC721AssetVault;
   erc721WarperController: ERC721WarperController;
+  erc721AssetController: ERC721AssetController;
   assetController: IAssetController;
   warper: Warper;
   erc721Warper: ERC721Warper;
@@ -45,6 +63,39 @@ export interface Contracts {
   presets: {
     erc721Configurable: ERC721PresetConfigurable;
   };
+
+  // Misc tests
+  ownable: Ownable;
+  multicall: Multicall;
+  uupsUpgradeable: UUPSUpgradeable;
+  configurableAvailabilityPeriodExtension: ConfigurableAvailabilityPeriodExtension;
+  configurableRentalPeriodExtension: ConfigurableRentalPeriodExtension;
+}
+
+export interface Interfaces {
+  // acl
+  iAcl: IACL;
+
+  // Assets
+  iAssetClassRegistry: IAssetClassRegistry;
+
+  // Universe token
+  iUniverseToken: IUniverseToken;
+
+  // Metahub
+  iListingManager: IListingManager;
+  iRentingManager: IRentingManager;
+  iUniverseManager: IUniverseManager;
+  iWarperManager: IWarperManager;
+
+  // Warper preset factory
+  iWarperPresetFactory: IWarperPresetFactory;
+
+  // Warpers mechanics
+  availabilityPeriod: IAvailabilityPeriodMechanics;
+  rentalPeriod: IRentalPeriodMechanics;
+  // Warpers
+  warperPreset: IWarperPreset;
 }
 
 export interface Mocks {

@@ -1,13 +1,3 @@
-import { ERC721PresetConfigurable } from '../../../../../typechain';
-
-declare module 'mocha' {
-  interface Context {
-    erc721PresetConfigurable: {
-      underTest: ERC721PresetConfigurable;
-    };
-  }
-}
-
 /**
  * TODO: docs
  */

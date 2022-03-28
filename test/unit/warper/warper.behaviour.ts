@@ -1,12 +1,11 @@
+import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
-import { ERC721, IWarperPreset, Metahub } from '../../../typechain';
+import { ERC721Mock, IWarperPreset, Metahub } from '../../../typechain';
 
+// TODO: refactor the test below so we can eliminate this context override
 declare module 'mocha' {
   interface Context {
     warper: {
-      underTest: IWarperPreset;
-      metahub: Metahub;
-      originalAsset: ERC721;
       forwarder: {
         call: () => Promise<string>;
         expected: string;
@@ -19,16 +18,26 @@ declare module 'mocha' {
  * Core warper method functionality
  */
 export function shouldBehaveLikeWarper(): void {
-  describe('View Functions', function () {
+  let warperPreset: IWarperPreset;
+  let metahub: FakeContract<Metahub>;
+  let originalAsset: ERC721Mock;
+
+  beforeEach(function () {
+    warperPreset = this.interfaces.warperPreset;
+    metahub = this.mocks.metahub;
+    originalAsset = this.mocks.assets.erc721;
+  });
+
+  describe('View Functions', () => {
     describe('__original', () => {
-      it('returns the original asset address', async function () {
-        await expect(this.warper.underTest.__original()).to.eventually.eq(this.warper.originalAsset.address);
+      it('returns the original asset address', async () => {
+        await expect(warperPreset.__original()).to.eventually.eq(originalAsset.address);
       });
     });
 
     describe('__metahub', () => {
-      it('returns the metahub address', async function () {
-        await expect(this.warper.underTest.__metahub()).to.eventually.equal(this.warper.metahub.address);
+      it('returns the metahub address', async () => {
+        await expect(warperPreset.__metahub()).to.eventually.equal(metahub.address);
       });
     });
 
