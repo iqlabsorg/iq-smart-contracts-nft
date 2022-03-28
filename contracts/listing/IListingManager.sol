@@ -63,27 +63,6 @@ interface IListingManager {
     event ListingUnpaused(uint256 indexed listingId);
 
     /**
-     * @dev Registers new listing strategy.
-     * @param strategyId Listing strategy ID.
-     * @param config Listing strategy configuration.
-     */
-    function registerListingStrategy(bytes4 strategyId, Listings.Strategy calldata config) external;
-
-    /**
-     * @dev Sets listing strategy controller.
-     * @param strategyId Listing strategy ID.
-     * @param controller Listing controller address.
-     */
-    function setListingController(bytes4 strategyId, address controller) external;
-
-    /**
-     * @dev Returns listing strategy configuration.
-     * @param strategyId Listing strategy ID.
-     * @return Listing strategy information.
-     */
-    function listingStrategy(bytes4 strategyId) external view returns (Listings.Strategy memory);
-
-    /**
      * @dev Performs new asset listing.
      * Emits an {AssetListed} event.
      * @param asset Asset to be listed.

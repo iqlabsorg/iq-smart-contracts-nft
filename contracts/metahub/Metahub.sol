@@ -96,6 +96,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     struct MetahubInitParams {
         IWarperPresetFactory warperPresetFactory;
         IAssetClassRegistry assetClassRegistry;
+        IListingStrategyRegistry listingStrategyRegistry;
         IUniverseToken universeToken;
         IACL acl;
         IERC20Upgradeable baseToken;
@@ -114,6 +115,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         _warperRegistry.presetFactory = params.warperPresetFactory;
         _assetRegistry.classRegistry = params.assetClassRegistry;
+        _listingRegistry.strategyRegistry = params.listingStrategyRegistry;
         _universeRegistry.token = params.universeToken;
     }
 
@@ -297,30 +299,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         if (presetData.length == 0) revert EmptyPresetData();
         warper = _deployWarperWithData(original, presetId, presetData);
         _registerWarper(universeId, warper, true);
-    }
-
-    /**
-     * @inheritdoc IListingManager
-     */
-    function registerListingStrategy(bytes4 strategyId, Listings.Strategy calldata config) external onlyAdmin {
-        _listingRegistry.registerStrategy(strategyId, config);
-        //todo: event
-    }
-
-    /**
-     * @inheritdoc IListingManager
-     */
-    function setListingController(bytes4 strategyId, address controller) external onlySupervisor {
-        _listingRegistry.setListingStrategyController(strategyId, controller);
-        //todo: event
-    }
-
-    /**
-     * @inheritdoc IListingManager
-     */
-    function listingStrategy(bytes4 strategyId) external view returns (Listings.Strategy memory) {
-        _listingRegistry.checkListingStrategySupport(strategyId);
-        return _listingRegistry.strategies[strategyId];
     }
 
     /**
@@ -565,7 +543,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     {
         // Calculate lister base fee.
         // Resolve listing controller to calculate lister fee based on selected listing strategy.
-        IListingController listingController = _listingRegistry.strategies[listingParams.strategy].controller;
+        IListingController listingController = _listingRegistry.listingController(listingParams.strategy);
         listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
 
         // Calculate universe base fee.

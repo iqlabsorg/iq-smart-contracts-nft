@@ -20,6 +20,7 @@ import {
   IWarperPresetFactory,
   ERC721AssetController__factory,
   ERC721AssetVaultMock__factory,
+  ListingStrategyRegistry__factory,
 } from '../../../typechain';
 
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
@@ -66,8 +67,19 @@ export async function unitFixtureMetahub() {
   })) as AssetClassRegistry;
   await wait(assetClassRegistry.initialize(acl.address));
 
+  // Deploy Listing Strategy Registry
+  const listingStrategyRegistry = (await upgrades.deployProxy(
+    new ListingStrategyRegistry__factory(deployer),
+    [acl.address],
+    {
+      kind: 'uups',
+      initializer: 'initialize(address)',
+    },
+  )) as AssetClassRegistry;
+
   const deployedAddresses = await hre.run('deploy:metahub-family', {
     acl: acl.address,
+    listingStrategyRegistry: listingStrategyRegistry.address,
     assetClassRegistry: assetClassRegistry.address,
     baseToken: baseToken.address,
     rentalFeePercent: 100,

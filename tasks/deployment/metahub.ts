@@ -5,9 +5,10 @@ import { Metahub, Metahub__factory, UniverseToken__factory, WarperPresetFactory_
 task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `WarperPresetFactory` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
   .addParam('baseToken', 'The base token contract address', undefined, types.string)
+  .addParam('listingStrategyRegistry', 'The `ListingStrategyRegistry` contract address', undefined, types.string)
   .addParam('assetClassRegistry', 'The `AssetClassRegistry` contract address', undefined, types.string)
   .addParam('rentalFeePercent', 'The rental fee percent on metahub', undefined, types.int)
-  .setAction(async ({ acl, baseToken, rentalFeePercent, assetClassRegistry }, hre) => {
+  .setAction(async ({ acl, baseToken, rentalFeePercent, assetClassRegistry, listingStrategyRegistry }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     // Delete the previous deployment
@@ -37,11 +38,12 @@ task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `Warper
     await wait(
       metahub.initialize({
         warperPresetFactory: warperPresetFactory.address,
-        assetClassRegistry: assetClassRegistry,
         universeToken: universeToken.address,
-        acl: acl,
-        baseToken: baseToken,
-        rentalFeePercent: rentalFeePercent,
+        listingStrategyRegistry,
+        assetClassRegistry,
+        acl,
+        baseToken,
+        rentalFeePercent,
       }),
     );
 
