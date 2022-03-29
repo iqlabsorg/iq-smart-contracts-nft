@@ -29,7 +29,7 @@ export function unitTestWarperPresetFactory(): void {
         unitFixtureWarperPresetFactory,
       );
 
-      this.interfaces.iWarperPresetFactory = IWarperPresetFactory__factory.connect(
+      this.contracts.warperPresetFactory = IWarperPresetFactory__factory.connect(
         warperPresetFactory.address,
         warperPresetFactory.signer,
       );

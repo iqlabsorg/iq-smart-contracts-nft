@@ -19,7 +19,7 @@ export function unitTestAssetClassRegistry(): void {
   describe('Asset Class registry', function () {
     beforeEach(async function () {
       const { assetClassRegistry } = await this.loadFixture(unitFixtureAssetClassRegistry);
-      this.interfaces.iAssetClassRegistry = IAssetClassRegistry__factory.connect(
+      this.contracts.assetClassRegistry = IAssetClassRegistry__factory.connect(
         assetClassRegistry.address,
         assetClassRegistry.signer,
       );

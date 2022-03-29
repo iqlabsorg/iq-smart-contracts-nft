@@ -7,24 +7,24 @@ import { RolesLibrary } from '../../shared/utils';
  * Warper preset factory tests
  */
 export function shouldBehaveACL(): void {
-  let iacl: IACL;
+  let acl: IACL;
   let deployer: SignerWithAddress;
 
   beforeEach(function () {
     deployer = this.signers.named['deployer'];
-    iacl = this.interfaces.iAcl;
+    acl = this.contracts.acl;
   });
 
   it('exposes `checkRole`', async () => {
-    const adminRole = await iacl.adminRole();
-    await expect(iacl.checkRole(adminRole, deployer.address)).to.not.be.reverted;
+    const adminRole = await acl.adminRole();
+    await expect(acl.checkRole(adminRole, deployer.address)).to.not.be.reverted;
   });
 
   it('exposes `adminRole`', async () => {
-    await expect(iacl.adminRole()).to.eventually.equal(RolesLibrary.ADMIN_ROLE);
+    await expect(acl.adminRole()).to.eventually.equal(RolesLibrary.ADMIN_ROLE);
   });
 
   it('exposes `supervisorRole`', async () => {
-    await expect(iacl.supervisorRole()).to.eventually.equal(RolesLibrary.SUPERVISOR_ROLE);
+    await expect(acl.supervisorRole()).to.eventually.equal(RolesLibrary.SUPERVISOR_ROLE);
   });
 }

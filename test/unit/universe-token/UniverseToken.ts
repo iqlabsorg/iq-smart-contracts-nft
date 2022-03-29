@@ -32,7 +32,7 @@ export function unitTestUniverseToken(): void {
   describe('UniverseToken', function () {
     beforeEach(async function () {
       const { universeToken, metahub } = await this.loadFixture(unitFixtureUniverseTokenMock);
-      this.interfaces.iUniverseToken = IUniverseToken__factory.connect(universeToken.address, universeToken.signer);
+      this.contracts.universeToken = IUniverseToken__factory.connect(universeToken.address, universeToken.signer);
       this.mocks.metahub = metahub;
     });
 

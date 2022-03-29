@@ -16,7 +16,7 @@ export function unitTestACL(): void {
     beforeEach(async function () {
       const { acl } = await this.loadFixture(unitFixtureACL);
 
-      this.interfaces.iAcl = IACL__factory.connect(acl.address, acl.signer);
+      this.contracts.acl = IACL__factory.connect(acl.address, acl.signer);
     });
 
     shouldBehaveACL();

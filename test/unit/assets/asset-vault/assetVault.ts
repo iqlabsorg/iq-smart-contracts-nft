@@ -1,5 +1,11 @@
 import hre, { ethers } from 'hardhat';
-import { ACL__factory, ERC721AssetVault__factory, ERC721Mock__factory } from '../../../../typechain';
+import {
+  ACL__factory,
+  ERC721AssetVault__factory,
+  ERC721Mock__factory,
+  IAssetVault__factory,
+  IERC721AssetVault__factory,
+} from '../../../../typechain';
 import { shouldBehaveLikeAssetVault } from './assetVault.behaviour';
 import { shouldBehaveLikeERC721AssetVault } from './ERC721AssetVault.behaviour';
 
@@ -31,7 +37,8 @@ export function unitTestAssetVault(): void {
   describe('ERC721AssetVault', function () {
     beforeEach(async function () {
       const { vault, asset } = await this.loadFixture(unitFixtureERC721AssetsVault);
-      this.contracts.erc721assetVault = vault;
+      this.contracts.assetVault = IAssetVault__factory.connect(vault.address, vault.signer);
+      this.contracts.erc721assetVault = IERC721AssetVault__factory.connect(vault.address, vault.signer);
       this.mocks.assets.erc721 = asset;
     });
 

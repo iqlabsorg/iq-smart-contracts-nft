@@ -21,7 +21,7 @@ export function shouldBehaveLikeUniverseToken(): void {
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
-      universeToken = this.interfaces.iUniverseToken;
+      universeToken = this.contracts.universeToken;
 
       universeOwner = this.signers.named['universeOwner'];
 

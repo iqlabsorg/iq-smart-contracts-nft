@@ -1,10 +1,10 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper } from '../../../../../../typechain';
+import { IERC721Warper } from '../../../../../../typechain';
 
 export function shouldBehaveLikeSetApprovalForAl(): void {
   describe('setApprovalForAll', () => {
-    let erc721warper: ERC721Warper;
+    let erc721warper: IERC721Warper;
     let assetOwner: SignerWithAddress;
     let operator: SignerWithAddress;
 

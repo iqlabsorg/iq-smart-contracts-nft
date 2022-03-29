@@ -12,7 +12,7 @@ export function shouldBehaveLikeAddingANewPreset(): void {
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
-      warperPresetFactory = this.interfaces.iWarperPresetFactory;
+      warperPresetFactory = this.contracts.warperPresetFactory;
 
       [stranger] = this.signers.unnamed;
       warperImpl1 = this.mocks.warperPreset[0];

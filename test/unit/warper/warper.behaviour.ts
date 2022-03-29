@@ -23,7 +23,7 @@ export function shouldBehaveLikeWarper(): void {
   let originalAsset: ERC721Mock;
 
   beforeEach(function () {
-    warperPreset = this.interfaces.warperPreset;
+    warperPreset = this.contracts.warperPreset;
     metahub = this.mocks.metahub;
     originalAsset = this.mocks.assets.erc721;
   });

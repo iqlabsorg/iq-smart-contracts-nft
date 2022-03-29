@@ -10,7 +10,7 @@ export function shouldBehaveLikeRemovePreset(): void {
     let stranger: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.interfaces.iWarperPresetFactory;
+      warperPresetFactory = this.contracts.warperPresetFactory;
 
       [stranger] = this.signers.unnamed;
       await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);

@@ -19,6 +19,13 @@ import {
   UUPSUpgradeable__factory,
   AssetClassRegistry,
   ListingStrategyRegistry,
+  IMetahub__factory,
+  IACL__factory,
+  IERC721AssetVault__factory,
+  IAssetController__factory,
+  IAssetClassRegistry__factory,
+  IUniverseToken__factory,
+  IWarperPresetFactory__factory,
 } from '../../../typechain';
 
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
@@ -109,20 +116,32 @@ export function unitTestMetahub(): void {
       } = await this.loadFixture(unitFixtureMetahub);
 
       // Interfaces/Subclasses under test
-      this.interfaces.iListingManager = IListingManager__factory.connect(metahub.address, metahub.signer);
-      this.interfaces.iRentingManager = IRentingManager__factory.connect(metahub.address, metahub.signer);
-      this.interfaces.iUniverseManager = IUniverseManager__factory.connect(metahub.address, metahub.signer);
-      this.interfaces.iWarperManager = IWarperManager__factory.connect(metahub.address, metahub.signer);
+      this.contracts.metahub = IMetahub__factory.connect(metahub.address, metahub.signer);
+      this.contracts.listingManager = IListingManager__factory.connect(metahub.address, metahub.signer);
+      this.contracts.rentingManager = IRentingManager__factory.connect(metahub.address, metahub.signer);
+      this.contracts.universeManager = IUniverseManager__factory.connect(metahub.address, metahub.signer);
+      this.contracts.warperManager = IWarperManager__factory.connect(metahub.address, metahub.signer);
       this.contracts.uupsUpgradeable = UUPSUpgradeable__factory.connect(metahub.address, metahub.signer);
 
       // Common dependencies
+      this.contracts.erc721assetVault = IERC721AssetVault__factory.connect(erc721Vault.address, erc721Vault.signer);
+      this.contracts.assetController = IAssetController__factory.connect(
+        erc721Controller.address,
+        erc721Controller.signer,
+      );
+      this.contracts.assetClassRegistry = IAssetClassRegistry__factory.connect(
+        assetClassRegistry.address,
+        assetClassRegistry.signer,
+      );
+      this.contracts.universeToken = IUniverseToken__factory.connect(universeToken.address, universeToken.signer);
+      this.contracts.acl = IACL__factory.connect(acl.address, acl.signer);
+      this.contracts.warperPresetFactory = IWarperPresetFactory__factory.connect(
+        warperPresetFactory.address,
+        warperPresetFactory.signer,
+      );
+
+      // Mocks
       this.mocks.assets.erc721 = originalAsset;
-      this.contracts.erc721assetVault = erc721Vault;
-      this.contracts.erc721AssetController = erc721Controller;
-      this.contracts.assetClassRegistry = assetClassRegistry;
-      this.contracts.universeToken = universeToken;
-      this.contracts.acl = acl;
-      this.contracts.warperPresetFactory = warperPresetFactory;
     });
 
     shouldBehaveLikeMetahub();

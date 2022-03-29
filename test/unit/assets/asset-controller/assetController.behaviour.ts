@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { expect } from 'chai';
-import { ERC721, IAssetController, Warper } from '../../../../typechain';
+import { ERC721Mock, IAssetController, IWarper } from '../../../../typechain';
 
 export function shouldBehaveLikeIAssetController(): void {
   describe('IAssetController', function () {
-    let warper: Warper;
-    let notWarper: ERC721;
+    let warper: IWarper;
+    let notWarper: ERC721Mock;
     let assetController: IAssetController;
 
     beforeEach(function () {
-      notWarper = this.mocks.assets.erc721 as unknown as ERC721;
+      notWarper = this.mocks.assets.erc721;
       warper = this.contracts.warper;
       assetController = this.contracts.assetController;
     });

@@ -34,68 +34,63 @@ import {
   Multicall,
   IWarperPresetFactory,
   IUniverseToken,
+  IMetahub,
+  IERC721AssetVault,
+  IERC721WarperController,
+  IWarper,
+  IAssetVault,
+  IERC721Warper,
 } from '../../typechain';
-import { ACL } from '../../typechain/ACL';
 
 declare module 'mocha' {
   interface Context {
     contracts: Contracts;
     loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     mocks: Mocks;
-    interfaces: Interfaces;
     signers: Signers;
   }
 }
 
 export interface Contracts {
-  metahub: Metahub;
-  assetClassRegistry: AssetClassRegistry;
-  universeToken: UniverseToken;
-  warperPresetFactory: WarperPresetFactory;
-  erc721assetVault: ERC721AssetVault;
-  erc721WarperController: ERC721WarperController;
-  erc721AssetController: ERC721AssetController;
-  assetController: IAssetController;
-  warper: Warper;
-  erc721Warper: ERC721Warper;
-  warperPreset: IWarperPreset;
-  acl: ACL;
-  presets: {
-    erc721Configurable: ERC721PresetConfigurable;
-  };
+  // Metahub
+  listingManager: IListingManager;
+  rentingManager: IRentingManager;
+  universeManager: IUniverseManager;
+  warperManager: IWarperManager;
+  metahub: IMetahub;
 
-  // Misc tests
-  ownable: Ownable;
-  multicall: Multicall;
-  uupsUpgradeable: UUPSUpgradeable;
-  configurableAvailabilityPeriodExtension: ConfigurableAvailabilityPeriodExtension;
-  configurableRentalPeriodExtension: ConfigurableRentalPeriodExtension;
-}
-
-export interface Interfaces {
   // acl
-  iAcl: IACL;
+  acl: IACL;
 
   // Assets
-  iAssetClassRegistry: IAssetClassRegistry;
+  assetClassRegistry: IAssetClassRegistry;
 
   // Universe token
-  iUniverseToken: IUniverseToken;
+  universeToken: IUniverseToken;
 
-  // Metahub
-  iListingManager: IListingManager;
-  iRentingManager: IRentingManager;
-  iUniverseManager: IUniverseManager;
-  iWarperManager: IWarperManager;
-
-  // Warper preset factory
-  iWarperPresetFactory: IWarperPresetFactory;
-
+  // Warpers
+  warperPresetFactory: IWarperPresetFactory;
+  warperPreset: IWarperPreset;
+  warper: IWarper;
+  erc721Warper: IERC721Warper;
   // Warpers mechanics
   availabilityPeriod: IAvailabilityPeriodMechanics;
   rentalPeriod: IRentalPeriodMechanics;
-  // Warpers
-  warperPreset: IWarperPreset;
+  configurableAvailabilityPeriodExtension: ConfigurableAvailabilityPeriodExtension;
+  configurableRentalPeriodExtension: ConfigurableRentalPeriodExtension;
+
+  // Vault
+  assetVault: IAssetVault;
+  erc721assetVault: IERC721AssetVault;
+
+  // controllers
+  erc721WarperController: IERC721WarperController;
+  assetController: IAssetController;
+
+  // Misc, non-interface tests
+  ownable: Ownable;
+  multicall: Multicall;
+  uupsUpgradeable: UUPSUpgradeable;
 }
 
 export interface Mocks {

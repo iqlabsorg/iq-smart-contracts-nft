@@ -15,11 +15,11 @@ export function shouldBehaveLikeListingManager(): void {
     let nftCreator: SignerWithAddress;
 
     beforeEach(async function () {
-      listingManager = this.interfaces.iListingManager;
+      listingManager = this.contracts.listingManager;
       originalAsset = this.mocks.assets.erc721;
 
       await this.contracts.assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
-        controller: this.contracts.erc721AssetController.address,
+        controller: this.contracts.assetController.address,
         vault: this.contracts.erc721assetVault.address,
       });
     });

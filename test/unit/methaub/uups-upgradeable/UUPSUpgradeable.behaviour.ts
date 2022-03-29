@@ -7,7 +7,7 @@ import { MetahubV2Mock, MetahubV2Mock__factory, UUPSUpgradeable, IACL, ACL } fro
 export function shouldBehaveLikeUUPSUpgradeable(): void {
   describe('upgradeTo', function () {
     let upgradeable: UUPSUpgradeable;
-    let acl: ACL;
+    let acl: IACL;
 
     let deployer: SignerWithAddress;
     let stranger: SignerWithAddress;

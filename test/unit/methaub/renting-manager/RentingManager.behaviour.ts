@@ -10,7 +10,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
       beforeEach(function () {
         // eslint-disable-next-line
-        rentingManager = this.interfaces.iRentingManager;
+        rentingManager = this.contracts.rentingManager;
       });
 
       it('todo'); // TODO

@@ -14,7 +14,7 @@ export function shouldBehaveLikeDeployWarperPreset(): void {
     let deployer: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.interfaces.iWarperPresetFactory;
+      warperPresetFactory = this.contracts.warperPresetFactory;
 
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;

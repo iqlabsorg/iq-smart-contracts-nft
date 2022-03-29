@@ -7,8 +7,8 @@ import {
   AssetClassRegistry,
   ERC721ReceiverMock,
   ERC721ReceiverMock__factory,
-  ERC721Warper,
-  ERC721WarperController,
+  IERC721Warper,
+  IERC721WarperController,
   Metahub,
 } from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
@@ -16,8 +16,8 @@ import { AssetRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {
-    let warper: ERC721Warper;
-    let erc721WarperController: ERC721WarperController;
+    let warper: IERC721Warper;
+    let erc721WarperController: IERC721WarperController;
     let assetOwner: SignerWithAddress;
     let deployer: SignerWithAddress;
 

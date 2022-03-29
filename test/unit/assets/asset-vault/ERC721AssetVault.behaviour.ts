@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ERC721AssetVault, ERC721Mock } from '../../../../typechain';
+import { ERC721Mock, IERC721AssetVault } from '../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 /**
@@ -8,7 +8,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 export function shouldBehaveLikeERC721AssetVault(): void {
   describe('ERC721 Asset Vault', () => {
     const mintedTokenId = 1;
-    let vault: ERC721AssetVault;
+    let vault: IERC721AssetVault;
     let asset: ERC721Mock;
 
     let operator: SignerWithAddress;

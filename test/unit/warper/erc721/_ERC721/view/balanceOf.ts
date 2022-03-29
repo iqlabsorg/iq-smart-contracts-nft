@@ -1,14 +1,14 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper, ERC721WarperController, Metahub } from '../../../../../../typechain';
+import { IERC721Warper, IERC721WarperController, Metahub } from '../../../../../../typechain';
 import { AddressZero } from '../../../../../shared/types';
 
 export function shouldBehaveLikeBalanceOf(): void {
   describe('balanceOf', () => {
     const mintedTokenId = 4455666;
-    let erc721warper: ERC721Warper;
-    let erc721WarperController: ERC721WarperController;
+    let erc721warper: IERC721Warper;
+    let erc721WarperController: IERC721WarperController;
     let metahub: FakeContract<Metahub>;
     let assetOwner: SignerWithAddress;
 

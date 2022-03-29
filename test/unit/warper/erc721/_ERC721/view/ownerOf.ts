@@ -1,15 +1,15 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper, ERC721WarperController, Metahub } from '../../../../../../typechain';
+import { IERC721Warper, IERC721WarperController, Metahub } from '../../../../../../typechain';
 import { AssetRentalStatus } from '../../../../../shared/utils';
 
 export function shouldBehaveLikeOwnerOf(): void {
   describe('ownerOf', () => {
     const mintedTokenId = 4455666;
 
-    let erc721warper: ERC721Warper;
-    let erc721WarperController: ERC721WarperController;
+    let erc721warper: IERC721Warper;
+    let erc721WarperController: IERC721WarperController;
     let metahub: FakeContract<Metahub>;
     let assetOwner: SignerWithAddress;
 

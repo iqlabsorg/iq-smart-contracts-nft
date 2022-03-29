@@ -19,6 +19,8 @@ import {
   IAvailabilityPeriodMechanics,
   IAvailabilityPeriodMechanics__factory,
   IERC165__factory,
+  IERC721WarperController__factory,
+  IERC721Warper__factory,
   IRentalPeriodMechanics,
   IRentalPeriodMechanics__factory,
   IWarperPreset,
@@ -102,15 +104,18 @@ export function unitTestWarpers(): void {
       );
       this.mocks.assetClassRegistry = assetClassRegistry;
       this.mocks.metahub = metahub;
-      this.contracts.erc721WarperController = erc721WarperController;
+      this.contracts.erc721WarperController = IERC721WarperController__factory.connect(
+        erc721WarperController.address,
+        erc721WarperController.signer,
+      );
       this.mocks.assets.erc721 = oNFT;
 
       // Mechanics under test
-      this.interfaces.availabilityPeriod = IAvailabilityPeriodMechanics__factory.connect(
+      this.contracts.availabilityPeriod = IAvailabilityPeriodMechanics__factory.connect(
         erc721Warper.address,
         erc721Warper.signer,
       );
-      this.interfaces.rentalPeriod = IRentalPeriodMechanics__factory.connect(erc721Warper.address, erc721Warper.signer);
+      this.contracts.rentalPeriod = IRentalPeriodMechanics__factory.connect(erc721Warper.address, erc721Warper.signer);
       this.contracts.configurableAvailabilityPeriodExtension = ConfigurableAvailabilityPeriodExtension__factory.connect(
         erc721Warper.address,
         erc721Warper.signer,
@@ -120,9 +125,9 @@ export function unitTestWarpers(): void {
         erc721Warper.signer,
       );
 
-      // Warper interfaces
-      this.contracts.erc721Warper = ERC721Warper__factory.connect(erc721Warper.address, erc721Warper.signer);
-      this.interfaces.warperPreset = IWarperPreset__factory.connect(erc721Warper.address, erc721Warper.signer);
+      // Warper contracts
+      this.contracts.erc721Warper = IERC721Warper__factory.connect(erc721Warper.address, erc721Warper.signer);
+      this.contracts.warperPreset = IWarperPreset__factory.connect(erc721Warper.address, erc721Warper.signer);
       this.contracts.multicall = Multicall__factory.connect(erc721Warper.address, erc721Warper.signer);
       this.warper = {
         forwarder: {

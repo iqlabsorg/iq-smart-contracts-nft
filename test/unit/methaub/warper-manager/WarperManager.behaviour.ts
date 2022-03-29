@@ -1,7 +1,13 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { ERC721Mock, ERC721Mock__factory, IWarperManager, WarperPresetFactory } from '../../../../typechain';
+import {
+  ERC721Mock,
+  ERC721Mock__factory,
+  IWarperManager,
+  IWarperPresetFactory,
+  WarperPresetFactory,
+} from '../../../../typechain';
 import { createUniverse, deployWarper } from '../../../shared/utils';
 import { warperPresetId } from '../Metahub';
 
@@ -11,7 +17,7 @@ import { warperPresetId } from '../Metahub';
 export function shouldBehaveLikeWarperManager(): void {
   describe('IWarperManager', function () {
     let warperManager: IWarperManager;
-    let warperPresetFactory: WarperPresetFactory;
+    let warperPresetFactory: IWarperPresetFactory;
     let originalAsset: ERC721Mock;
 
     let deployer: SignerWithAddress;
@@ -21,10 +27,10 @@ export function shouldBehaveLikeWarperManager(): void {
     beforeEach(async function () {
       originalAsset = this.mocks.assets.erc721;
       warperPresetFactory = this.contracts.warperPresetFactory;
-      warperManager = this.interfaces.iWarperManager;
+      warperManager = this.contracts.warperManager;
 
       // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
-      universeId = await createUniverse(this.interfaces.iUniverseManager, {
+      universeId = await createUniverse(this.contracts.universeManager, {
         name: 'IQ Universe',
         rentalFeePercent: 1000,
       });

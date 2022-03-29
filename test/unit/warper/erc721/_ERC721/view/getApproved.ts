@@ -1,14 +1,14 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721Warper, Metahub } from '../../../../../../typechain';
+import { IERC721Warper, Metahub } from '../../../../../../typechain';
 
 export function shouldBehaveLikeGetApproved(): void {
   describe('getApproved', function () {
     const nonExistentTokenId = 42;
     const mintedTokenId = 4455666;
 
-    let erc721warper: ERC721Warper;
+    let erc721warper: IERC721Warper;
     let metahub: FakeContract<Metahub>;
     let assetOwner: SignerWithAddress;
 

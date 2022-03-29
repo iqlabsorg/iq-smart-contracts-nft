@@ -6,6 +6,8 @@ import {
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
   IAssetController,
+  IAssetController__factory,
+  IWarper__factory,
   Metahub,
   Metahub__factory,
   Warper,
@@ -50,8 +52,11 @@ export function unitTestAssetController(): void {
       const { originalNft, erc721AssetController, warper } = await this.loadFixture(unitFixtureERC721AssetsController);
 
       this.mocks.assets.erc721 = originalNft;
-      this.contracts.warper = warper as unknown as Warper;
-      this.contracts.assetController = erc721AssetController as unknown as IAssetController;
+      this.contracts.warper = IWarper__factory.connect(warper.address, warper.signer);
+      this.contracts.assetController = IAssetController__factory.connect(
+        erc721AssetController.address,
+        erc721AssetController.signer,
+      );
     });
 
     shouldBehaveLikeIAssetController();

@@ -7,11 +7,11 @@ import { MaxUint32 } from '../../../../shared/utils';
 export function shouldBehaveLikeAvailabilityPeriod(): void {
   describe('Availability period', function () {
     it('__availabilityPeriodStart', async function () {
-      await expect(this.interfaces.availabilityPeriod.__availabilityPeriodStart()).to.eventually.equal(0);
+      await expect(this.contracts.availabilityPeriod.__availabilityPeriodStart()).to.eventually.equal(0);
     });
 
     it('__availabilityPeriodEnd', async function () {
-      await expect(this.interfaces.availabilityPeriod.__availabilityPeriodEnd()).to.eventually.equal(MaxUint32);
+      await expect(this.contracts.availabilityPeriod.__availabilityPeriodEnd()).to.eventually.equal(MaxUint32);
     });
   });
 }

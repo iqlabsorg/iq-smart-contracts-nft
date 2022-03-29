@@ -19,7 +19,7 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
 
     beforeEach(function () {
       deployer = this.signers.named['deployer'];
-      assetClassRegistry = this.interfaces.iAssetClassRegistry;
+      assetClassRegistry = this.contracts.assetClassRegistry;
     });
 
     describe('Asset Controller Management', () => {

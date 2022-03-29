@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { IUniverseManager, UniverseToken } from '../../../../typechain';
+import { IUniverseManager, IUniverseToken } from '../../../../typechain';
 
 /**
  * The metahub contract behaves like IWarperManager
@@ -7,10 +7,10 @@ import { IUniverseManager, UniverseToken } from '../../../../typechain';
 export function shouldBehaveLikeUniverseManager(): void {
   describe('IUniverseManager', function () {
     let universeManager: IUniverseManager;
-    let universeToken: UniverseToken;
+    let universeToken: IUniverseToken;
 
     beforeEach(function () {
-      universeManager = this.interfaces.iUniverseManager;
+      universeManager = this.contracts.universeManager;
       universeToken = this.contracts.universeToken;
     });
 
