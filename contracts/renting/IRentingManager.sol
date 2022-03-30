@@ -10,12 +10,24 @@ interface IRentingManager {
      * @dev Thrown when the estimated rental fee calculated upon renting
      * is higher than maximal payment amount the renter is willing to pay.
      */
-    error RentalPriceSlippage();
+    error RentalFeeSlippage();
 
     /**
      * @dev Thrown when the message sender doesn't match the renter address.
      */
     error CallerIsNotRenter();
+
+    /**
+     * @dev Rental fee breakdown.
+     */
+    struct RentalFees {
+        uint256 listerBaseFee;
+        uint256 listerPremium;
+        uint256 universeBaseFee;
+        uint256 universePremium;
+        uint256 protocolFee;
+        uint256 total;
+    }
 
     /**
      * @dev Returns token amount from specific collection rented by particular account.
@@ -35,24 +47,9 @@ interface IRentingManager {
     /**
      * @dev Evaluates renting params and returns rental fee breakdown.
      * @param rentingParams Renting parameters.
-     * @return listerBaseFee
-     * @return listerPremium
-     * @return universeBaseFee
-     * @return universePremium
-     * @return protocolFee
-     * @return total
+     * @return Rental fee breakdown.
      */
-    function estimateRent(Rentings.Params calldata rentingParams)
-        external
-        view
-        returns (
-            uint256 listerBaseFee,
-            uint256 listerPremium,
-            uint256 universeBaseFee,
-            uint256 universePremium,
-            uint256 protocolFee,
-            uint256 total
-        );
+    function estimateRent(Rentings.Params calldata rentingParams) external view returns (RentalFees memory);
 
     /**
      * @dev Performs renting operation.

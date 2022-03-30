@@ -20,7 +20,6 @@ library Assets {
     /*
      * @dev This is the list of asset class identifiers to be used across the system.
      */
-    bytes4 public constant ERC20 = bytes4(keccak256("ERC20"));
     bytes4 public constant ERC721 = bytes4(keccak256("ERC721"));
     bytes4 public constant ERC1155 = bytes4(keccak256("ERC1155"));
 
@@ -49,8 +48,7 @@ library Assets {
     /**
      * @dev Communicates asset identification information.
      * The structure designed to be token-standard agnostic, so the layout of `data` might vary for different token standards.
-     * For example, in case of ERC20 token, the `data` will contain contract address only,
-     * and for ERC721 it will include both contract address and tokenId.
+     * For example, in case of ERC721 token, the `data` will contain contract address and tokenId.
      * @param class Asset class ID
      * @param data Asset identification data.
      */

@@ -38,12 +38,14 @@ library Rentings {
      * @param warper Warper address.
      * @param renter Renter address.
      * @param rentalPeriod Desired period of asset renting.
+     * @param paymentToken The token address which renter offers as a mean of payment.
      */
     struct Params {
         uint256 listingId;
         address warper;
         address renter;
         uint32 rentalPeriod;
+        address paymentToken;
     }
 
     // todo: docs

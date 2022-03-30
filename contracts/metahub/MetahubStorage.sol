@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
+import "../accounting/Accounts.sol";
 import "../acl/IACL.sol";
 import "../universe/Universes.sol";
 import "../asset/Assets.sol";
@@ -18,6 +19,11 @@ abstract contract MetahubStorage {
      * @dev Protocol configuration.
      */
     Protocol.Config internal _protocol;
+
+    /**
+     * @dev Account registry contains the data about participants' accounts and their current balances.
+     */
+    Accounts.Registry internal _accountRegistry;
 
     /**
      * @dev Universe registry contains the data about all registered universes and their settings.
