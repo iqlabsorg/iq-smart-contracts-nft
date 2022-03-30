@@ -15,10 +15,10 @@ interface IWarperManager {
     /**
      * @dev Emitted when a new warper is registered.
      * @param universeId Universe ID.
-     * @param original Original asset contract address.
      * @param warper Warper address.
+     * @param original Original asset address.
      */
-    event WarperRegistered(uint256 indexed universeId, address indexed original, address indexed warper);
+    event WarperRegistered(uint256 indexed universeId, address indexed warper, address indexed original);
 
     /**
      * @dev Emitted when the warper is paused.
@@ -59,6 +59,15 @@ interface IWarperManager {
         bytes32 presetId,
         bytes calldata presetData
     ) external returns (address);
+
+    /**
+     * @dev Registers a new custom warper.
+     * The warper must be deployed and configured prior to registration,
+     * since it becomes available for renting immediately.
+     * @param universeId Universe ID.
+     * @param warper Warper address.
+     */
+    function registerWarper(address warper, uint256 universeId) external;
 
     /**
      * @dev Returns the list of warpers belonging to the particular universe.

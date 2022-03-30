@@ -325,6 +325,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc IWarperManager
+     */
+    function registerWarper(address warper, uint256 universeId) external onlyUniverseOwner(universeId) {
+        _registerWarper(universeId, warper, false);
+    }
+
+    /**
      * @inheritdoc IListingManager
      */
     function listAsset(
