@@ -3,6 +3,7 @@ import {
   ACL__factory,
   ERC721AssetVault__factory,
   ERC721Mock__factory,
+  IACL__factory,
   IAssetVault__factory,
   IERC721AssetVault__factory,
 } from '../../../../typechain';
@@ -29,16 +30,17 @@ export async function unitFixtureERC721AssetsVault() {
         name: 'ONFT',
       }),
     ),
-    acl: new ACL__factory(deployer).attach(await hre.run('deploy:acl')),
+    acl: new ACL__factory(deployer).attach(deployedACL),
   };
 }
 
 export function unitTestAssetVault(): void {
   describe('ERC721AssetVault', function () {
     beforeEach(async function () {
-      const { vault, asset } = await this.loadFixture(unitFixtureERC721AssetsVault);
+      const { vault, asset, acl } = await this.loadFixture(unitFixtureERC721AssetsVault);
       this.contracts.assetVault = IAssetVault__factory.connect(vault.address, vault.signer);
       this.contracts.erc721assetVault = IERC721AssetVault__factory.connect(vault.address, vault.signer);
+      this.contracts.acl = IACL__factory.connect(acl.address, acl.signer);
       this.mocks.assets.erc721 = asset;
     });
 

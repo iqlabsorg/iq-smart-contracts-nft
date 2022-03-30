@@ -1,8 +1,9 @@
 import { ethers } from 'hardhat';
-import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction } from 'ethers';
+import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction, Signer } from 'ethers';
 import { IUniverseManager, IWarperManager, IWarperPresetFactory, Metahub, WarperPresetFactory } from '../../typechain';
 import { Assets, WarperRegisteredEvent } from '../../typechain/Metahub';
 import { wait } from '../../tasks';
+import { expect } from 'chai';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 

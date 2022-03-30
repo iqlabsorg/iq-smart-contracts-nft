@@ -3,6 +3,7 @@ import { TASK_TEST_SETUP_TEST_ENVIRONMENT } from 'hardhat/builtin-tasks/task-nam
 import { subtask } from 'hardhat/config';
 import chai, { Assertion } from 'chai';
 import { BigNumber } from 'ethers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 declare global {
   //eslint-disable-next-line @typescript-eslint/no-namespace
@@ -21,6 +22,14 @@ declare global {
        */
       equalStruct(expectedStruct: Record<string, any>): AsyncAssertion;
     }
+    interface Assertion {
+      /**
+       * Check if the ACL reverted with the expected error message
+       * @param account The signer
+       * @param role The bytes32 string
+       */
+      revertedByACL(account: string, role: string): AsyncAssertion;
+    }
   }
 }
 
@@ -29,6 +38,12 @@ Assertion.addMethod('revertedWithError', function (error: string, ...expectedArg
   const reason = `${error}(${args})`;
 
   return new Assertion(this._obj).to.be.revertedWith(reason);
+});
+
+Assertion.addMethod('revertedByACL', function (account: string, role: string) {
+  return new Assertion(this._obj).to.be.revertedWith(
+    `AccessControl: account ${account.toLowerCase()} is missing role ${role}`,
+  );
 });
 
 // Override default subtask to add chai plugins

@@ -63,8 +63,6 @@ export function shouldBehaveLikeUniverseToken(): void {
 
     describe('Effect Functions', function () {
       describe('mint', function () {
-        let mintTx: ContractTransaction;
-
         it('reverts when mint msg.sender is not metahub', async function () {
           await expect(universeToken.mint(universeOwner.address, universeName)).to.be.revertedWith(
             'CallerIsNotMetahub',
@@ -87,6 +85,8 @@ export function shouldBehaveLikeUniverseToken(): void {
         });
 
         context('when mint msg.sender is metahub', function () {
+          let mintTx: ContractTransaction;
+
           beforeEach(async function () {
             mintTx = await universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName);
           });
