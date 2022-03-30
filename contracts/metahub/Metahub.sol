@@ -342,7 +342,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _assetRegistry.transferAssetToVault(asset, _msgSender());
 
         // Register listing.
-        Listings.Listing memory listing = Listings.Listing(_msgSender(), asset, params, maxLockPeriod, 0, false, false);
+        Listings.Listing memory listing = Listings.Listing({
+            asset: asset,
+            params: params,
+            lister: _msgSender(),
+            maxLockPeriod: maxLockPeriod,
+            lockedTill: 0,
+            delisted: false,
+            paused: false
+        });
         uint256 listingId = _listingRegistry.register(listing);
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);

@@ -60,18 +60,18 @@ library Listings {
 
     /**
      * @dev Listing structure.
-     * @param lister Lister account address.
      * @param asset Listed asset structure.
      * @param params Listing strategy parameters.
+     * @param lister Lister account address.
      * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
      * @param lockedTill The earliest possible time when the asset can be returned to the owner.
      * @param delisted Indicates whether the asset is delisted.
      * @param paused Indicates whether the listing is paused.
      */
     struct Listing {
-        address lister; // todo: move after params
         Assets.Asset asset;
         Params params;
+        address lister;
         uint32 maxLockPeriod;
         uint32 lockedTill;
         bool delisted;
