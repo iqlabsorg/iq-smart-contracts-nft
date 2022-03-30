@@ -95,7 +95,7 @@ contract UniverseToken is IUniverseToken, UUPSUpgradeable, ERC721Upgradeable, Ac
     /**
      * @inheritdoc AccessControlledUpgradeable
      */
-    function _acl() internal override returns (IACL) {
+    function _acl() internal view override returns (IACL) {
         return _aclContract;
     }
 
