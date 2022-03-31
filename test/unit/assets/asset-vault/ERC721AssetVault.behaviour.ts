@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { ERC721Mock, IERC721AssetVault } from '../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { AssetClass } from '../../../shared/utils';
 
 /**
  * Tests for ERC721 Asset Vault specific behaviour
@@ -12,14 +13,19 @@ export function shouldBehaveLikeERC721AssetVault(): void {
     let asset: ERC721Mock;
 
     let operator: SignerWithAddress;
+    let admin: SignerWithAddress;
+    let deployer: SignerWithAddress;
     let assetOwner: SignerWithAddress;
 
     beforeEach(async function () {
       operator = this.signers.named['operator'];
+      deployer = this.signers.named['deployer'];
 
-      [assetOwner] = this.signers.unnamed;
+      [assetOwner, admin] = this.signers.unnamed;
       asset = this.mocks.assets.erc721;
       vault = this.contracts.erc721assetVault;
+
+      await this.contracts.acl.connect(deployer).grantRole(await this.contracts.acl.adminRole(), admin.address);
 
       await asset.mint(assetOwner.address, mintedTokenId);
       await asset.connect(assetOwner).setApprovalForAll(operator.address, true);
@@ -46,8 +52,50 @@ export function shouldBehaveLikeERC721AssetVault(): void {
       });
     });
 
+    describe('assetClass', () => {
+      it('returns successfully', async () => {
+        await expect(vault.assetClass()).to.eventually.equal(AssetClass.ERC721);
+      });
+    });
+
     describe('returnToOwner', () => {
-      it('todo');
+      beforeEach(async () => {
+        await asset
+          .connect(operator)
+          .functions['safeTransferFrom(address,address,uint256)'](assetOwner.address, vault.address, mintedTokenId);
+      });
+
+      context('asset return not allowed', () => {
+        it('reverts', async () => {
+          await expect(vault.returnToOwner(asset.address, mintedTokenId)).to.be.revertedWith(
+            'AssetReturnIsNotAllowed()',
+          );
+        });
+      });
+
+      context('asset return allowed', () => {
+        beforeEach(async () => {
+          await vault.connect(admin).switchToRecoveryMode();
+        });
+
+        context('invalid asset id', () => {
+          const invalidTokenId = 2;
+
+          it('reverts', async () => {
+            await expect(vault.returnToOwner(assetOwner.address, invalidTokenId)).to.be.revertedWith('AssetNotFound()');
+          });
+        });
+
+        context('valid asset id', () => {
+          it('successfully transfers the token', async () => {
+            await expect(() => vault.returnToOwner(asset.address, mintedTokenId)).to.changeTokenBalance(
+              asset,
+              assetOwner,
+              1,
+            );
+          });
+        });
+      });
     });
   });
 }
