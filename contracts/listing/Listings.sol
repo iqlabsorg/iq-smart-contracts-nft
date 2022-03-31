@@ -65,6 +65,8 @@ library Listings {
      * @param lister Lister account address.
      * @param maxLockPeriod The maximum amount of time the asset owner can wait before getting the asset back.
      * @param lockedTill The earliest possible time when the asset can be returned to the owner.
+     * @param immediatePayout Indicates whether the rental fee must be transferred to the lister account on every renting.
+     * If FALSE, the rental fees get accumulated until withdrawn manually.
      * @param delisted Indicates whether the asset is delisted.
      * @param paused Indicates whether the listing is paused.
      */
@@ -74,6 +76,7 @@ library Listings {
         address lister;
         uint32 maxLockPeriod;
         uint32 lockedTill;
+        bool immediatePayout;
         bool delisted;
         bool paused;
     }
@@ -139,7 +142,7 @@ library Listings {
      * @dev Listing related data associated with the specific account.
      * @param listingIndex The set of listing IDs.
      */
-    struct Lister {
+    struct ListerInfo {
         EnumerableSetUpgradeable.UintSet listingIndex;
     }
 
@@ -154,7 +157,7 @@ library Listings {
         CountersUpgradeable.Counter idTracker; // todo: reduce size
         IListingStrategyRegistry strategyRegistry;
         mapping(uint256 => Listing) listings;
-        mapping(address => Lister) listers;
+        mapping(address => ListerInfo) listers;
     }
 
     /**

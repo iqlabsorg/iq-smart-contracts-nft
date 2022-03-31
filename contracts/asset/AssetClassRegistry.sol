@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./IAssetClassRegistry.sol";
 import "../acl/AccessControlledUpgradeable.sol";
+import "../Errors.sol";
 
 contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
     /**

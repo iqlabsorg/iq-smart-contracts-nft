@@ -68,12 +68,15 @@ interface IListingManager {
      * @param asset Asset to be listed.
      * @param params Listing strategy parameters.
      * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
+     * @param immediatePayout Indicates whether the rental fee must be transferred to the lister account on every renting.
+     * If FALSE, the rental fees get accumulated until withdrawn manually.
      * @return New listing ID.
      */
     function listAsset(
         Assets.Asset calldata asset,
         Listings.Params calldata params,
-        uint32 maxLockPeriod
+        uint32 maxLockPeriod,
+        bool immediatePayout
     ) external returns (uint256);
 
     /**

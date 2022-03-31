@@ -126,26 +126,21 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IRentingManager
      */
-    function estimateRent(Rentings.Params calldata params) external view returns (RentalFees memory) {
-        // Validate renting parameters.
-        (Listings.Listing storage listing, Warpers.Warper storage warper) = _validateRentingParams(params);
-        return _calculateRentalFees(listing.asset, warper, listing.params, params);
+    function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory) {
+        _validateRentingParams(rentingParams);
+        return _calculateRentalFees(rentingParams);
     }
 
     /**
      * @dev Main renting request validation function.
      */
-    function _validateRentingParams(Rentings.Params calldata params)
-        internal
-        view
-        returns (Listings.Listing storage listing, Warpers.Warper storage warper)
-    {
+    function _validateRentingParams(Rentings.Params calldata params) internal view {
         // Validate from the protocol perspective.
         _protocol.checkBaseToken(params.paymentToken);
 
         // Validate from the listing perspective.
         _listingRegistry.checkListed(params.listingId);
-        listing = _listingRegistry.listings[params.listingId];
+        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
         listing.checkNotPaused();
         listing.checkValidLockPeriod(params.rentalPeriod);
 
@@ -153,7 +148,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _assetRegistry.checkCompatibleWarper(listing.asset.id, params.warper);
 
         // Validate from the warper perspective.
-        warper = _warperRegistry.warpers[params.warper];
+        Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
         warper.checkNotPaused();
         warper.controller.validateRentingParams(listing.asset, params);
     }
@@ -163,34 +158,19 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256) {
         // Currently payer must match the renter address since the estimation might be renter specific.
-        address payer = _msgSender();
-        if (payer != rentingParams.renter) revert CallerIsNotRenter();
+        if (_msgSender() != rentingParams.renter) revert CallerIsNotRenter();
 
         // Validate renting parameters.
-        (Listings.Listing storage listing, Warpers.Warper storage warper) = _validateRentingParams(rentingParams);
-        Assets.Asset memory listedAsset = listing.asset;
+        _validateRentingParams(rentingParams);
 
         // Handle payments.
-        _handleRentalPayment(
-            _calculateRentalFees(listedAsset, warper, listing.params, rentingParams),
-            listing.lister,
-            warper.universeId,
-            payer,
-            rentingParams.paymentToken,
-            maxPaymentAmount
-        );
+        _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
 
-        // Warp the asset!
-        (bytes32 collectionId, Assets.Asset memory warpedAsset) = abi.decode(
-            address(warper.controller).functionDelegateCall(
-                abi.encodeWithSelector(
-                    IWarperController.warp.selector,
-                    listedAsset,
-                    rentingParams.warper,
-                    rentingParams.renter
-                )
-            ),
-            (bytes32, Assets.Asset)
+        // Deliver warper asset to the renter!
+        (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
+            rentingParams.listingId,
+            rentingParams.warper,
+            rentingParams.renter
         );
 
         // Register new rental agreement.
@@ -217,33 +197,73 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
-     * @dev Transfers rental payments.
+     * @dev Finds the listed asset and warps it, using corresponding warper controller.
+     * @param listingId Listing ID.
+     * @param warper Warper address.
+     * @param renter Renter address.
+     * @return collectionId Warped collection ID.
+     * @return warpedAsset Warped asset structure.
+     */
+    function _warpListedAsset(
+        uint256 listingId,
+        address warper,
+        address renter
+    ) internal returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
+        Assets.Asset memory asset = _listingRegistry.listings[listingId].asset;
+        address controller = address(_warperRegistry.warpers[warper].controller);
+        (collectionId, warpedAsset) = abi.decode(
+            controller.functionDelegateCall(
+                abi.encodeWithSelector(IWarperController.warp.selector, asset, warper, renter)
+            ),
+            (bytes32, Assets.Asset)
+        );
+    }
+
+    /**
+     * @dev Handles all rental payments.
      */
     function _handleRentalPayment(
-        RentalFees memory fees,
-        address lister,
-        uint256 universeId,
+        Rentings.Params calldata rentingParams,
         address payer,
-        address paymentToken,
         uint256 maxPaymentAmount
     ) internal {
+        // Get precise estimation.
+        Rentings.RentalFees memory fees = _calculateRentalFees(rentingParams);
+        address paymentToken = rentingParams.paymentToken;
+
         // Ensure no rental fee payment slippage.
         if (fees.total > maxPaymentAmount) revert RentalFeeSlippage();
 
-        // Transfer the lister fee part directly to the lister account.
+        // The amount of payment tokens to be accumulated on the Metahub for future payouts.
+        // This will include all fees which are not being paid out immediately.
+        uint256 accumulatedTokens = 0;
+
+        // Handle lister fee component.
+        Listings.Listing storage listing = _listingRegistry.listings[rentingParams.listingId];
         uint256 listerFee = fees.listerBaseFee + fees.listerPremium;
-        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, lister, listerFee);
+        // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
+        // Otherwise increase the lister balance.
+        address lister = listing.lister;
+        if (listing.immediatePayout) {
+            IERC20Upgradeable(paymentToken).safeTransferFrom(payer, lister, listerFee);
+        } else {
+            _accountRegistry.users[lister].increaseBalance(paymentToken, listerFee);
+            accumulatedTokens += listerFee;
+        }
 
-        // Transfer the remaining part of the fees to the metahub and split between the universe and the protocol.
-        uint256 accumulatedFees = fees.total - listerFee;
-        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedFees);
-
-        // Increase universe balance.
+        // Handle universe fee component.
+        uint256 universeId = _warperRegistry.warpers[rentingParams.warper].universeId;
         uint256 universeFee = fees.universeBaseFee + fees.universePremium;
+        // Increase universe balance.
         _accountRegistry.universes[universeId].increaseBalance(paymentToken, universeFee);
+        accumulatedTokens += universeFee;
 
-        // Increase protocol balance.
+        // Handle protocol fee component.
         _accountRegistry.protocol.increaseBalance(paymentToken, fees.protocolFee);
+        accumulatedTokens += fees.protocolFee;
+
+        // Transfer the accumulated token amount from payer to the metahub.
+        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
         // todo: event with balance changes;
     }
 
@@ -337,7 +357,8 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     function listAsset(
         Assets.Asset calldata asset,
         Listings.Params calldata params,
-        uint32 maxLockPeriod
+        uint32 maxLockPeriod,
+        bool immediatePayout
     ) external returns (uint256) {
         // Check that listing asset is supported.
         _assetRegistry.checkAssetSupport(asset.token());
@@ -355,6 +376,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             lister: _msgSender(),
             maxLockPeriod: maxLockPeriod,
             lockedTill: 0,
+            immediatePayout: immediatePayout,
             delisted: false,
             paused: false
         });
@@ -498,6 +520,17 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IPaymentManager
      */
+    function withdrawFunds(
+        address token,
+        uint256 amount,
+        address to
+    ) external {
+        _accountRegistry.users[_msgSender()].withdraw(token, amount, to);
+    }
+
+    /**
+     * @inheritdoc IPaymentManager
+     */
     function baseToken() external view returns (address) {
         return address(_protocol.baseToken);
     }
@@ -528,6 +561,20 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function universeBalances(uint256 universeId) external view returns (Accounts.Balance[] memory) {
         return _accountRegistry.universes[universeId].balances();
+    }
+
+    /**
+     * @inheritdoc IPaymentManager
+     */
+    function balance(address token) external view returns (uint256) {
+        return _accountRegistry.users[_msgSender()].balance(token);
+    }
+
+    /**
+     * @inheritdoc IPaymentManager
+     */
+    function balances() external view returns (Accounts.Balance[] memory) {
+        return _accountRegistry.users[_msgSender()].balances();
     }
 
     /**
@@ -613,18 +660,20 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @dev Performs rental fee calculation and returns the fee breakdown.
      */
-    function _calculateRentalFees(
-        Assets.Asset memory asset,
-        Warpers.Warper memory warper,
-        Listings.Params memory listingParams,
-        Rentings.Params memory rentingParams
-    ) internal view returns (RentalFees memory) {
+    function _calculateRentalFees(Rentings.Params calldata rentingParams)
+        internal
+        view
+        returns (Rentings.RentalFees memory)
+    {
         // Calculate lister base fee.
+        Listings.Listing storage listing = _listingRegistry.listings[rentingParams.listingId];
+        Listings.Params memory listingParams = listing.params;
         // Resolve listing controller to calculate lister fee based on selected listing strategy.
         IListingController listingController = _listingRegistry.listingController(listingParams.strategy);
         uint256 listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
 
         // Calculate universe base fee.
+        Warpers.Warper storage warper = _warperRegistry.warpers[rentingParams.warper];
         uint16 universeRentalFeePercent = _universeRegistry.universes[warper.universeId].rentalFeePercent;
         uint256 universeBaseFee = (listerBaseFee * universeRentalFeePercent) / 10_000;
 
@@ -633,20 +682,23 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Calculate warper premiums.
         (uint256 universePremium, uint256 listerPremium) = warper.controller.calculatePremiums(
-            asset,
+            listing.asset,
             rentingParams,
             universeBaseFee,
             listerBaseFee
         );
 
+        // Calculate TOTAL rental fee.
+        uint256 total = listerBaseFee + listerPremium + universeBaseFee + universePremium + protocolFee;
+
         return
-            RentalFees({
+            Rentings.RentalFees({
+                total: total,
+                protocolFee: protocolFee,
                 listerBaseFee: listerBaseFee,
                 listerPremium: listerPremium,
                 universeBaseFee: universeBaseFee,
-                universePremium: universePremium,
-                protocolFee: protocolFee,
-                total: listerBaseFee + listerPremium + universeBaseFee + universePremium + protocolFee
+                universePremium: universePremium
             });
     }
 }

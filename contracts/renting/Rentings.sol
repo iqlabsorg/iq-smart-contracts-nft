@@ -33,6 +33,18 @@ library Rentings {
     error RentalAgreementConflict(uint256 conflictingRentalId);
 
     /**
+     * @dev Rental fee breakdown.
+     */
+    struct RentalFees {
+        uint256 total;
+        uint256 protocolFee;
+        uint256 listerBaseFee;
+        uint256 listerPremium;
+        uint256 universeBaseFee;
+        uint256 universePremium;
+    }
+
+    /**
      * @dev Renting parameters structure. It is used to encode all the necessary information to estimate and/or fulfill a particular renting request.
      * @param listingId Listing ID. Also allows to identify the asset being rented.
      * @param warper Warper address.

@@ -18,18 +18,6 @@ interface IRentingManager {
     error CallerIsNotRenter();
 
     /**
-     * @dev Rental fee breakdown.
-     */
-    struct RentalFees {
-        uint256 listerBaseFee;
-        uint256 listerPremium;
-        uint256 universeBaseFee;
-        uint256 universePremium;
-        uint256 protocolFee;
-        uint256 total;
-    }
-
-    /**
      * @dev Returns token amount from specific collection rented by particular account.
      * @param warpedCollectionId Warped collection ID.
      * @param renter The renter account address.
@@ -49,7 +37,7 @@ interface IRentingManager {
      * @param rentingParams Renting parameters.
      * @return Rental fee breakdown.
      */
-    function estimateRent(Rentings.Params calldata rentingParams) external view returns (RentalFees memory);
+    function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory);
 
     /**
      * @dev Performs renting operation.

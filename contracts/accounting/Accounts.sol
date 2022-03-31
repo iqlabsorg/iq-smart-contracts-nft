@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./EnumerableMapUpgradeable.sol";
+import "../renting/Rentings.sol";
 
 library Accounts {
     using Accounts for Account;
@@ -89,11 +90,13 @@ library Accounts {
 
     /**
      * @dev Account registry.
-     * @param protocol The protocol account.
-     * @param universes Mapping from a universe ID to the universe account.
+     * @param protocol The protocol account state.
+     * @param universes Mapping from a universe ID to the universe account state.
+     * @param users Mapping from a user address to the account state.
      */
     struct Registry {
         Account protocol;
         mapping(uint256 => Account) universes;
+        mapping(address => Account) users;
     }
 }
