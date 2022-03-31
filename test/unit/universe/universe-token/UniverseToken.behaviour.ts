@@ -2,8 +2,8 @@ import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ContractTransaction, Signer } from 'ethers';
-import { IUniverseToken, Metahub } from '../../../typechain';
-import { AddressZero } from '../../shared/types';
+import { IUniverseToken, Metahub } from '../../../../typechain';
+import { AddressZero } from '../../../shared/types';
 
 /**
  * Core functionality tests of public Universe Token
@@ -11,8 +11,6 @@ import { AddressZero } from '../../shared/types';
 export function shouldBehaveLikeUniverseToken(): void {
   describe('Universe token tests', () => {
     const tokenId = 1;
-    const randomTokenId = 12;
-    const universeName = 'Universe One';
 
     let universeToken: IUniverseToken;
     let metahub: FakeContract<Metahub>;
@@ -25,23 +23,9 @@ export function shouldBehaveLikeUniverseToken(): void {
 
       universeOwner = this.signers.named['universeOwner'];
 
-      await universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName);
+      await universeToken.connect(metahub.wallet).mint(universeOwner.address);
     });
     describe('View Functions', function () {
-      describe('universeName', () => {
-        context('when the given token id is minted', () => {
-          it('returns the universe name of universe that exists', async () => {
-            expect(await universeToken.universeName(tokenId)).to.be.equal(universeName);
-          });
-        });
-
-        context('when the given token id is not minted', () => {
-          it('returns empty string', async () => {
-            expect(await universeToken.universeName(randomTokenId)).to.be.equal('');
-          });
-        });
-      });
-
       describe('Universe (NFT) token Name', () => {
         it('has correct token name', async () => {
           await expect(universeToken.name()).to.eventually.eq('IQVerse');
@@ -64,20 +48,16 @@ export function shouldBehaveLikeUniverseToken(): void {
     describe('Effect Functions', function () {
       describe('mint', function () {
         it('reverts when mint msg.sender is not metahub', async function () {
-          await expect(universeToken.mint(universeOwner.address, universeName)).to.be.revertedWith(
-            'CallerIsNotMetahub',
-          );
+          await expect(universeToken.mint(universeOwner.address)).to.be.revertedWith('CallerIsNotRegistry()');
         });
 
         describe('Minting', () => {
           it('owner cannot mint', async () => {
-            await expect(universeToken.mint(universeOwner.address, universeName)).to.be.revertedWith(
-              'CallerIsNotMetahub',
-            );
+            await expect(universeToken.mint(universeOwner.address)).to.be.revertedWith('CallerIsNotRegistry()');
           });
 
           it('metahub can mint', async () => {
-            await expect(universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName))
+            await expect(universeToken.connect(metahub.wallet).mint(universeOwner.address))
               .to.emit(universeToken, 'Transfer')
               .withArgs(AddressZero, universeOwner.address, 2);
             await expect(universeToken.ownerOf(2)).to.eventually.eq(universeOwner.address);
@@ -88,7 +68,7 @@ export function shouldBehaveLikeUniverseToken(): void {
           let mintTx: ContractTransaction;
 
           beforeEach(async function () {
-            mintTx = await universeToken.connect(metahub.wallet).mint(universeOwner.address, universeName);
+            mintTx = await universeToken.connect(metahub.wallet).mint(universeOwner.address);
           });
 
           it('emits a Transfer event', function () {
@@ -98,10 +78,6 @@ export function shouldBehaveLikeUniverseToken(): void {
           context('when minted', function () {
             it('returns token URI', async function () {
               await expect(universeToken.tokenURI(tokenId)).to.eventually.eq('');
-            });
-
-            it('returns universe name', async function () {
-              await expect(universeToken.universeName(tokenId)).to.eventually.eq(universeName);
             });
           });
         });

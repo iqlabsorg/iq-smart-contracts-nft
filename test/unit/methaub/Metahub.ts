@@ -1,4 +1,4 @@
-import hre, { ethers, upgrades } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { formatBytes32String } from 'ethers/lib/utils';
 import {
   ERC20Mock__factory,
@@ -6,26 +6,23 @@ import {
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
   Metahub__factory,
-  UniverseToken__factory,
   WarperPresetFactory__factory,
   AssetClassRegistry__factory,
   ERC721AssetController__factory,
   ListingStrategyRegistry__factory,
   IListingManager__factory,
   IRentingManager__factory,
-  IUniverseManager__factory,
   IWarperManager__factory,
   ERC721AssetVault__factory,
   UUPSUpgradeable__factory,
-  AssetClassRegistry,
-  ListingStrategyRegistry,
   IMetahub__factory,
   IACL__factory,
   IERC721AssetVault__factory,
   IAssetController__factory,
   IAssetClassRegistry__factory,
-  IUniverseToken__factory,
   IWarperPresetFactory__factory,
+  UniverseRegistry__factory,
+  IUniverseRegistry__factory,
 } from '../../../typechain';
 
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
@@ -81,7 +78,7 @@ export async function unitFixtureMetahub() {
     rentalFeePercent: 100,
   });
   const metahub = new Metahub__factory(deployer).attach(deployedAddresses.metahub);
-  const universeToken = new UniverseToken__factory(deployer).attach(deployedAddresses.universeToken);
+  const universeRegistry = new UniverseRegistry__factory(deployer).attach(deployedAddresses.universeRegistry);
   const warperPresetFactory = new WarperPresetFactory__factory(deployer).attach(deployedAddresses.warperPresetFactory);
   await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
 
@@ -90,7 +87,7 @@ export async function unitFixtureMetahub() {
 
   return {
     assetClassRegistry,
-    universeToken,
+    universeRegistry,
     originalAsset,
     erc721Controller,
     erc721Vault,
@@ -108,7 +105,7 @@ export function unitTestMetahub(): void {
         acl,
         metahub,
         originalAsset,
-        universeToken,
+        universeRegistry,
         warperPresetFactory,
         assetClassRegistry,
         erc721Controller,
@@ -119,7 +116,6 @@ export function unitTestMetahub(): void {
       this.contracts.metahub = IMetahub__factory.connect(metahub.address, metahub.signer);
       this.contracts.listingManager = IListingManager__factory.connect(metahub.address, metahub.signer);
       this.contracts.rentingManager = IRentingManager__factory.connect(metahub.address, metahub.signer);
-      this.contracts.universeManager = IUniverseManager__factory.connect(metahub.address, metahub.signer);
       this.contracts.warperManager = IWarperManager__factory.connect(metahub.address, metahub.signer);
       this.contracts.uupsUpgradeable = UUPSUpgradeable__factory.connect(metahub.address, metahub.signer);
 
@@ -133,7 +129,10 @@ export function unitTestMetahub(): void {
         assetClassRegistry.address,
         assetClassRegistry.signer,
       );
-      this.contracts.universeToken = IUniverseToken__factory.connect(universeToken.address, universeToken.signer);
+      this.contracts.universeRegistry = IUniverseRegistry__factory.connect(
+        universeRegistry.address,
+        universeRegistry.signer,
+      );
       this.contracts.acl = IACL__factory.connect(acl.address, acl.signer);
       this.contracts.warperPresetFactory = IWarperPresetFactory__factory.connect(
         warperPresetFactory.address,

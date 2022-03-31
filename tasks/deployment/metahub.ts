@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import { wait } from '..';
-import { Metahub, Metahub__factory, UniverseToken__factory, WarperPresetFactory__factory } from '../../typechain';
+import { Metahub, Metahub__factory, UniverseRegistry__factory, WarperPresetFactory__factory } from '../../typechain';
 
 task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `WarperPresetFactory` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -28,17 +28,17 @@ task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `Warper
     })) as Metahub;
 
     // Deploy Universe token
-    const deployedUniverseToken = await hre.run('deploy:universe-token', {
+    const deployedUniverseToken = await hre.run('deploy:universe-registry', {
       acl: acl,
       metahub: metahub.address,
     });
-    const universeToken = new UniverseToken__factory(deployer).attach(deployedUniverseToken);
+    const universeRegistry = new UniverseRegistry__factory(deployer).attach(deployedUniverseToken);
 
     // Initializing Metahub.
     await wait(
       metahub.initialize({
         warperPresetFactory: warperPresetFactory.address,
-        universeToken: universeToken.address,
+        universeRegistry: universeRegistry.address,
         listingStrategyRegistry,
         assetClassRegistry,
         acl,
@@ -49,7 +49,7 @@ task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `Warper
 
     return {
       metahub: metahub.address,
-      universeToken: universeToken.address,
+      universeRegistry: universeRegistry.address,
       warperPresetFactory: warperPresetFactory.address,
     };
   });

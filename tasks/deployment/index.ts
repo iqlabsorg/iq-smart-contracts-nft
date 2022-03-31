@@ -4,5 +4,5 @@ import './mocks';
 import './presets';
 import './vaults';
 import './controllers';
-import './universe-token';
+import './universe';
 import './assets';

@@ -1,13 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import {
-  ERC721Mock,
-  ERC721Mock__factory,
-  IWarperManager,
-  IWarperPresetFactory,
-  WarperPresetFactory,
-} from '../../../../typechain';
+import { ERC721Mock, ERC721Mock__factory, IWarperManager, IWarperPresetFactory } from '../../../../typechain';
 import { createUniverse, deployWarper } from '../../../shared/utils';
 import { warperPresetId } from '../Metahub';
 
@@ -30,7 +24,7 @@ export function shouldBehaveLikeWarperManager(): void {
       warperManager = this.contracts.warperManager;
 
       // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
-      universeId = await createUniverse(this.contracts.universeManager, {
+      universeId = await createUniverse(this.contracts.universeRegistry, {
         name: 'IQ Universe',
         rentalFeePercent: 1000,
       });

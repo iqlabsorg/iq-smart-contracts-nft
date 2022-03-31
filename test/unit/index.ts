@@ -2,7 +2,8 @@ import { baseContext } from '../shared/contexts';
 import { unitTestMetahub } from './methaub/Metahub';
 import { unitTestWarperPresetFactory } from './warper-preset-factory/WarperPresetFactory';
 import { unitTestWarpers } from './warper/warper';
-import { unitTestUniverseToken } from './universe-token/UniverseToken';
+import { unitTestUniverseToken } from './universe/universe-token/UniverseToken';
+import { unitTestUniverseRegistry } from './universe/universe-registry/UniverseRegistry';
 import {
   unitTestAssetClassRegistry,
   unitTestAssetController,
@@ -16,6 +17,7 @@ baseContext('Unit Tests', function () {
   unitTestMetahub();
   unitTestWarpers();
   unitTestUniverseToken();
+  unitTestUniverseRegistry();
   unitTestAssetsLibrary();
   unitTestAssetVault();
   unitTestAssetController();

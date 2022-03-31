@@ -22,7 +22,6 @@ import {
   IAssetClassRegistry,
   IListingManager,
   IRentingManager,
-  IUniverseManager,
   IWarperManager,
   UUPSUpgradeable,
   ERC721AssetController,
@@ -40,6 +39,7 @@ import {
   IWarper,
   IAssetVault,
   IERC721Warper,
+  IUniverseRegistry,
 } from '../../typechain';
 
 declare module 'mocha' {
@@ -55,12 +55,14 @@ export interface Contracts {
   // Metahub
   listingManager: IListingManager;
   rentingManager: IRentingManager;
-  universeManager: IUniverseManager;
   warperManager: IWarperManager;
   metahub: IMetahub;
 
   // acl
   acl: IACL;
+
+  // Universe registry
+  universeRegistry: IUniverseRegistry;
 
   // Assets
   assetClassRegistry: IAssetClassRegistry;

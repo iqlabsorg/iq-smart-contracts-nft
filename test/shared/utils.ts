@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike } from 'ethers';
-import { IUniverseManager, IWarperManager, IWarperPresetFactory, WarperPresetFactory } from '../../typechain';
+import { IUniverseRegistry, IWarperManager, IWarperPresetFactory, WarperPresetFactory } from '../../typechain';
 import { Assets } from '../../typechain/Metahub';
 import { wait } from '../../tasks';
 
@@ -50,15 +50,15 @@ export function solidityId(string: string): string {
 
 /**
  * Performs universe creation call and returns universe ID.
- * @param metahub
+ * @param universeRegistry
  * @param params
  */
 export async function createUniverse(
-  metahub: IUniverseManager,
-  ...params: Parameters<IUniverseManager['createUniverse']>
+  universeRegistry: IUniverseRegistry,
+  ...params: Parameters<IUniverseRegistry['createUniverse']>
 ): Promise<BigNumber> {
-  const receipt = await wait(metahub.createUniverse(...params));
-  const events = await metahub.queryFilter(metahub.filters.UniverseCreated(), receipt.blockHash);
+  const receipt = await wait(universeRegistry.createUniverse(...params));
+  const events = await universeRegistry.queryFilter(universeRegistry.filters.UniverseCreated(), receipt.blockHash);
   return events[0].args.universeId;
 }
 

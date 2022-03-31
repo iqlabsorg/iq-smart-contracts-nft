@@ -1,28 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC721MetadataUpgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 
-interface IUniverseToken is IERC721MetadataUpgradeable {
+interface IUniverseToken is IERC721Metadata {
     /**
      * @dev Mints new token and transfers it to `to` address.
      * @param to Universe owner address.
-     * @param name Universe name.
      * @return Minted token ID.
      */
-    function mint(address to, string calldata name) external returns (uint256);
-
-    /**
-     * @dev Returns the Universe name associated with token ID.
-     * @param tokenId Universe token ID.
-     * @return Universe name.
-     */
-    function universeName(uint256 tokenId) external view returns (string memory);
-
-    /**
-     * @dev Update the universe name.
-     * @param tokenId The unique identifier for the universe.
-     * @param name The universe name to set.
-     */
-    function setUniverseName(uint256 tokenId, string memory name) external;
+    function mint(address to) external returns (uint256);
 }

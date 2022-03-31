@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "../accounting/Accounts.sol";
 import "../acl/IACL.sol";
-import "../universe/Universes.sol";
+import "../universe/IUniverseRegistry.sol";
 import "../asset/Assets.sol";
 import "../warper/Warpers.sol";
 import "../listing/Listings.sol";
@@ -28,7 +28,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Universe registry contains the data about all registered universes and their settings.
      */
-    Universes.Registry internal _universeRegistry;
+    IUniverseRegistry internal _universeRegistry;
 
     /**
      * @dev Asset registry contains the data about all registered assets and supported asset classes.

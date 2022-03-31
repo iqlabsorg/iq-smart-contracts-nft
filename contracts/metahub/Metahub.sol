@@ -20,7 +20,7 @@ import "../warper/ERC721/IERC721Warper.sol";
 import "../warper/IWarperPreset.sol";
 import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarperController.sol";
-import "../universe/IUniverseToken.sol";
+import "../universe/IUniverseRegistry.sol";
 import "../listing/IListingController.sol";
 import "../Errors.sol";
 import "./IMetahub.sol";
@@ -45,7 +45,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     using Rentings for Rentings.Registry;
     using Warpers for Warpers.Warper;
     using Warpers for Warpers.Registry;
-    using Universes for Universes.Registry;
     using Protocol for Protocol.Config;
 
     /**
@@ -101,7 +100,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         IWarperPresetFactory warperPresetFactory;
         IAssetClassRegistry assetClassRegistry;
         IListingStrategyRegistry listingStrategyRegistry;
-        IUniverseToken universeToken;
+        IUniverseRegistry universeRegistry;
         IACL acl;
         IERC20Upgradeable baseToken;
         uint16 rentalFeePercent;
@@ -120,7 +119,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _warperRegistry.presetFactory = params.warperPresetFactory;
         _assetRegistry.classRegistry = params.assetClassRegistry;
         _listingRegistry.strategyRegistry = params.listingStrategyRegistry;
-        _universeRegistry.token = params.universeToken;
+        _universeRegistry = params.universeRegistry;
     }
 
     /**
@@ -288,43 +287,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function assetRentalStatus(Assets.AssetId calldata warpedAssetId) external view returns (Rentings.RentalStatus) {
         return _rentingRegistry.assetRentalStatus(warpedAssetId);
-    }
-
-    /**
-     * @inheritdoc IUniverseManager
-     */
-    function createUniverse(UniverseParams calldata params) external returns (uint256) {
-        uint256 universeId = _universeRegistry.token.mint(_msgSender(), params.name);
-        _universeRegistry.add(universeId, Universes.Universe(params.rentalFeePercent));
-
-        emit UniverseCreated(universeId, params.name);
-
-        return universeId;
-    }
-
-    /**
-     * @inheritdoc IUniverseManager
-     */
-    function setUniverseName(uint256 universeId, string memory universeName) external onlyUniverseOwner(universeId) {
-        _universeRegistry.token.setUniverseName(universeId, universeName);
-    }
-
-    /**
-     * @inheritdoc IUniverseManager
-     */
-    function universe(uint256 universeId)
-        external
-        view
-        returns (
-            string memory name,
-            string memory symbol,
-            string memory universeName
-        )
-    {
-        IUniverseToken universeToken = _universeRegistry.token;
-        name = universeToken.name();
-        symbol = universeToken.symbol();
-        universeName = universeToken.universeName(universeId);
     }
 
     /**
@@ -683,7 +645,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Calculate universe base fee.
         Warpers.Warper storage warper = _warperRegistry.warpers[rentingParams.warper];
-        uint16 universeRentalFeePercent = _universeRegistry.universes[warper.universeId].rentalFeePercent;
+        uint16 universeRentalFeePercent = _universeRegistry.universeFeePercent(warper.universeId);
         uint256 universeBaseFee = (listerBaseFee * universeRentalFeePercent) / 10_000;
 
         // Calculate protocol fee.
