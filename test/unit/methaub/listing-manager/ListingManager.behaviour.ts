@@ -31,7 +31,7 @@ export function shouldBehaveLikeListingManager(): void {
         const params = makeFixedPriceStrategy(100);
         const maxLockPeriod = 86400;
 
-        await expect(listingManager.listAsset(asset, params, maxLockPeriod)).to.eventually.revertedWithError(
+        await expect(listingManager.listAsset(asset, params, maxLockPeriod, false)).to.eventually.revertedWithError(
           'AssetHasNoWarpers',
           asset,
         );
@@ -42,7 +42,7 @@ export function shouldBehaveLikeListingManager(): void {
         const params = makeFixedPriceStrategy(100);
         const maxLockPeriod = 86400;
 
-        await expect(listingManager.listAsset(asset, params, maxLockPeriod))
+        await expect(listingManager.listAsset(asset, params, maxLockPeriod, false))
           .to.emit(listingManager, 'AssetListed')
           .withArgs(asset, 1);
       });
@@ -53,7 +53,7 @@ export function shouldBehaveLikeListingManager(): void {
         const params = makeFixedPriceStrategy(100);
         const maxLockPeriod = 86400;
 
-        await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod);
+        await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
 
         await expect(originalAsset.ownerOf(1)).to.eventually.eq(erc721Vault.address);
       });
