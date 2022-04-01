@@ -14,6 +14,14 @@ contract AssetClassRegistry is
     AssetClassRegistryStorage
 {
     /**
+     * @dev Modifier to make a function callable only for the registered asset class.
+     */
+    modifier onlyRegisteredAssetClass(bytes4 assetClass) {
+        checkRegisteredAssetClass(assetClass);
+        _;
+    }
+
+    /**
      * @custom:oz-upgrades-unsafe-allow constructor
      */
     constructor() initializer {}
@@ -41,7 +49,11 @@ contract AssetClassRegistry is
     /**
      * @inheritdoc IAssetClassRegistry
      */
-    function setAssetClassVault(bytes4 assetClass, address vault) external onlyAdmin {
+    function setAssetClassVault(bytes4 assetClass, address vault)
+        external
+        onlyAdmin
+        onlyRegisteredAssetClass(assetClass)
+    {
         bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
         if (vaultAssetClass != assetClass) revert AssetClassMismatch(vaultAssetClass, assetClass);
 
@@ -52,7 +64,11 @@ contract AssetClassRegistry is
     /**
      * @inheritdoc IAssetClassRegistry
      */
-    function setAssetClassController(bytes4 assetClass, address controller) external onlyAdmin {
+    function setAssetClassController(bytes4 assetClass, address controller)
+        external
+        onlyAdmin
+        onlyRegisteredAssetClass(assetClass)
+    {
         bytes4 controllerAssetClass = IAssetController(controller).assetClass();
         if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
 
@@ -63,17 +79,28 @@ contract AssetClassRegistry is
     /**
      * @inheritdoc IAssetClassRegistry
      */
-    function assetClassConfig(bytes4 assetClass) external view returns (ClassConfig memory) {
+    function assetClassConfig(bytes4 assetClass)
+        external
+        view
+        onlyRegisteredAssetClass(assetClass)
+        returns (ClassConfig memory)
+    {
         return _classes[assetClass];
     }
 
     /**
-     * @dev Checks asset class support.
-     * @param assetClass Asset class ID.
+     * @inheritdoc IAssetClassRegistry
      */
     function isRegisteredAssetClass(bytes4 assetClass) public view returns (bool) {
         // The registered asset must have controller.
         return address(_classes[assetClass].controller) != address(0);
+    }
+
+    /**
+     * @inheritdoc IAssetClassRegistry
+     */
+    function checkRegisteredAssetClass(bytes4 assetClass) public view {
+        if (!isRegisteredAssetClass(assetClass)) revert UnregisteredAssetClass(assetClass);
     }
 
     /**

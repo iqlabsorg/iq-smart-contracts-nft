@@ -12,7 +12,13 @@ interface IAssetClassRegistry {
     error AssetClassIsAlreadyRegistered(bytes4 assetClass);
 
     /**
-     * @dev Emitted when the asset class controller is registered.
+     * @dev Thrown upon attempting to work with unregistered asset class.
+     * @param assetClass Asset class ID.
+     */
+    error UnregisteredAssetClass(bytes4 assetClass);
+
+    /**
+     * @dev Emitted when the new asset class is registered.
      * @param assetClass Asset class ID.
      * @param controller Controller address.
      * @param vault Vault address.
@@ -76,4 +82,10 @@ interface IAssetClassRegistry {
      * @param assetClass Asset class ID.
      */
     function isRegisteredAssetClass(bytes4 assetClass) external view returns (bool);
+
+    /**
+     * @dev Throws if asset class is not registered.
+     * @param assetClass Asset class ID.
+     */
+    function checkRegisteredAssetClass(bytes4 assetClass) external view;
 }

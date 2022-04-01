@@ -1,11 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import {
-  ERC721AssetController,
-  ERC721AssetController__factory,
-  IAssetClassRegistry,
-  IAssetClassRegistry__factory,
-} from '../../../../typechain';
+import { ERC721AssetController, ERC721AssetController__factory, IAssetClassRegistry } from '../../../../typechain';
 import { AddressZero } from '../../../shared/types';
 import { AssetClass } from '../../../shared/utils';
 
@@ -16,13 +11,38 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
   describe('IAssetClassRegistry', function () {
     let assetClassRegistry: IAssetClassRegistry;
     let deployer: SignerWithAddress;
+    let stranger: SignerWithAddress;
 
     beforeEach(function () {
       deployer = this.signers.named['deployer'];
+      [stranger] = this.signers.unnamed;
       assetClassRegistry = this.contracts.assetClassRegistry;
     });
 
-    describe('Asset Controller Management', () => {
+    describe('registerAssetClass', () => {
+      context('When called by stranger', () => {
+        it('reverts', async () => {
+          await expect(
+            assetClassRegistry.connect(stranger).registerAssetClass(AssetClass.ERC721, {
+              vault: AddressZero,
+              controller: AddressZero,
+            }),
+          ).to.be.reverted;
+        });
+      });
+      context('When called by admin', () => {
+        it('executes successfully', async () => {
+          await expect(
+            assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
+              vault: AddressZero,
+              controller: AddressZero,
+            }),
+          );
+        });
+      });
+    });
+
+    describe.skip('Asset Controller Management', () => {
       let erc721controller: ERC721AssetController;
       beforeEach(async () => {
         erc721controller = await new ERC721AssetController__factory(deployer).deploy();
