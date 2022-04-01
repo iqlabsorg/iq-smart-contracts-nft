@@ -10,9 +10,9 @@ interface IUniverseRegistry {
     /**
      * @dev Emitted when a universe is created.
      * @param universeId Universe ID.
-     * @param universe Universe-specific parameters.
+     * @param name Universe name.
      */
-    event UniverseCreated(uint256 indexed universeId, UniverseParams universe);
+    event UniverseCreated(uint256 indexed universeId, string name);
 
     /**
      * @dev Emitted when a universe name is updated.

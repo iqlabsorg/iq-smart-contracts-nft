@@ -2,8 +2,8 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
 import "./IUniverseToken.sol";
 
 /**

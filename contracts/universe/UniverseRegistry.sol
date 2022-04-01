@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC165Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import "../acl/AccessControlledUpgradeable.sol";
-import "../acl/IACL.sol";
-import "../Errors.sol";
 import "./IUniverseRegistry.sol";
 import "./UniverseToken.sol";
 
@@ -16,8 +11,6 @@ import "./UniverseToken.sol";
  * @title Universe Registry contract.
  */
 contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
-    using CountersUpgradeable for CountersUpgradeable.Counter;
-
     /**
      * @dev Metahub address.
      */
@@ -31,7 +24,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     /**
      * @dev Universe token address.
      */
-    UniverseToken private _universeToken;
+    IUniverseToken private _universeToken;
 
     /**
      * @dev Mapping from token ID to the Universe structure.
@@ -73,7 +66,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
         uint256 universeId = _universeToken.mint(_msgSender());
         _universes[universeId] = params;
 
-        emit UniverseCreated(universeId, params);
+        emit UniverseCreated(universeId, params.name);
 
         return universeId;
     }
