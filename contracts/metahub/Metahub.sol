@@ -190,7 +190,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         // Update listing lock time.
         _listingRegistry.listings[rentingParams.listingId].addLock(rentalAgreement.endTime);
 
-        //todo: clean up x2 expired rental agreements
+        // Clean up x2 expired rental agreements.
+        _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
+
         // todo: emit AssetRented event
 
         return rentalId;

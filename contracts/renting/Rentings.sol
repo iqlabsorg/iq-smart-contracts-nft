@@ -5,14 +5,19 @@ import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "../asset/Assets.sol";
 
-// todo: limit cleanup cycles to 20 iterations (global constant)
 library Rentings {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using Rentings for RenterInfo;
     using Rentings for Agreement;
+    using Rentings for Registry;
     using Assets for Assets.AssetId;
+
+    /**
+     * @dev Defines the maximal allowed number of cycles when looking for expired rental agreements.
+     */
+    uint256 private constant GC_CYCLES = 20;
 
     /**
      * @dev Warper rental status.
@@ -27,10 +32,15 @@ library Rentings {
     }
 
     /**
-     * @dev Thrown then a rental agreement is being registered for a specific warper ID,
+     * @dev Thrown when a rental agreement is being registered for a specific warper ID,
      * while the previous rental agreement for this warper is still effective.
      */
     error RentalAgreementConflict(uint256 conflictingRentalId);
+
+    /**
+     * @dev Thrown when attempting to delete effective rental agreement data (before expiration).
+     */
+    error CannotDeleteEffectiveRentalAgreement(uint256 rentalId);
 
     /**
      * @dev Rental fee breakdown.
@@ -104,10 +114,36 @@ library Rentings {
      * @param assets Mapping from asset ID (byte32) to the asset specific renting info.
      */
     struct Registry {
-        CountersUpgradeable.Counter idTracker; // todo: reduce size
+        CountersUpgradeable.Counter idTracker;
         mapping(uint256 => Agreement) agreements;
         mapping(address => RenterInfo) renters;
         mapping(bytes32 => AssetInfo) assets;
+    }
+
+    /**
+     * @dev Finds expired user rental agreements associated with `collectionId` and deletes them.
+     * Deletes only first N entries defined by `toBeRemoved` param.
+     * The total number of cycles is capped by GC_CYCLES constant.
+     */
+    function deleteExpiredUserRentalAgreements(
+        Registry storage self,
+        address renter,
+        bytes32 collectionId,
+        uint256 toBeRemoved
+    ) internal {
+        EnumerableSetUpgradeable.UintSet storage rentalIndex = self.renters[renter].collectionRentalIndex[collectionId];
+        uint256 rentalCount = rentalIndex.length();
+        if (rentalCount == 0 || toBeRemoved == 0) return;
+
+        uint256 maxCycles = rentalCount < GC_CYCLES ? rentalCount : GC_CYCLES;
+        uint256 removed = 0;
+        for (uint256 i = 0; i < maxCycles; i++) {
+            uint256 rentalId = rentalIndex.at(i);
+            if (!self.agreements[rentalId].isEffective()) {
+                _removeRentalAgreement(self, rentalId);
+                if (removed++ == toBeRemoved) return;
+            }
+        }
     }
 
     /**
@@ -137,9 +173,17 @@ library Rentings {
     }
 
     /**
+     * @dev Safely removes expired rental data from the registry.
+     */
+    function removeExpiredRentalAgreement(Registry storage self, uint256 rentalId) internal {
+        if (self.agreements[rentalId].isEffective()) revert CannotDeleteEffectiveRentalAgreement(rentalId);
+        _removeRentalAgreement(self, rentalId);
+    }
+
+    /**
      * @dev Removes rental data from the registry.
      */
-    function remove(Registry storage self, uint256 rentalId) internal {
+    function _removeRentalAgreement(Registry storage self, uint256 rentalId) private {
         address renter = self.agreements[rentalId].renter;
         bytes32 collectionId = self.agreements[rentalId].collectionId;
 

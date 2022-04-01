@@ -154,7 +154,7 @@ library Listings {
      * @param listers Mapping from lister address to the lister info.
      */
     struct Registry {
-        CountersUpgradeable.Counter idTracker; // todo: reduce size
+        CountersUpgradeable.Counter idTracker;
         IListingStrategyRegistry strategyRegistry;
         mapping(uint256 => Listing) listings;
         mapping(address => ListerInfo) listers;
