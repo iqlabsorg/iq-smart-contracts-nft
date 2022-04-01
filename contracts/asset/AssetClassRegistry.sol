@@ -3,21 +3,16 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "./IAssetClassRegistry.sol";
 import "../acl/AccessControlledUpgradeable.sol";
 import "../Errors.sol";
+import "./AssetClassRegistryStorage.sol";
 
-contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
-    /**
-     * @dev ACL contract.
-     */
-    IACL private _aclContract;
-
-    /**
-     * @dev Mapping from asset class ID to the asset class configuration.
-     */
-    mapping(bytes4 => ClassConfig) private _registry;
-
+contract AssetClassRegistry is
+    IAssetClassRegistry,
+    UUPSUpgradeable,
+    AccessControlledUpgradeable,
+    AssetClassRegistryStorage
+{
     /**
      * @custom:oz-upgrades-unsafe-allow constructor
      */
@@ -39,7 +34,7 @@ contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessContr
         //todo: validate interfaces
         if (isRegisteredAssetClass(assetClass)) revert AssetClassIsAlreadyRegistered(assetClass);
 
-        _registry[assetClass] = config;
+        _classes[assetClass] = config;
         emit AssetClassRegistered(assetClass, config.controller, config.vault);
     }
 
@@ -50,7 +45,7 @@ contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessContr
         bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
         if (vaultAssetClass != assetClass) revert AssetClassMismatch(vaultAssetClass, assetClass);
 
-        _registry[assetClass].vault = vault;
+        _classes[assetClass].vault = vault;
         emit AssetClassVaultChanged(assetClass, vault);
     }
 
@@ -61,7 +56,7 @@ contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessContr
         bytes4 controllerAssetClass = IAssetController(controller).assetClass();
         if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
 
-        _registry[assetClass].controller = controller;
+        _classes[assetClass].controller = controller;
         emit AssetClassControllerChanged(assetClass, controller);
     }
 
@@ -69,7 +64,7 @@ contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessContr
      * @inheritdoc IAssetClassRegistry
      */
     function assetClassConfig(bytes4 assetClass) external view returns (ClassConfig memory) {
-        return _registry[assetClass];
+        return _classes[assetClass];
     }
 
     /**
@@ -78,7 +73,7 @@ contract AssetClassRegistry is IAssetClassRegistry, UUPSUpgradeable, AccessContr
      */
     function isRegisteredAssetClass(bytes4 assetClass) public view returns (bool) {
         // The registered asset must have controller.
-        return address(_registry[assetClass].controller) != address(0);
+        return address(_classes[assetClass].controller) != address(0);
     }
 
     /**
