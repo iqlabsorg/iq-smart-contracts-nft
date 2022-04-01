@@ -23,11 +23,25 @@ interface IListingStrategyRegistry {
     error UnregisteredListingStrategy(bytes4 strategyId);
 
     /**
+     * @dev Emitted when the new listing strategy is registered.
+     * @param strategyId Listing strategy ID.
+     * @param controller Controller address.
+     */
+    event ListingStrategyRegistered(bytes4 indexed strategyId, address indexed controller);
+
+    /**
+     * @dev Emitted when the listing strategy controller is changed.
+     * @param strategyId Listing strategy ID.
+     * @param newController Controller address.
+     */
+    event ListingStrategyControllerChanged(bytes4 indexed strategyId, address indexed newController);
+
+    /**
      * @dev Listing strategy information.
      * @param controller Listing controller address.
      */
     struct StrategyConfig {
-        IListingController controller;
+        address controller;
     }
 
     /**

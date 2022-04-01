@@ -6,19 +6,15 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpg
 
 import "../acl/AccessControlledUpgradeable.sol";
 import "./IListingStrategyRegistry.sol";
+import "./ListingStrategyRegistryStorage.sol";
 
-contract ListingStrategyRegistry is IListingStrategyRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
+contract ListingStrategyRegistry is
+    IListingStrategyRegistry,
+    UUPSUpgradeable,
+    AccessControlledUpgradeable,
+    ListingStrategyRegistryStorage
+{
     using ERC165CheckerUpgradeable for address;
-
-    /**
-     * @dev ACL contract.
-     */
-    IACL private _aclContract;
-
-    /**
-     * @dev Mapping from listing strategy ID to the listing strategy configuration.
-     */
-    mapping(bytes4 => StrategyConfig) _registry;
 
     /**
      * @custom:oz-upgrades-unsafe-allow constructor
@@ -38,13 +34,13 @@ contract ListingStrategyRegistry is IListingStrategyRegistry, UUPSUpgradeable, A
      * @inheritdoc IListingStrategyRegistry
      */
     function registerListingStrategy(bytes4 strategyId, StrategyConfig calldata config) external onlyAdmin {
-        _checkValidListingController(address(config.controller));
+        _checkValidListingController(config.controller);
         if (isRegisteredListingStrategy(strategyId)) {
             revert ListingStrategyIsAlreadyRegistered(strategyId);
         }
 
-        _registry[strategyId] = config;
-        //todo: event
+        _strategies[strategyId] = config;
+        emit ListingStrategyRegistered(strategyId, config.controller);
     }
 
     /**
@@ -53,15 +49,15 @@ contract ListingStrategyRegistry is IListingStrategyRegistry, UUPSUpgradeable, A
     function setListingController(bytes4 strategyId, address controller) external onlySupervisor {
         _checkRegisteredListingStrategy(strategyId);
         _checkValidListingController(controller);
-        _registry[strategyId].controller = IListingController(controller);
-        //todo: event
+        _strategies[strategyId].controller = controller;
+        emit ListingStrategyControllerChanged(strategyId, controller);
     }
 
     /**
      * @inheritdoc IListingStrategyRegistry
      */
     function listingController(bytes4 strategyId) external view returns (address) {
-        return address(_registry[strategyId].controller);
+        return _strategies[strategyId].controller;
     }
 
     /**
@@ -69,14 +65,14 @@ contract ListingStrategyRegistry is IListingStrategyRegistry, UUPSUpgradeable, A
      */
     function listingStrategy(bytes4 strategyId) external view returns (StrategyConfig memory) {
         _checkRegisteredListingStrategy(strategyId);
-        return _registry[strategyId];
+        return _strategies[strategyId];
     }
 
     /**
      * @inheritdoc IListingStrategyRegistry
      */
     function isRegisteredListingStrategy(bytes4 strategyId) public view returns (bool) {
-        return address(_registry[strategyId].controller) != address(0);
+        return _strategies[strategyId].controller != address(0);
     }
 
     /**
