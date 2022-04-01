@@ -12,6 +12,9 @@ import "../Errors.sol";
 import "./IUniverseRegistry.sol";
 import "./UniverseToken.sol";
 
+/**
+ * @title Universe Registry contract.
+ */
 contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
@@ -36,16 +39,6 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     mapping(uint256 => UniverseParams) internal _universes;
 
     /**
-     * @dev Modifier to make a function callable only by the metahub contract.
-     */
-    modifier onlyMetahub() {
-        if (_msgSender() != _metahub) {
-            revert CallerIsNotMetahub();
-        }
-        _;
-    }
-
-    /**
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
@@ -60,8 +53,9 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     constructor() initializer {}
 
     /**
-     * @dev UniverseToken initializer.
-     * @param metahub Warper preset factory address.
+     * @dev UniverseRegistry initializer.
+     * @param metahub Address of the Metahub contract.
+     * @param acl Address of the ACL contract.
      */
     function initialize(address metahub, address acl) external initializer {
         __UUPSUpgradeable_init();
@@ -170,10 +164,16 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
         return _aclContract;
     }
 
+    /**
+     * @dev Revert if the passed account is not the owner of the universe.
+     */
     function _checkUniverseOwner(uint256 universeId, address account) internal view {
         if (!_isUniverseOwner(universeId, account)) revert AccountIsNotUniverseOwner(account);
     }
 
+    /**
+     * @dev Return `true` if the account is the owner of the universe.
+     */
     function _isUniverseOwner(uint256 universeId, address account) internal view returns (bool) {
         return _universeToken.ownerOf(universeId) == account;
     }

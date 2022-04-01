@@ -6,6 +6,9 @@ import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./IUniverseToken.sol";
 
+/**
+ * @title Universe token contract.
+ */
 contract UniverseToken is IUniverseToken, ERC721 {
     using Counters for Counters.Counter;
 
@@ -14,14 +17,18 @@ contract UniverseToken is IUniverseToken, ERC721 {
      */
     error CallerIsNotRegistry();
 
-    // ID counter.
-    Counters.Counter private _tokenIdTracker;
-
-    // Metahub address.
-    address private _registry;
+    /**
+     * @dev Registry address.
+     */
+    address private immutable _registry;
 
     /**
-     * @dev Modifier to make a function callable only by the metahub contract.
+     * @dev Token ID counter.
+     */
+    Counters.Counter private _tokenIdTracker;
+
+    /**
+     * @dev Modifier to make a function callable only by the registry contract.
      */
     modifier onlyRegistry() {
         if (_msgSender() != _registry) revert CallerIsNotRegistry();
