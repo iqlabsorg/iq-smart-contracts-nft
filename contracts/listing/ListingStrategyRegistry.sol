@@ -17,6 +17,14 @@ contract ListingStrategyRegistry is
     using ERC165CheckerUpgradeable for address;
 
     /**
+     * @dev Modifier to make a function callable only for the registered listing strategy.
+     */
+    modifier onlyRegisteredStrategy(bytes4 strategyId) {
+        checkRegisteredListingStrategy(strategyId);
+        _;
+    }
+
+    /**
      * @custom:oz-upgrades-unsafe-allow constructor
      */
     constructor() initializer {}
@@ -46,8 +54,11 @@ contract ListingStrategyRegistry is
     /**
      * @inheritdoc IListingStrategyRegistry
      */
-    function setListingController(bytes4 strategyId, address controller) external onlySupervisor {
-        _checkRegisteredListingStrategy(strategyId);
+    function setListingController(bytes4 strategyId, address controller)
+        external
+        onlySupervisor
+        onlyRegisteredStrategy(strategyId)
+    {
         _checkValidListingController(controller);
         _strategies[strategyId].controller = controller;
         emit ListingStrategyControllerChanged(strategyId, controller);
@@ -56,15 +67,19 @@ contract ListingStrategyRegistry is
     /**
      * @inheritdoc IListingStrategyRegistry
      */
-    function listingController(bytes4 strategyId) external view returns (address) {
+    function listingController(bytes4 strategyId) external view onlyRegisteredStrategy(strategyId) returns (address) {
         return _strategies[strategyId].controller;
     }
 
     /**
      * @inheritdoc IListingStrategyRegistry
      */
-    function listingStrategy(bytes4 strategyId) external view returns (StrategyConfig memory) {
-        _checkRegisteredListingStrategy(strategyId);
+    function listingStrategy(bytes4 strategyId)
+        external
+        view
+        onlyRegisteredStrategy(strategyId)
+        returns (StrategyConfig memory)
+    {
         return _strategies[strategyId];
     }
 
@@ -76,10 +91,9 @@ contract ListingStrategyRegistry is
     }
 
     /**
-     * @dev Throws if listing strategy is not registered.
-     * @param strategyId Listing strategy ID.
+     * @inheritdoc IListingStrategyRegistry
      */
-    function _checkRegisteredListingStrategy(bytes4 strategyId) internal view {
+    function checkRegisteredListingStrategy(bytes4 strategyId) public view {
         if (!isRegisteredListingStrategy(strategyId)) revert UnregisteredListingStrategy(strategyId);
     }
 
