@@ -46,4 +46,11 @@ interface IRentingManager {
      * @return New rental ID.
      */
     function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256);
+
+    /**
+     * @dev Returns the rental agreement details.
+     * @param rentalId Rental agreement ID.
+     * @return Rental agreement details.
+     */
+    function rentalAgreementInfo(uint256 rentalId) external view returns (Rentings.Agreement memory);
 }
