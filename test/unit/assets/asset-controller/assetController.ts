@@ -12,7 +12,6 @@ import {
   Metahub__factory,
   Warper,
 } from '../../../../typechain';
-import { shouldBehaveLikeIAssetTransferExecutor } from './asset-transfer-executer/assetTransferExecutor.behaviour';
 import { shouldBehaveLikeIAssetController } from './assetController.behaviour';
 
 export async function unitFixtureERC721AssetsController() {
@@ -60,6 +59,5 @@ export function unitTestAssetController(): void {
     });
 
     shouldBehaveLikeIAssetController();
-    shouldBehaveLikeIAssetTransferExecutor();
   });
 }
