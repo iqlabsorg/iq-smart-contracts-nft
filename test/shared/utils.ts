@@ -154,15 +154,11 @@ export const AssetRentalStatus = {
 export class AccessControlledHelper {
   constructor(readonly successfulSigner: Signer, readonly stranger: Signer, readonly requiredRole: string) {}
 
-  static onlyRoleCan(
-    actors: () => AccessControlledHelper,
-    tx: (signer: Signer) => Promise<ContractTransaction>,
-    successBody: (tx: ContractTransaction) => Promise<void>,
-  ) {
+  static onlyRoleCan(actors: () => AccessControlledHelper, tx: (signer: Signer) => Promise<void>) {
     context('When called with the correct role', () => {
       it('called successfully', async () => {
         const actorSet = actors();
-        await successBody(await tx(actorSet.successfulSigner));
+        await tx(actorSet.successfulSigner);
       });
     });
 

@@ -37,13 +37,10 @@ export function shouldBehaveLikeAssetVault(): void {
       AccessControlledHelper.onlyRoleCan(
         () => onlyAdminCan,
         async signer => {
-          return await assetVault.connect(signer).switchToRecoveryMode();
-        },
-        async tx => {
+          const tx = await assetVault.connect(signer).switchToRecoveryMode();
           await expect(tx)
             .to.emit(assetVault, 'RecoveryModeActivated')
             .withArgs(await onlyAdminCan.successfulSigner.getAddress());
-
           await expect(assetVault.isRecovery()).to.eventually.equal(true);
         },
       );
@@ -67,9 +64,7 @@ export function shouldBehaveLikeAssetVault(): void {
       AccessControlledHelper.onlyRoleCan(
         () => onlySupervisorCan,
         async signer => {
-          return await assetVault.connect(signer).pause();
-        },
-        async tx => {
+          const tx = await assetVault.connect(signer).pause();
           const pausable = Pausable__factory.connect(assetVault.address, assetVault.signer);
 
           await expect(tx).to.emit(pausable, 'Paused');
@@ -93,9 +88,7 @@ export function shouldBehaveLikeAssetVault(): void {
         AccessControlledHelper.onlyRoleCan(
           () => onlySupervisorCan,
           async signer => {
-            return await assetVault.connect(signer).unpause();
-          },
-          async tx => {
+            const tx = await assetVault.connect(signer).unpause();
             const pausable = Pausable__factory.connect(assetVault.address, assetVault.signer);
 
             await expect(tx).to.emit(pausable, 'Unpaused');
