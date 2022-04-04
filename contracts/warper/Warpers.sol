@@ -2,12 +2,15 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+
 import "./IWarperController.sol";
 import "./IWarperPresetFactory.sol";
+import "../asset/Assets.sol";
 
 library Warpers {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using Warpers for Registry;
+    using Assets for Assets.Asset;
 
     /**
      * @dev Thrown when performing action or accessing data of an unknown warper.
@@ -32,17 +35,38 @@ library Warpers {
     error WarperIsNotPaused();
 
     /**
+     * @dev Thrown when there are no registered warpers for a particular asset.
+     * @param asset Asset address.
+     */
+    error UnsupportedAsset(address asset);
+
+    /**
+     * @dev Thrown upon attempting to use the warper which is not registered for the provided asset.
+     */
+    error IncompatibleAsset(address asset);
+
+    /**
      * @dev Registered warper data.
+     * @param original Original asset contract address.
      * @param controller Warper controller.
      * @param name Warper name.
      * @param universeId Warper universe ID.
      * @param paused Indicates whether the warper is paused.
      */
     struct Warper {
+        address original;
         IWarperController controller;
         string name;
         uint256 universeId;
         bool paused;
+    }
+
+    /**
+     * @dev Throws if the warper original does not match the `asset`;
+     */
+    function checkCompatibleAsset(Warper storage self, Assets.Asset memory asset) internal view {
+        address original = asset.token();
+        if (self.original != original) revert IncompatibleAsset(original);
     }
 
     /**
@@ -73,20 +97,24 @@ library Warpers {
     /**
      * @dev Warper registry.
      * @param presetFactory Warper preset factory contract.
+     * @param warperIndex Set of registered warper addresses.
+     * @param universeWarperIndex Mapping from a universe ID to the set of warper addresses registered by the universe.
+     * @param assetWarperIndex Mapping from an original asset address to the set of warper addresses registered for the asset.
      * @param warpers Mapping from a warper address to the warper details.
-     * @param universeWarpers Mapping from a universe ID to the set of warper addresses registered by the universe.
      */
     struct Registry {
         IWarperPresetFactory presetFactory;
+        EnumerableSetUpgradeable.AddressSet warperIndex;
+        mapping(uint256 => EnumerableSetUpgradeable.AddressSet) universeWarperIndex;
+        mapping(address => EnumerableSetUpgradeable.AddressSet) assetWarperIndex;
         mapping(address => Warpers.Warper) warpers;
-        mapping(uint256 => EnumerableSetUpgradeable.AddressSet) universeWarpers;
     }
 
     /**
      * @dev Checks warper registration by address.
      */
     function isRegisteredWarper(Registry storage self, address warper) internal view returns (bool) {
-        return self.warpers[warper].universeId != 0;
+        return self.warperIndex.contains(warper);
     }
 
     /**
@@ -97,10 +125,20 @@ library Warpers {
     }
 
     /**
-     * @dev Throws if warper is already registered.
+     * @dev Throws if asset is not supported.
+     * @param asset Asset address.
      */
-    function checkNotRegisteredWarper(Registry storage self, address warper) internal view {
-        if (self.isRegisteredWarper(warper)) revert WarperIsAlreadyRegistered(warper);
+    function checkSupportedAsset(Registry storage self, address asset) internal view {
+        if (!self.isSupportedAsset(asset)) revert UnsupportedAsset(asset);
+    }
+
+    /**
+     * @dev Checks asset support by address.
+     * The supported asset should have at least one warper.
+     * @param asset Asset address.
+     */
+    function isSupportedAsset(Registry storage self, address asset) internal view returns (bool) {
+        return self.assetWarperIndex[asset].length() > 0;
     }
 
     /**
@@ -111,25 +149,34 @@ library Warpers {
         address warperAddress,
         Warper memory warper
     ) internal {
-        // Check that warper is not already registered.
-        self.checkNotRegisteredWarper(warperAddress);
+        if (self.warperIndex.add(warperAddress)) {
+            // Ensure warper compatibility with the current generation of asset controller.
+            warper.controller.checkCompatibleWarper(warperAddress);
+            //todo: check warper count against limits to prevent uncapped enumeration.
 
-        // Ensure warper compatibility with the current generation of asset controller.
-        warper.controller.checkCompatibleWarper(warperAddress);
-        //todo: check warper count against limits to prevent uncapped enumeration.
-
-        // Create warper main registration record.
-        self.warpers[warperAddress] = warper;
-        // Associate the warper with the universe.
-        self.universeWarpers[warper.universeId].add(warperAddress);
+            // Create warper main registration record.
+            self.warpers[warperAddress] = warper;
+            // Associate the warper with the universe.
+            self.universeWarperIndex[warper.universeId].add(warperAddress);
+            // Associate the warper with the original asset.
+            self.assetWarperIndex[warper.original].add(warperAddress);
+        } else {
+            revert WarperIsAlreadyRegistered(warperAddress);
+        }
     }
 
     /**
      * @dev Removes warper data from the registry.
      */
-    function remove(Registry storage self, address warper) internal {
-        uint256 universeId = self.warpers[warper].universeId;
-        self.universeWarpers[universeId].remove(warper);
-        delete self.warpers[warper];
+    function remove(Registry storage self, address warperAddress) internal {
+        Warper storage warper = self.warpers[warperAddress];
+        // Clean up universe index.
+        self.universeWarperIndex[warper.universeId].remove(warperAddress);
+        // Clean up asset index.
+        self.assetWarperIndex[warper.original].add(warperAddress);
+        // Clean up main index.
+        self.warperIndex.remove(warperAddress);
+        // Delete warper data.
+        delete self.warpers[warperAddress];
     }
 }

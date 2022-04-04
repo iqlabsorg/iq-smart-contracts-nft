@@ -171,11 +171,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         listing.checkNotPaused();
         listing.checkValidLockPeriod(params.rentalPeriod);
 
-        // Validate from the original asset perspective.
-        _assetRegistry.checkCompatibleWarper(listing.asset.id, params.warper);
-
         // Validate from the warper perspective.
         Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
+        warper.checkCompatibleAsset(listing.asset);
         warper.checkNotPaused();
         warper.controller.validateRentingParams(listing.asset, params);
     }
@@ -330,7 +328,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Check that warper asset class is supported.
         bytes4 assetClass = IWarper(warper).__assetClass();
-        _assetRegistry.checkAssetClassSupport(assetClass);
+        _assetRegistry.checkSupportedAssetClass(assetClass);
 
         // Check that warper has correct metahub reference.
         address warperMetahub = IWarper(warper).__metahub();
@@ -339,9 +337,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         IWarperController controller = IWarperController(_assetRegistry.assetClassController(assetClass));
 
         // Register warper.
+        address original = IWarper(warper).__original();
         _warperRegistry.register(
             warper,
             Warpers.Warper({
+                original: original,
                 controller: controller,
                 name: params.name,
                 universeId: params.universeId,
@@ -350,15 +350,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         );
 
         // Register the original asset if it is seen for the first time.
-        address original = IWarper(warper).__original();
         if (!_assetRegistry.isRegisteredAsset(original)) {
-            _assetRegistry.addAsset(assetClass, original);
-            // todo: emit event AssetRegistered(asset);
+            _assetRegistry.registerAsset(assetClass, original);
         }
-        // Associate the original asset with the the warper.
-        _assetRegistry.addAssetWarper(original, warper);
 
-        emit WarperRegistered(params.universeId, original, warper);
+        emit WarperRegistered(params.universeId, warper, original);
     }
 
     /**
@@ -370,11 +366,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         uint32 maxLockPeriod,
         bool immediatePayout
     ) external returns (uint256) {
-        // Check that listing asset is supported.
-        _assetRegistry.checkAssetSupport(asset.token());
+        // Check that asset is supported.
+        _warperRegistry.checkSupportedAsset(asset.token());
 
         // Check that listing strategy is supported.
-        _listingRegistry.checkListingStrategySupport(params.strategy);
+        _listingRegistry.checkSupportedListingStrategy(params.strategy);
 
         // Transfer asset from lister account to the vault.
         _assetRegistry.transferAssetToVault(asset, _msgSender());
@@ -473,14 +469,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IWarperManager
      */
     function universeWarpers(uint256 universeId) external view returns (address[] memory) {
-        return _warperRegistry.universeWarpers[universeId].values();
+        return _warperRegistry.universeWarperIndex[universeId].values();
     }
 
     /**
      * @inheritdoc IWarperManager
      */
     function assetWarpers(address original) external view returns (address[] memory) {
-        return _assetRegistry.assets[original].warpers.values();
+        return _warperRegistry.assetWarperIndex[original].values();
     }
 
     /**

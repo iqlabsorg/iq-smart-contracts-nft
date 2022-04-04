@@ -4,18 +4,15 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-import "../Errors.sol";
 import "./IAssetController.sol";
 import "./IAssetVault.sol";
 import "./IAssetClassRegistry.sol";
 
 library Assets {
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using Address for address;
     using Assets for Registry;
     using Assets for Asset;
-    using Assets for AssetId;
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     /*
      * @dev This is the list of asset class identifiers to be used across the system.
@@ -35,15 +32,10 @@ library Assets {
     error UnsupportedAssetClass(bytes4 assetClass);
 
     /**
-     * @dev Thrown when there are no registered warpers for a particular asset.
-     * @param asset Asset address.
+     * @dev Thrown upon attempting to register an asset twice.
+     * @param asset Duplicate asset address.
      */
-    error UnsupportedAsset(address asset);
-
-    /**
-     * @dev Thrown upon attempting to use the warper which is not registered for the provided asset.
-     */
-    error IncompatibleAssetWarper(address asset, address warper);
+    error AssetIsAlreadyRegistered(address asset);
 
     /**
      * @dev Communicates asset identification information.
@@ -101,78 +93,53 @@ library Assets {
      * @dev Original asset data.
      * @param controller Asset controller.
      * @param vault Asset vault.
-     * @param warpers Set of warper addresses registered for the asset.
      */
     struct AssetConfig {
         IAssetController controller;
         IAssetVault vault;
-        EnumerableSetUpgradeable.AddressSet warpers;
     }
 
     /**
      * @dev Asset registry.
      * @param classRegistry Asset class registry contract.
+     * @param assetIndex Set of registered asset addresses.
      * @param assets Mapping from asset address to the asset configuration.
      */
     struct Registry {
         IAssetClassRegistry classRegistry;
+        EnumerableSetUpgradeable.AddressSet assetIndex;
         mapping(address => AssetConfig) assets;
     }
 
     /**
      * @dev Registers new asset.
      */
-    function addAsset(
+    function registerAsset(
         Registry storage self,
         bytes4 assetClass,
         address asset
     ) internal {
-        IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
-        self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
-        self.assets[asset].controller = IAssetController(assetClassConfig.controller);
-    }
-
-    /**
-     * @dev Registers new `warper` that supports the `asset`.
-     */
-    function addAssetWarper(
-        Registry storage self,
-        address asset,
-        address warper
-    ) internal returns (bool) {
-        return self.assets[asset].warpers.add(warper);
+        if (self.assetIndex.add(asset)) {
+            IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
+            self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
+            self.assets[asset].controller = IAssetController(assetClassConfig.controller);
+        } else {
+            revert AssetIsAlreadyRegistered(asset);
+        }
     }
 
     /**
      * @dev Checks asset registration by address.
-     * The registered asset must have controller.
      */
     function isRegisteredAsset(Registry storage self, address asset) internal view returns (bool) {
-        return address(self.assets[asset].controller) != address(0);
-    }
-
-    /**
-     * @dev Checks asset support by address.
-     * The supported asset should have at least one warper.
-     * @param asset Asset address.
-     */
-    function isSupportedAsset(Registry storage self, address asset) internal view returns (bool) {
-        return self.assets[asset].warpers.length() > 0;
-    }
-
-    /**
-     * @dev Throws if asset is not supported.
-     * @param asset Asset address.
-     */
-    function checkAssetSupport(Registry storage self, address asset) internal view {
-        if (!self.isSupportedAsset(asset)) revert UnsupportedAsset(asset);
+        return self.assetIndex.contains(asset);
     }
 
     /**
      * @dev Throws if asset class is not supported.
      * @param assetClass Asset class ID.
      */
-    function checkAssetClassSupport(Registry storage self, bytes4 assetClass) internal view {
+    function checkSupportedAssetClass(Registry storage self, bytes4 assetClass) internal view {
         if (!self.classRegistry.isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
     }
 
@@ -182,18 +149,6 @@ library Assets {
      */
     function assetClassController(Registry storage self, bytes4 assetClass) internal view returns (address) {
         return self.classRegistry.assetClassConfig(assetClass).controller;
-    }
-
-    /**
-     * @dev Throws if the `warper` is not registered for the `asset`.
-     */
-    function checkCompatibleWarper(
-        Registry storage self,
-        Assets.AssetId memory assetId,
-        address warper
-    ) internal view {
-        address assetToken = assetId.token();
-        if (!self.assets[assetToken].warpers.contains(warper)) revert IncompatibleAssetWarper(assetToken, warper);
     }
 
     /**

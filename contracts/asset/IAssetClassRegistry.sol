@@ -78,7 +78,7 @@ interface IAssetClassRegistry {
     function assetClassConfig(bytes4 assetClass) external view returns (ClassConfig memory);
 
     /**
-     * @dev Checks asset class support.
+     * @dev Checks asset class registration.
      * @param assetClass Asset class ID.
      */
     function isRegisteredAssetClass(bytes4 assetClass) external view returns (bool);

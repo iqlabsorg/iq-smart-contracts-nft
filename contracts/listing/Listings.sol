@@ -198,7 +198,7 @@ library Listings {
      * @dev Throws if listing strategy is not supported.
      * @param strategyId Listing strategy ID.
      */
-    function checkListingStrategySupport(Registry storage self, bytes4 strategyId) internal view {
+    function checkSupportedListingStrategy(Registry storage self, bytes4 strategyId) internal view {
         if (!self.strategyRegistry.isRegisteredListingStrategy(strategyId))
             revert UnsupportedListingStrategy(strategyId);
     }

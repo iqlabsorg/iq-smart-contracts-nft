@@ -96,7 +96,7 @@ export function shouldBehaveLikeWarperManager(): void {
               it('emits a WarperRegistered event', async () => {
                 await expect(warperManager.registerWarper(warperAddress, warperRegistrationParams))
                   .to.emit(warperManager, 'WarperRegistered')
-                  .withArgs(universeId, originalAsset.address, warperAddress);
+                  .withArgs(universeId, warperAddress, originalAsset.address);
               });
             });
           });
