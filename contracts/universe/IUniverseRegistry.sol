@@ -12,21 +12,21 @@ interface IUniverseRegistry {
      * @param universeId Universe ID.
      * @param name Universe name.
      */
-    event UniverseCreated(uint256 indexed universeId, string name);
+    event UniverseChanged(uint256 indexed universeId, string name);
 
     /**
-     * @dev Emitted when a universe name is updated.
+     * @dev Emitted when a universe name is changed.
      * @param universeId Universe ID.
      * @param name The newly set name.
      */
-    event UniverseNameUpdated(uint256 indexed universeId, string name);
+    event UniverseNameChanged(uint256 indexed universeId, string name);
 
     /**
-     * @dev Emitted when universe rental fee is updated.
+     * @dev Emitted when universe rental fee is changed.
      * @param universeId Universe ID.
      * @param rentalFeePercent The newly rental fee.
      */
-    event UniverseRentalFeeUpdated(uint256 indexed universeId, uint16 rentalFeePercent);
+    event UniverseRentalFeeChanged(uint256 indexed universeId, uint16 rentalFeePercent);
 
     /**
      * @dev The universe properties & initial configuration params.

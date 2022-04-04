@@ -18,7 +18,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
         const universeId = 1;
 
         await expect(universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 }))
-          .to.emit(universeRegistry, 'UniverseCreated')
+          .to.emit(universeRegistry, 'UniverseChanged')
           .withArgs(universeId, universeName);
       });
     });

@@ -66,7 +66,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
         uint256 universeId = _universeToken.mint(_msgSender());
         _universes[universeId] = params;
 
-        emit UniverseCreated(universeId, params.name);
+        emit UniverseChanged(universeId, params.name);
 
         return universeId;
     }
@@ -77,7 +77,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     function setUniverseName(uint256 universeId, string memory name) external onlyUniverseOwner(universeId) {
         _universes[universeId].name = name;
 
-        emit UniverseNameUpdated(universeId, name);
+        emit UniverseNameChanged(universeId, name);
     }
 
     /**
@@ -86,7 +86,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     function setUniverseRentalFee(uint256 universeId, uint16 rentalFeePercent) external onlyUniverseOwner(universeId) {
         _universes[universeId].rentalFeePercent = rentalFeePercent;
 
-        emit UniverseRentalFeeUpdated(universeId, rentalFeePercent);
+        emit UniverseRentalFeeChanged(universeId, rentalFeePercent);
     }
 
     /**
