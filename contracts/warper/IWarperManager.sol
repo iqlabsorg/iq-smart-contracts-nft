@@ -6,6 +6,11 @@ import "./Warpers.sol";
 
 interface IWarperManager {
     /**
+     * @dev Thrown if provided warper address does not implement warper interface.
+     */
+    error InvalidWarperInterface();
+
+    /**
      * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
      * @param actual Metahub address returned by warper.
      * @param required Required metahub address.
@@ -33,41 +38,25 @@ interface IWarperManager {
     event WarperUnpaused(address indexed warper);
 
     /**
-     * @dev Deploys a preset warper identified by `presetId`.
-     * @param universeId Universe ID.
-     * @param original Original asset contract address.
-     * @param presetId Warper preset ID.
-     * @return Warper address.
+     * @dev Warper registration params.
+     * @param name The warper name.
+     * @param universeId The universe ID.
+     * @param paused Indicates whether the warper should stay paused after registration.
      */
-    function deployWarper(
-        uint256 universeId,
-        address original,
-        bytes32 presetId
-    ) external returns (address);
+    struct WarperRegistrationParams {
+        string name;
+        uint256 universeId;
+        bool paused;
+    }
 
     /**
-     * @dev Deploys a preset warper identified by `presetId`, and performs additional setup call.
-     * @param universeId Universe ID.
-     * @param original Original asset contract address.
-     * @param presetId Warper preset ID.
-     * @param presetData Warper additional initialization data.
-     * @return Warper address.
-     */
-    function deployWarperWithData(
-        uint256 universeId,
-        address original,
-        bytes32 presetId,
-        bytes calldata presetData
-    ) external returns (address);
-
-    /**
-     * @dev Registers a new custom warper.
+     * @dev Registers a new warper.
      * The warper must be deployed and configured prior to registration,
      * since it becomes available for renting immediately.
-     * @param universeId Universe ID.
      * @param warper Warper address.
+     * @param params Warper registration params.
      */
-    function registerWarper(address warper, uint256 universeId) external;
+    function registerWarper(address warper, WarperRegistrationParams calldata params) external;
 
     /**
      * @dev Returns the list of warpers belonging to the particular universe.

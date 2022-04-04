@@ -92,9 +92,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     constructor() initializer {}
 
-    /** todo: docs
+    /**
      * @dev Metahub initialization params.
      * @param warperPresetFactory Warper preset factory address.
+     * @param assetClassRegistry
+     * @param listingStrategyRegistry
+     * @param universeRegistry
+     * @param acl
+     * @param baseToken
+     * @param rentalFeePercent
      */
     struct MetahubInitParams {
         IWarperPresetFactory warperPresetFactory;
@@ -314,34 +320,45 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IWarperManager
      */
-    function deployWarper(
-        uint256 universeId,
-        address original,
-        bytes32 presetId
-    ) external onlyUniverseOwner(universeId) returns (address warper) {
-        warper = _deployWarperWithData(original, presetId, new bytes(0));
-        _registerWarper(universeId, warper, true);
-    }
+    function registerWarper(address warper, WarperRegistrationParams calldata params)
+        external
+        onlyUniverseOwner(params.universeId)
+    {
+        // Check that provided warper address is a valid contract.
+        if (!warper.isContract() || !warper.supportsInterface(type(IWarper).interfaceId))
+            revert InvalidWarperInterface();
 
-    /**
-     * @inheritdoc IWarperManager
-     */
-    function deployWarperWithData(
-        uint256 universeId,
-        address original,
-        bytes32 presetId,
-        bytes calldata presetData
-    ) external onlyUniverseOwner(universeId) returns (address warper) {
-        if (presetData.length == 0) revert EmptyPresetData();
-        warper = _deployWarperWithData(original, presetId, presetData);
-        _registerWarper(universeId, warper, true);
-    }
+        // Check that warper asset class is supported.
+        bytes4 assetClass = IWarper(warper).__assetClass();
+        _assetRegistry.checkAssetClassSupport(assetClass);
 
-    /**
-     * @inheritdoc IWarperManager
-     */
-    function registerWarper(address warper, uint256 universeId) external onlyUniverseOwner(universeId) {
-        _registerWarper(universeId, warper, false);
+        // Check that warper has correct metahub reference.
+        address warperMetahub = IWarper(warper).__metahub();
+        if (warperMetahub != address(this)) revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
+
+        IWarperController controller = IWarperController(_assetRegistry.assetClassController(assetClass));
+
+        // Register warper.
+        _warperRegistry.register(
+            warper,
+            Warpers.Warper({
+                controller: controller,
+                name: params.name,
+                universeId: params.universeId,
+                paused: params.paused
+            })
+        );
+
+        // Register the original asset if it is seen for the first time.
+        address original = IWarper(warper).__original();
+        if (!_assetRegistry.isRegisteredAsset(original)) {
+            _assetRegistry.addAsset(assetClass, original);
+            // todo: emit event AssetRegistered(asset);
+        }
+        // Associate the original asset with the the warper.
+        _assetRegistry.addAssetWarper(original, warper);
+
+        emit WarperRegistered(params.universeId, original, warper);
     }
 
     /**
@@ -574,65 +591,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @dev Checks whether the caller is authorized to upgrade the Metahub implementation.
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
-
-    /**
-     * @dev Constructs warper initialization payload and
-     * calls warper preset factory to deploy a warper from preset.
-     */
-    function _deployWarperWithData(
-        address original,
-        bytes32 presetId,
-        bytes memory presetData
-    ) internal returns (address) {
-        // Construct warper initialization payload call.
-        // Put warper default initialization payload first, then append additional preset data.
-        bytes memory initCall = abi.encodeWithSelector(
-            IWarperPreset.__initialize.selector,
-            abi.encode(original, address(this), presetData)
-        );
-
-        // Deploy new warper instance from preset via warper preset factory.
-        return _warperRegistry.presetFactory.deployPreset(presetId, initCall);
-    }
-
-    /**
-     * @dev Performs warper registration.
-     * @param universeId The universe ID.
-     * @param warper The warper address.
-     * @param paused Indicates whether the warper should stay paused after registration.
-     */
-    function _registerWarper(
-        uint256 universeId,
-        address warper,
-        bool paused
-    ) internal {
-        // Check that warper asset class is supported.
-        bytes4 assetClass = IWarper(warper).__assetClass();
-        _assetRegistry.checkAssetClassSupport(assetClass);
-
-        // Check that warper has correct metahub reference.
-        address warperMetahub = IWarper(warper).__metahub();
-        if (warperMetahub != address(this)) revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
-
-        IWarperController controller = IWarperController(_assetRegistry.assetClassController(assetClass));
-
-        // Register warper.
-        _warperRegistry.register(
-            warper,
-            Warpers.Warper({universeId: universeId, controller: controller, paused: paused})
-        );
-
-        // Register the original asset if it is seen for the first time.
-        address original = IWarper(warper).__original();
-        if (!_assetRegistry.isRegisteredAsset(original)) {
-            _assetRegistry.addAsset(assetClass, original);
-            // todo: emit event AssetRegistered(asset);
-        }
-        // Associate the original asset with the the warper.
-        _assetRegistry.addAssetWarper(original, warper);
-
-        emit WarperRegistered(universeId, original, warper);
-    }
 
     /**
      * @dev Throws if the warpers universe owner is not the provided account address.

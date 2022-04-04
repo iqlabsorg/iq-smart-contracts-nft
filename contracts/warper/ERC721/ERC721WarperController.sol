@@ -24,7 +24,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
      * @inheritdoc IWarperController
      */
     function checkCompatibleWarper(address warper) external view {
-        if (!isCompatibleWarper(warper)) revert InvalidWarperInterface();
+        if (!isCompatibleWarper(warper)) revert IncompatibleWarperInterface();
     }
 
     /**

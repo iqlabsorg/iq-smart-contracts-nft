@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import { deployWarperPreset } from '../../../shared/utils';
+import { deployWarperPresetWithInitData } from '../../../shared/utils';
 import { IWarperPresetFactory, WarperPresetMock, WarperPresetMock__factory } from '../../../../typechain';
 import { presetId1, presetId2 } from '../WarperPresetFactory.behaviour';
 
@@ -36,7 +36,11 @@ export function shouldBehaveLikeDeployWarperPreset(): void {
       ]);
 
       // Deploy warper and get address from event.
-      const warperAddress = await deployWarperPreset(warperPresetFactory.connect(stranger), presetId1, initData);
+      const warperAddress = await deployWarperPresetWithInitData(
+        warperPresetFactory.connect(stranger),
+        presetId1,
+        initData,
+      );
 
       // Assert warper is deployed and initialized correctly.
       expect(warperAddress).to.be.properAddress;

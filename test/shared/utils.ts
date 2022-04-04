@@ -1,6 +1,13 @@
 import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike } from 'ethers';
-import { IUniverseRegistry, IWarperManager, IWarperPresetFactory, WarperPresetFactory } from '../../typechain';
+import {
+  IUniverseRegistry,
+  IWarperManager,
+  IWarperPreset__factory,
+  IWarperPresetFactory,
+  WarperPresetFactory,
+  WarperPresetMock__factory,
+} from '../../typechain';
 import { Assets } from '../../typechain/Metahub';
 import { wait } from '../../tasks';
 
@@ -64,10 +71,25 @@ export async function createUniverse(
 
 /**
  * Deploys a warper from preset via factory and returns warper address.
+ */
+export async function deployWarperPreset(
+  factory: IWarperPresetFactory,
+  presetId: BytesLike,
+  metahubAddress: string,
+  originalAddress: string,
+): Promise<string> {
+  const initData = IWarperPreset__factory.createInterface().encodeFunctionData('__initialize', [
+    defaultAbiCoder.encode(['address', 'address'], [originalAddress, metahubAddress]),
+  ]);
+  return await deployWarperPresetWithInitData(factory, presetId, initData);
+}
+
+/**
+ * Deploys a warper from preset via factory and returns warper address.
  * @param factory
  * @param params
  */
-export async function deployWarperPreset(
+export async function deployWarperPresetWithInitData(
   factory: IWarperPresetFactory,
   ...params: Parameters<WarperPresetFactory['deployPreset']>
 ): Promise<string> {
@@ -76,17 +98,12 @@ export async function deployWarperPreset(
   return events[0].args.warper;
 }
 
-/**
- * Deploys a warper from preset via metahub and returns warper address.
- * @param metahub
- * @param params
- */
-export async function deployWarper(
-  metahub: IWarperManager,
-  ...params: Parameters<IWarperManager['deployWarper']>
+export async function registerWarper(
+  manager: IWarperManager,
+  ...params: Parameters<IWarperManager['registerWarper']>
 ): Promise<string> {
-  const receipt = await wait(metahub.deployWarper(...params));
-  const events = await metahub.queryFilter(metahub.filters.WarperRegistered(), receipt.blockHash);
+  const receipt = await wait(manager.registerWarper(...params));
+  const events = await manager.queryFilter(manager.filters.WarperRegistered(), receipt.blockHash);
   return events[0].args.warper;
 }
 

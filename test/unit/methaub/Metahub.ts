@@ -23,9 +23,11 @@ import {
   IWarperPresetFactory__factory,
   UniverseRegistry__factory,
   IUniverseRegistry__factory,
+  ERC721WarperController__factory,
 } from '../../../typechain';
 
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
+import { AssetClass } from '../../shared/utils';
 
 export async function unitFixtureMetahub() {
   // Resolve primary roles
@@ -82,8 +84,14 @@ export async function unitFixtureMetahub() {
   const warperPresetFactory = new WarperPresetFactory__factory(deployer).attach(deployedAddresses.warperPresetFactory);
   await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
 
-  const erc721Controller = await new ERC721AssetController__factory(deployer).deploy();
+  const erc721Controller = await new ERC721WarperController__factory(deployer).deploy();
   const erc721Vault = await new ERC721AssetVault__factory(deployer).deploy(metahub.address, acl.address);
+
+  // Register ERC721 asset class.
+  await assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
+    controller: erc721Controller.address,
+    vault: erc721Vault.address,
+  });
 
   return {
     assetClassRegistry,

@@ -33,13 +33,15 @@ library Warpers {
 
     /**
      * @dev Registered warper data.
+     * @param controller Warper controller.
+     * @param name Warper name.
      * @param universeId Warper universe ID.
-     * @param controller Warper asset controller.
      * @param paused Indicates whether the warper is paused.
      */
     struct Warper {
-        uint256 universeId;
         IWarperController controller;
+        string name;
+        uint256 universeId;
         bool paused;
     }
 

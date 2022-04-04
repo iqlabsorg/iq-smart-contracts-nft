@@ -10,7 +10,7 @@ interface IWarperController is IAssetController {
     /**
      * @dev Thrown if warper interface is not compatible with the controller.
      */
-    error InvalidWarperInterface();
+    error IncompatibleWarperInterface();
 
     /**
      * @dev Thrown upon attempting to use the warper with an asset different from the one expected by the warper.
