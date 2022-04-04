@@ -42,12 +42,11 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
     /**
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        bool supportedByWarper = interfaceId == type(IWarper).interfaceId || interfaceId == type(IERC165).interfaceId;
-        if (supportedByWarper) return true;
-
-        address original = _original();
-        return original.supportsERC165() ? original.supportsInterface(interfaceId) : false;
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165) returns (bool) {
+        return
+            interfaceId == type(IWarper).interfaceId ||
+            interfaceId == type(IERC165).interfaceId ||
+            _original().supportsInterface(interfaceId);
     }
 
     /**
