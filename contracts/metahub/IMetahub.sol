@@ -5,5 +5,6 @@ import "../accounting/IPaymentManager.sol";
 import "../warper/IWarperManager.sol";
 import "../listing/IListingManager.sol";
 import "../renting/IRentingManager.sol";
+import "./IProtocolConfigManager.sol";
 
-interface IMetahub is IPaymentManager, IWarperManager, IListingManager, IRentingManager {}
+interface IMetahub is IProtocolConfigManager, IPaymentManager, IWarperManager, IListingManager, IRentingManager {}

@@ -18,7 +18,7 @@ abstract contract MetahubStorage {
     /**
      * @dev Protocol configuration.
      */
-    Protocol.Config internal _protocol;
+    Protocol.Config internal _protocolConfig;
 
     /**
      * @dev Account registry contains the data about participants' accounts and their current balances.

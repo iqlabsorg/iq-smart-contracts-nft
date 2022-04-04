@@ -43,12 +43,6 @@ interface IPaymentManager {
     ) external;
 
     /**
-     * @dev Get the base token that's used for stable price denomination.
-     * @return The base token address.
-     */
-    function baseToken() external view returns (address);
-
-    /**
      * @dev Returns the amount of `token`, currently accumulated by the protocol.
      * @param token The token address.
      * @return Balance of `token`.

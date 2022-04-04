@@ -114,12 +114,34 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         __UUPSUpgradeable_init();
 
         _aclContract = params.acl;
-        _protocol = Protocol.Config({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
+        _protocolConfig = Protocol.Config({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
 
         _warperRegistry.presetFactory = params.warperPresetFactory;
         _assetRegistry.classRegistry = params.assetClassRegistry;
         _listingRegistry.strategyRegistry = params.listingStrategyRegistry;
         _universeRegistry = params.universeRegistry;
+    }
+
+    /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function setProtocolRentalFeePercent(uint16 rentalFeePercent) external onlyAdmin {
+        _protocolConfig.rentalFeePercent = rentalFeePercent;
+        emit ProtocolRentalFeeChanged(rentalFeePercent);
+    }
+
+    /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function protocolRentalFeePercent() external view returns (uint16) {
+        return _protocolConfig.rentalFeePercent;
+    }
+
+    /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function baseToken() external view returns (address) {
+        return address(_protocolConfig.baseToken);
     }
 
     /**
@@ -135,7 +157,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function _validateRentingParams(Rentings.Params calldata params) internal view {
         // Validate from the protocol perspective.
-        _protocol.checkBaseToken(params.paymentToken);
+        _protocolConfig.checkBaseToken(params.paymentToken);
 
         // Validate from the listing perspective.
         _listingRegistry.checkListed(params.listingId);
@@ -502,13 +524,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IPaymentManager
      */
-    function baseToken() external view returns (address) {
-        return address(_protocol.baseToken);
-    }
-
-    /**
-     * @inheritdoc IPaymentManager
-     */
     function protocolBalance(address token) public view returns (uint256) {
         return _accountRegistry.protocol.balance(token);
     }
@@ -649,7 +664,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         uint256 universeBaseFee = (listerBaseFee * universeRentalFeePercent) / 10_000;
 
         // Calculate protocol fee.
-        uint256 protocolFee = (listerBaseFee * _protocol.rentalFeePercent) / 10_000;
+        uint256 protocolFee = (listerBaseFee * _protocolConfig.rentalFeePercent) / 10_000;
 
         // Calculate warper premiums.
         (uint256 universePremium, uint256 listerPremium) = warper.controller.calculatePremiums(
