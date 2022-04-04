@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { IACL, IAssetVault, Pausable__factory } from '../../../../typechain';
+import { IAssetVault, Pausable__factory } from '../../../../typechain';
 import { AccessControlledHelper } from '../../../shared/utils';
 
 /**
@@ -9,41 +9,27 @@ import { AccessControlledHelper } from '../../../shared/utils';
 export function shouldBehaveLikeAssetVault(): void {
   describe('IAssetVault', function () {
     let assetVault: IAssetVault;
-    let acl: IACL;
-    let stranger: SignerWithAddress;
     let admin: SignerWithAddress;
     let supervisor: SignerWithAddress;
     let operator: SignerWithAddress;
 
-    let onlyAdminCan: AccessControlledHelper;
-    let onlySupervisorCan: AccessControlledHelper;
-
-    beforeEach(async function () {
+    beforeEach(function () {
       assetVault = this.contracts.assetVault;
-      acl = this.contracts.acl;
 
-      operator = this.signers.named['operator'];
-      [stranger, admin, supervisor] = this.signers.unnamed;
-      const deployer = this.signers.named['deployer'];
-
-      await acl.connect(deployer).grantRole(await acl.adminRole(), admin.address);
-      await acl.connect(deployer).grantRole(await acl.supervisorRole(), supervisor.address);
-
-      onlyAdminCan = new AccessControlledHelper(admin, stranger, await acl.adminRole());
-      onlySupervisorCan = new AccessControlledHelper(supervisor, stranger, await acl.supervisorRole());
+      admin = this.signers.named.admin;
+      operator = this.signers.named.operator;
+      supervisor = this.signers.named.supervisor;
     });
 
     describe('switchToRecoveryMode', () => {
-      AccessControlledHelper.onlyRoleCan(
-        () => onlyAdminCan,
-        async signer => {
-          const tx = await assetVault.connect(signer).switchToRecoveryMode();
-          await expect(tx)
-            .to.emit(assetVault, 'RecoveryModeActivated')
-            .withArgs(await onlyAdminCan.successfulSigner.getAddress());
-          await expect(assetVault.isRecovery()).to.eventually.equal(true);
-        },
-      );
+      AccessControlledHelper.onlyAdminCan(async signer => {
+        const tx = await assetVault.connect(signer).switchToRecoveryMode();
+
+        await expect(tx)
+          .to.emit(assetVault, 'RecoveryModeActivated')
+          .withArgs(await AccessControlledHelper.adminData.successfulSigner.getAddress());
+        await expect(assetVault.isRecovery()).to.eventually.equal(true);
+      });
 
       context('When in recovery mode', () => {
         beforeEach(async () => {
@@ -61,16 +47,13 @@ export function shouldBehaveLikeAssetVault(): void {
     });
 
     describe('pause', () => {
-      AccessControlledHelper.onlyRoleCan(
-        () => onlySupervisorCan,
-        async signer => {
-          const tx = await assetVault.connect(signer).pause();
-          const pausable = Pausable__factory.connect(assetVault.address, assetVault.signer);
+      AccessControlledHelper.onlySupervisorCan(async signer => {
+        const tx = await assetVault.connect(signer).pause();
+        const pausable = Pausable__factory.connect(assetVault.address, assetVault.signer);
 
-          await expect(tx).to.emit(pausable, 'Paused');
-          await expect(pausable.paused()).to.eventually.equal(true);
-        },
-      );
+        await expect(tx).to.emit(pausable, 'Paused');
+        await expect(pausable.paused()).to.eventually.equal(true);
+      });
     });
 
     describe('unpause', () => {
@@ -85,16 +68,13 @@ export function shouldBehaveLikeAssetVault(): void {
           await assetVault.connect(supervisor).pause();
         });
 
-        AccessControlledHelper.onlyRoleCan(
-          () => onlySupervisorCan,
-          async signer => {
-            const tx = await assetVault.connect(signer).unpause();
-            const pausable = Pausable__factory.connect(assetVault.address, assetVault.signer);
+        AccessControlledHelper.onlySupervisorCan(async signer => {
+          const tx = await assetVault.connect(signer).unpause();
+          const pausable = Pausable__factory.connect(assetVault.address, assetVault.signer);
 
-            await expect(tx).to.emit(pausable, 'Unpaused');
-            await expect(pausable.paused()).to.eventually.equal(false);
-          },
-        );
+          await expect(tx).to.emit(pausable, 'Unpaused');
+          await expect(pausable.paused()).to.eventually.equal(false);
+        });
       });
     });
 

@@ -1,9 +1,10 @@
 import { ethers } from 'hardhat';
-import { BigNumber, BigNumberish, BytesLike, ContractTransaction, Signer } from 'ethers';
+import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
 import {
+  IACL,
   IUniverseRegistry,
-  IWarperManager,
   IWarperPreset__factory,
+  IWarperManager,
   IWarperPresetFactory,
   WarperPresetFactory,
 } from '../../typechain';
@@ -152,23 +153,44 @@ export const AssetRentalStatus = {
 };
 
 export class AccessControlledHelper {
+  public static adminData: AccessControlledHelper;
+  public static supervisorData: AccessControlledHelper;
+
   constructor(readonly successfulSigner: Signer, readonly stranger: Signer, readonly requiredRole: string) {}
 
-  static onlyRoleCan(actors: () => AccessControlledHelper, tx: (signer: Signer) => Promise<void>) {
-    context('When called with the correct role', () => {
-      it('called successfully', async () => {
-        const actorSet = actors();
-        await tx(actorSet.successfulSigner);
-      });
-    });
+  static async registerAdmin(successfulSigner: Signer, stranger: Signer, acl: IACL) {
+    const adminBytes = await acl.adminRole();
+    AccessControlledHelper.adminData = new AccessControlledHelper(successfulSigner, stranger, adminBytes);
+  }
 
-    context('When called by stranger', () => {
-      it('reverts', async () => {
-        const actorSet = actors();
-        await expect(tx(actorSet.stranger)).to.be.revertedByACL(
-          await actorSet.stranger.getAddress(),
-          actorSet.requiredRole,
-        );
+  static async registerSupervisor(successfulSigner: Signer, stranger: Signer, acl: IACL) {
+    const supervisorBytes = await acl.supervisorRole();
+    AccessControlledHelper.supervisorData = new AccessControlledHelper(successfulSigner, stranger, supervisorBytes);
+  }
+
+  static onlyAdminCan(tx: (signer: Signer) => Promise<void>) {
+    return AccessControlledHelper.onlyRoleCan(() => AccessControlledHelper.adminData, tx);
+  }
+
+  static onlySupervisorCan(tx: (signer: Signer) => Promise<void>) {
+    return AccessControlledHelper.onlyRoleCan(() => AccessControlledHelper.supervisorData, tx);
+  }
+
+  private static onlyRoleCan(actorSet: () => AccessControlledHelper, tx: (signer: Signer) => Promise<void>) {
+    describe('onlyRole', () => {
+      context('When called with the correct role', () => {
+        it('called successfully', async () => {
+          await tx(actorSet().successfulSigner);
+        });
+      });
+
+      context('When called by stranger', () => {
+        it('reverts', async () => {
+          await expect(tx(actorSet().stranger)).to.be.revertedByACL(
+            await actorSet().stranger.getAddress(),
+            actorSet().requiredRole,
+          );
+        });
       });
     });
   }

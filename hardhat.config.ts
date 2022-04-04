@@ -50,6 +50,8 @@ const config: HardhatUserConfig = {
     assetOwner: 2,
     operator: 3,
     universeOwner: 4,
+    admin: 5,
+    supervisor: 6,
   },
   networks: {
     ropsten: {
