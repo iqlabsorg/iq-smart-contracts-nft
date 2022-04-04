@@ -1,15 +1,15 @@
 import { ethers } from 'hardhat';
-import { BigNumber, BigNumberish, BytesLike } from 'ethers';
+import { BigNumber, BigNumberish, BytesLike, ContractTransaction, Signer } from 'ethers';
 import {
   IUniverseRegistry,
   IWarperManager,
   IWarperPreset__factory,
   IWarperPresetFactory,
   WarperPresetFactory,
-  WarperPresetMock__factory,
 } from '../../typechain';
 import { Assets } from '../../typechain/Metahub';
 import { wait } from '../../tasks';
+import { expect } from 'chai';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 
@@ -150,3 +150,30 @@ export const AssetRentalStatus = {
   AVAILABLE: 1,
   RENTED: 2,
 };
+
+export class AccessControlledHelper {
+  constructor(readonly successfulSigner: Signer, readonly stranger: Signer, readonly requiredRole: string) {}
+
+  static onlyRoleCan(
+    actors: () => AccessControlledHelper,
+    tx: (signer: Signer) => Promise<ContractTransaction>,
+    successBody: (tx: ContractTransaction) => Promise<void>,
+  ) {
+    context('When called with the correct role', () => {
+      it('called successfully', async () => {
+        const actorSet = actors();
+        await successBody(await tx(actorSet.successfulSigner));
+      });
+    });
+
+    context('When called by stranger', () => {
+      it('reverts', async () => {
+        const actorSet = actors();
+        await expect(tx(actorSet.stranger)).to.be.revertedByACL(
+          await actorSet.stranger.getAddress(),
+          actorSet.requiredRole,
+        );
+      });
+    });
+  }
+}

@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ContractTransaction, Signer } from 'ethers';
 import { IACL, IAssetVault, Pausable__factory } from '../../../../typechain';
+import { AccessControlledHelper } from '../../../shared/utils';
 
 /**
  * Tests for ERC721 Asset Vault
@@ -15,6 +15,9 @@ export function shouldBehaveLikeAssetVault(): void {
     let supervisor: SignerWithAddress;
     let operator: SignerWithAddress;
 
+    let onlyAdminCan: AccessControlledHelper;
+    let onlySupervisorCan: AccessControlledHelper;
+
     beforeEach(async function () {
       assetVault = this.contracts.assetVault;
       acl = this.contracts.acl;
@@ -25,57 +28,21 @@ export function shouldBehaveLikeAssetVault(): void {
 
       await acl.connect(deployer).grantRole(await acl.adminRole(), admin.address);
       await acl.connect(deployer).grantRole(await acl.supervisorRole(), supervisor.address);
+
+      onlyAdminCan = new AccessControlledHelper(admin, stranger, await acl.adminRole());
+      onlySupervisorCan = new AccessControlledHelper(supervisor, stranger, await acl.supervisorRole());
     });
 
-    function onlyRoleCan(
-      tx: (signer: Signer) => Promise<ContractTransaction>,
-      successBody: (tx: ContractTransaction, signer: Signer) => Promise<void>,
-      roleProvider: () => Promise<[Signer, string]>,
-    ) {
-      let role: string;
-      let signer: Signer;
-
-      beforeEach(async () => {
-        [signer, role] = await roleProvider();
-      });
-
-      context('When called with the correct role', () => {
-        it('called successfully', async () => {
-          const cTx = await tx(signer);
-          await successBody(cTx, signer);
-        });
-      });
-
-      context('When called by stranger', () => {
-        it('reverts', async () => {
-          await expect(tx(stranger)).to.be.revertedByACL(stranger.address, role);
-        });
-      });
-    }
-
-    function onlyAdminCan(
-      tx: (signer: Signer) => Promise<ContractTransaction>,
-      successBody: (tx: ContractTransaction, signer: Signer) => Promise<void>,
-    ) {
-      onlyRoleCan(tx, successBody, async () => [admin, await acl.adminRole()]);
-    }
-
-    function onlySupervisorCan(
-      tx: (signer: Signer) => Promise<ContractTransaction>,
-      successBody: (tx: ContractTransaction, signer: Signer) => Promise<void>,
-    ) {
-      onlyRoleCan(tx, successBody, async () => [supervisor, await acl.supervisorRole()]);
-    }
-
     describe('switchToRecoveryMode', () => {
-      onlyAdminCan(
+      AccessControlledHelper.onlyRoleCan(
+        () => onlyAdminCan,
         async signer => {
           return await assetVault.connect(signer).switchToRecoveryMode();
         },
-        async (tx, signer) => {
+        async tx => {
           await expect(tx)
             .to.emit(assetVault, 'RecoveryModeActivated')
-            .withArgs(await signer.getAddress());
+            .withArgs(await onlyAdminCan.successfulSigner.getAddress());
 
           await expect(assetVault.isRecovery()).to.eventually.equal(true);
         },
@@ -97,7 +64,8 @@ export function shouldBehaveLikeAssetVault(): void {
     });
 
     describe('pause', () => {
-      onlySupervisorCan(
+      AccessControlledHelper.onlyRoleCan(
+        () => onlySupervisorCan,
         async signer => {
           return await assetVault.connect(signer).pause();
         },
@@ -122,7 +90,8 @@ export function shouldBehaveLikeAssetVault(): void {
           await assetVault.connect(supervisor).pause();
         });
 
-        onlySupervisorCan(
+        AccessControlledHelper.onlyRoleCan(
+          () => onlySupervisorCan,
           async signer => {
             return await assetVault.connect(signer).unpause();
           },
