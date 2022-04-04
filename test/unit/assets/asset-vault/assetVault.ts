@@ -1,10 +1,8 @@
 import hre, { ethers } from 'hardhat';
 import {
-  ACL__factory,
   ERC721AssetVault__factory,
   ERC721Mock__factory,
   IACL,
-  IACL__factory,
   IAssetVault__factory,
   IERC721AssetVault__factory,
 } from '../../../../typechain';

@@ -152,45 +152,55 @@ export const AssetRentalStatus = {
   RENTED: 2,
 };
 
-export class AccessControlledHelper {
-  public static adminData: AccessControlledHelper;
-  public static supervisorData: AccessControlledHelper;
+interface ActorSet {
+  successfulSigner: Signer;
+  stranger: Signer;
+  requiredRole: string;
+}
 
-  constructor(readonly successfulSigner: Signer, readonly stranger: Signer, readonly requiredRole: string) {}
+export class AccessControlledHelper {
+  public static adminData: ActorSet;
+  public static supervisorData: ActorSet;
 
   static async registerAdmin(successfulSigner: Signer, stranger: Signer, acl: IACL) {
     const adminBytes = await acl.adminRole();
-    AccessControlledHelper.adminData = new AccessControlledHelper(successfulSigner, stranger, adminBytes);
+    AccessControlledHelper.adminData = {
+      successfulSigner,
+      stranger,
+      requiredRole: adminBytes,
+    };
   }
 
   static async registerSupervisor(successfulSigner: Signer, stranger: Signer, acl: IACL) {
     const supervisorBytes = await acl.supervisorRole();
-    AccessControlledHelper.supervisorData = new AccessControlledHelper(successfulSigner, stranger, supervisorBytes);
+    AccessControlledHelper.supervisorData = {
+      successfulSigner,
+      stranger,
+      requiredRole: supervisorBytes,
+    };
   }
 
   static onlyAdminCan(tx: (signer: Signer) => Promise<void>) {
-    return AccessControlledHelper.onlyRoleCan(() => AccessControlledHelper.adminData, tx);
+    return AccessControlledHelper.onlyRoleCan('admin', () => AccessControlledHelper.adminData, tx);
   }
 
   static onlySupervisorCan(tx: (signer: Signer) => Promise<void>) {
-    return AccessControlledHelper.onlyRoleCan(() => AccessControlledHelper.supervisorData, tx);
+    return AccessControlledHelper.onlyRoleCan('supervisor', () => AccessControlledHelper.supervisorData, tx);
   }
 
-  private static onlyRoleCan(actorSet: () => AccessControlledHelper, tx: (signer: Signer) => Promise<void>) {
-    describe('onlyRole', () => {
-      context('When called with the correct role', () => {
-        it('called successfully', async () => {
-          await tx(actorSet().successfulSigner);
-        });
+  private static onlyRoleCan(roleName: string, actorSet: () => ActorSet, tx: (signer: Signer) => Promise<void>) {
+    context(`When called by ${roleName}`, () => {
+      it('executes successfully', async () => {
+        await tx(actorSet().successfulSigner);
       });
+    });
 
-      context('When called by stranger', () => {
-        it('reverts', async () => {
-          await expect(tx(actorSet().stranger)).to.be.revertedByACL(
-            await actorSet().stranger.getAddress(),
-            actorSet().requiredRole,
-          );
-        });
+    context('When called by stranger', () => {
+      it('reverts', async () => {
+        await expect(tx(actorSet().stranger)).to.be.revertedByACL(
+          await actorSet().stranger.getAddress(),
+          actorSet().requiredRole,
+        );
       });
     });
   }
