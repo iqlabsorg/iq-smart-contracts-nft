@@ -6,26 +6,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../acl/AccessControlledUpgradeable.sol";
 import "./IUniverseRegistry.sol";
 import "./UniverseToken.sol";
+import "./UniverseRegistryStorage.sol";
 
 /**
  * @title Universe Registry contract.
  */
-contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
-    /**
-     * @dev ACL contract address.
-     */
-    IACL private _aclContract;
-
-    /**
-     * @dev Universe token address.
-     */
-    IUniverseToken private _universeToken;
-
-    /**
-     * @dev Mapping from token ID to the Universe structure.
-     */
-    mapping(uint256 => UniverseParams) internal _universes;
-
+contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpgradeable, AccessControlledUpgradeable {
     /**
      * @dev Modifier to make a function callable only by the universe owner.
      */
