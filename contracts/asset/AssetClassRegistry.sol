@@ -2,9 +2,9 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 
 import "../acl/AccessControlledUpgradeable.sol";
-import "../Errors.sol";
 import "./AssetClassRegistryStorage.sol";
 
 contract AssetClassRegistry is
@@ -13,6 +13,8 @@ contract AssetClassRegistry is
     AccessControlledUpgradeable,
     AssetClassRegistryStorage
 {
+    using ERC165CheckerUpgradeable for address;
+
     /**
      * @dev Modifier to make a function callable only for the registered asset class.
      */
@@ -39,7 +41,10 @@ contract AssetClassRegistry is
      * @inheritdoc IAssetClassRegistry
      */
     function registerAssetClass(bytes4 assetClass, ClassConfig calldata config) external onlyAdmin {
-        //todo: validate interfaces
+        _checkValidAssetController(assetClass, config.controller);
+        _checkValidAssetVault(assetClass, config.vault);
+
+        // Check if not already registered.
         if (isRegisteredAssetClass(assetClass)) revert AssetClassIsAlreadyRegistered(assetClass);
 
         _classes[assetClass] = config;
@@ -54,9 +59,7 @@ contract AssetClassRegistry is
         onlyAdmin
         onlyRegisteredAssetClass(assetClass)
     {
-        bytes4 vaultAssetClass = IAssetVault(vault).assetClass();
-        if (vaultAssetClass != assetClass) revert AssetClassMismatch(vaultAssetClass, assetClass);
-
+        _checkValidAssetVault(assetClass, vault);
         _classes[assetClass].vault = vault;
         emit AssetClassVaultChanged(assetClass, vault);
     }
@@ -69,9 +72,7 @@ contract AssetClassRegistry is
         onlyAdmin
         onlyRegisteredAssetClass(assetClass)
     {
-        bytes4 controllerAssetClass = IAssetController(controller).assetClass();
-        if (controllerAssetClass != assetClass) revert AssetClassMismatch(controllerAssetClass, assetClass);
-
+        _checkValidAssetController(assetClass, controller);
         _classes[assetClass].controller = controller;
         emit AssetClassControllerChanged(assetClass, controller);
     }
@@ -101,6 +102,28 @@ contract AssetClassRegistry is
      */
     function checkRegisteredAssetClass(bytes4 assetClass) public view {
         if (!isRegisteredAssetClass(assetClass)) revert UnregisteredAssetClass(assetClass);
+    }
+
+    /**
+     * @dev Throws if provided address is not a valid asset controller address.
+     * @param assetClass Asset class ID.
+     * @param controller Asset controller address.
+     */
+    function _checkValidAssetController(bytes4 assetClass, address controller) internal view {
+        if (!controller.supportsInterface(type(IAssetController).interfaceId)) revert InvalidAssetControllerInterface();
+        bytes4 contractAssetClass = IAssetController(controller).assetClass();
+        if (contractAssetClass != assetClass) revert AssetClassMismatch(contractAssetClass, assetClass);
+    }
+
+    /**
+     * @dev Throws if provided address is not a valid asset vault address.
+     * @param assetClass Asset class ID.
+     * @param vault Asset vault address.
+     */
+    function _checkValidAssetVault(bytes4 assetClass, address vault) internal view {
+        if (!vault.supportsInterface(type(IAssetVault).interfaceId)) revert InvalidAssetVaultInterface();
+        bytes4 contractAssetClass = IAssetVault(vault).assetClass();
+        if (contractAssetClass != assetClass) revert AssetClassMismatch(contractAssetClass, assetClass);
     }
 
     /**

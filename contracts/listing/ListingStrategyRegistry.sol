@@ -42,7 +42,7 @@ contract ListingStrategyRegistry is
      * @inheritdoc IListingStrategyRegistry
      */
     function registerListingStrategy(bytes4 strategyId, StrategyConfig calldata config) external onlyAdmin {
-        _checkValidListingController(config.controller);
+        _checkValidListingController(strategyId, config.controller);
         if (isRegisteredListingStrategy(strategyId)) {
             revert ListingStrategyIsAlreadyRegistered(strategyId);
         }
@@ -59,7 +59,7 @@ contract ListingStrategyRegistry is
         onlySupervisor
         onlyRegisteredStrategy(strategyId)
     {
-        _checkValidListingController(controller);
+        _checkValidListingController(strategyId, controller);
         _strategies[strategyId].controller = controller;
         emit ListingStrategyControllerChanged(strategyId, controller);
     }
@@ -99,11 +99,15 @@ contract ListingStrategyRegistry is
 
     /**
      * @dev Throws if provided address is not a valid listing controller.
+     * @param strategyId Listing strategy ID.
      * @param controller Listing controller address.
      */
-    function _checkValidListingController(address controller) internal view {
+    function _checkValidListingController(bytes4 strategyId, address controller) internal view {
         if (!controller.supportsInterface(type(IListingController).interfaceId))
             revert InvalidListingControllerInterface();
+
+        bytes4 contractStrategyId = IListingController(controller).strategyId();
+        if (contractStrategyId != strategyId) revert ListingStrategyMismatch(contractStrategyId, strategyId);
     }
 
     /**

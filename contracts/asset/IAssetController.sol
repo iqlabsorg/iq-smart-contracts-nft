@@ -4,7 +4,14 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "./Assets.sol";
 
-interface IAssetController {
+interface IAssetController is IERC165 {
+    /**
+     * @dev Thrown when the asset has invalid class for specific operation.
+     * @param provided Provided class ID.
+     * @param required Required class ID.
+     */
+    error AssetClassMismatch(bytes4 provided, bytes4 required);
+
     /**
      * @dev Emitted when asset is transferred.
      * @param asset Asset being transferred.

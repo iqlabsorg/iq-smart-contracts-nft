@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../Errors.sol";
+
 import "./IWarperPresetFactory.sol";
 import "./IWarperPreset.sol";
 

@@ -12,10 +12,10 @@ interface IWarperManager {
 
     /**
      * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
-     * @param actual Metahub address returned by warper.
+     * @param provided Metahub address returned by warper.
      * @param required Required metahub address.
      */
-    error WarperHasIncorrectMetahubReference(address actual, address required);
+    error WarperHasIncorrectMetahubReference(address provided, address required);
 
     /**
      * @dev Emitted when a new warper is registered.

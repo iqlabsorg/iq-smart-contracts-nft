@@ -5,13 +5,17 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
-import "../Errors.sol";
 import "./IWarper.sol";
 import "./utils/CallForwarder.sol";
 import "./utils/WarperContext.sol";
 
 abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
     using ERC165Checker for address;
+
+    /**
+     * @dev Thrown when the original asset contract does not implement the interface, expected by Warper.
+     */
+    error InvalidOriginalTokenInterface(address original, bytes4 requiredInterfaceId);
 
     /**
      * @dev Forwards the current call to the original asset contract. Will run if call data

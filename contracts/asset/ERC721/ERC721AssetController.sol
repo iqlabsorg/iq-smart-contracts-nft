@@ -2,16 +2,16 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "../../Errors.sol";
-import "../IAssetController.sol";
+
 import "../Assets.sol";
-import "./ERC721AssetVault.sol";
 import "../utils/DelegateContext.sol";
+import "./ERC721AssetVault.sol";
+import "../AssetController.sol";
 
 /**
  * @title Asset controller for the ERC721 tokens
  */
-contract ERC721AssetController is IAssetController, DelegateContext {
+contract ERC721AssetController is AssetController, DelegateContext {
     using Assets for Assets.AssetId;
 
     /**
@@ -34,7 +34,6 @@ contract ERC721AssetController is IAssetController, DelegateContext {
         address assetOwner,
         address vault
     ) external onlyDelegatecall {
-        //todo: check vault interface
         _transferAsset(asset, assetOwner, vault, "");
     }
 

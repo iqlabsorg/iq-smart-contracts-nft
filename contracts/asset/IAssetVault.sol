@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-interface IAssetVault {
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
+
+interface IAssetVault is IERC165 {
     /**
      * @dev Thrown when the asset is not is found among vault inventory.
      */

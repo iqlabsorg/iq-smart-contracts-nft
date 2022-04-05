@@ -6,9 +6,16 @@ import "./IListingController.sol";
 
 interface IListingStrategyRegistry {
     /**
-     * @dev Thrown when listing controller is dos not implement the required interface.
+     * @dev Thrown when listing controller does not implement the required interface.
      */
     error InvalidListingControllerInterface();
+
+    /**
+     * @dev Thrown when the listing cannot be processed by the specific controller due to the listing strategy ID mismatch.
+     * @param provided Provided listing strategy ID.
+     * @param required Required listing strategy ID.
+     */
+    error ListingStrategyMismatch(bytes4 provided, bytes4 required);
 
     /**
      * @dev Thrown upon attempting to register a listing strategy twice.

@@ -4,10 +4,19 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 import "../../metahub/IMetahub.sol";
-import "../../Errors.sol";
 import "./InitializationContext.sol";
 
 abstract contract WarperContext is Context, InitializationContext {
+    /**
+     * @dev Thrown when the message sender doesn't match the Metahub address.
+     */
+    error CallerIsNotMetahub();
+
+    /**
+     * @dev Thrown when the message sender doesn't match the warper admin address.
+     */
+    error CallerIsNotWarperAdmin();
+
     /**
      * @dev Metahub address slot.
      */

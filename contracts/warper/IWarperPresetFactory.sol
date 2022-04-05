@@ -8,6 +8,11 @@ interface IWarperPresetFactory {
     error DisabledWarperPreset(bytes32 presetId);
     error EnabledWarperPreset(bytes32 presetId);
 
+    /**
+     * @dev Thrown when the provided preset initialization data is empty.
+     */
+    error EmptyPresetData();
+
     struct WarperPreset {
         bytes32 id;
         address implementation;

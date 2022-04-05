@@ -22,7 +22,6 @@ import "../warper/IWarperPresetFactory.sol";
 import "../warper/IWarperController.sol";
 import "../universe/IUniverseRegistry.sol";
 import "../listing/IListingController.sol";
-import "../Errors.sol";
 import "./IMetahub.sol";
 import "./MetahubStorage.sol";
 import "./Protocol.sol";

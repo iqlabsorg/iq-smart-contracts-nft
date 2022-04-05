@@ -28,6 +28,13 @@ contract ERC721AssetVault is IERC721AssetVault, AssetVault {
     constructor(address operator, address acl) AssetVault(operator, acl) {}
 
     /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AssetVault, IERC165) returns (bool) {
+        return interfaceId == type(IERC721AssetVault).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    /**
      * @inheritdoc IERC721Receiver
      */
     function onERC721Received(

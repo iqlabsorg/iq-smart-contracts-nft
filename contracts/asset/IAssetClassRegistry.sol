@@ -6,6 +6,13 @@ import "./IAssetVault.sol";
 
 interface IAssetClassRegistry {
     /**
+     * @dev Thrown when the asset class supported by contract does not match the required one.
+     * @param provided Provided class ID.
+     * @param required Required class ID.
+     */
+    error AssetClassMismatch(bytes4 provided, bytes4 required);
+
+    /**
      * @dev Thrown upon attempting to register an asset class twice.
      * @param assetClass Duplicate asset class ID.
      */
@@ -16,6 +23,16 @@ interface IAssetClassRegistry {
      * @param assetClass Asset class ID.
      */
     error UnregisteredAssetClass(bytes4 assetClass);
+
+    /**
+     * @dev Thrown when the asset controller contract does not implement the required interface.
+     */
+    error InvalidAssetControllerInterface();
+
+    /**
+     * @dev Thrown when the vault contract does not implement the required interface.
+     */
+    error InvalidAssetVaultInterface();
 
     /**
      * @dev Emitted when the new asset class is registered.

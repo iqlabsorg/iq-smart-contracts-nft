@@ -14,6 +14,19 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
     using Assets for Assets.Asset;
 
     /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AssetController, IERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IERC721WarperController).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    /**
      * @inheritdoc IWarperController
      */
     function isCompatibleWarper(address warper) public view returns (bool) {

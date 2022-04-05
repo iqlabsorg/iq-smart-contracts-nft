@@ -3,6 +3,8 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
 import "../acl/AccessControlled.sol";
 import "./IAssetVault.sol";
 
@@ -14,7 +16,7 @@ import "./IAssetVault.sol";
  * Warning: All tokens transferred to the vault contract directly (not by Metahub contract) will be lost forever!!!
  *
  */
-abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
+abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 {
     /**
      * @dev Vault recovery mode state.
      */
@@ -67,6 +69,13 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable {
     modifier whenNotRecovery() {
         if (_recovery) revert VaultIsInRecoveryMode();
         _;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IAssetVault).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**
