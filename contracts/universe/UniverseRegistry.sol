@@ -35,6 +35,14 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     }
 
     /**
+     * @dev Modifier to check if the universe name is valid.
+     */
+    modifier onlyValidUniverseName(string memory universeNameToCheck) {
+        if (bytes(universeNameToCheck).length == 0) revert InvalidUniverseName(universeNameToCheck);
+        _;
+    }
+
+    /**
      * @dev Constructor that gets called for the implementation contract.
      * @custom:oz-upgrades-unsafe-allow constructor
      */
@@ -55,7 +63,11 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function createUniverse(UniverseParams calldata params) external returns (uint256) {
+    function createUniverse(UniverseParams calldata params)
+        external
+        onlyValidUniverseName(params.name)
+        returns (uint256)
+    {
         uint256 universeId = _universeToken.mint(_msgSender());
         _universes[universeId] = params;
 
@@ -67,7 +79,11 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function setUniverseName(uint256 universeId, string memory name) external onlyUniverseOwner(universeId) {
+    function setUniverseName(uint256 universeId, string memory name)
+        external
+        onlyValidUniverseName(name)
+        onlyUniverseOwner(universeId)
+    {
         _universes[universeId].name = name;
 
         emit UniverseNameChanged(universeId, name);

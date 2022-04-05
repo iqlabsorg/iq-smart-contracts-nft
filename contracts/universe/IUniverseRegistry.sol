@@ -8,6 +8,11 @@ interface IUniverseRegistry {
     error AccountIsNotUniverseOwner(address account);
 
     /**
+     * @dev Thrown when a the supplied universe name is not valid.
+     */
+    error InvalidUniverseName(string universeName);
+
+    /**
      * @dev Emitted when a universe is created.
      * @param universeId Universe ID.
      * @param name Universe name.
