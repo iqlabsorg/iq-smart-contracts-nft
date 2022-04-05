@@ -230,6 +230,24 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc IRentingManager
+     */
+    function userRentalCount(address renter) external view returns (uint256) {
+        return _rentingRegistry.userRentalCount(renter);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function userRentalAgreements(
+        address renter,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Rentings.Agreement[] memory) {
+        return _rentingRegistry.userRentalAgreements(renter, offset, limit);
+    }
+
+    /**
      * @dev Finds the listed asset and warps it, using corresponding warper controller.
      * @param listingId Listing ID.
      * @param warper Warper address.

@@ -121,6 +121,38 @@ library Rentings {
     }
 
     /**
+     * @dev Returns the number of currently registered rental agreements for particular renter account.
+     */
+    function userRentalCount(Registry storage self, address renter) internal view returns (uint256) {
+        return self.renters[renter].rentalIndex.length();
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered rental agreements for particular renter account.
+     */
+    function userRentalAgreements(
+        Registry storage self,
+        address renter,
+        uint256 offset,
+        uint256 limit
+    ) internal view returns (uint256[] memory, Rentings.Agreement[] memory) {
+        EnumerableSetUpgradeable.UintSet storage userRentalIndex = self.renters[renter].rentalIndex;
+        uint256 rentalCount = userRentalIndex.length();
+        if (limit > rentalCount - offset) {
+            limit = rentalCount - offset;
+        }
+
+        Rentings.Agreement[] memory agreements = new Rentings.Agreement[](limit);
+        uint256[] memory rentalIds = new uint256[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            rentalIds[i] = userRentalIndex.at(i);
+            agreements[i] = self.agreements[rentalIds[i]];
+        }
+
+        return (rentalIds, agreements);
+    }
+
+    /**
      * @dev Finds expired user rental agreements associated with `collectionId` and deletes them.
      * Deletes only first N entries defined by `toBeRemoved` param.
      * The total number of cycles is capped by GC_CYCLES constant.

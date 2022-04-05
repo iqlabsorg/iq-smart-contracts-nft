@@ -3,8 +3,6 @@ pragma solidity 0.8.13;
 
 import "./Rentings.sol";
 
-// todo: implement userRentalCount, userRentalIds, userRentals(account, start, count)
-
 interface IRentingManager {
     /**
      * @dev Thrown when the estimated rental fee calculated upon renting
@@ -53,4 +51,25 @@ interface IRentingManager {
      * @return Rental agreement details.
      */
     function rentalAgreementInfo(uint256 rentalId) external view returns (Rentings.Agreement memory);
+
+    /**
+     * @dev Returns the number of currently registered rental agreements for particular renter account.
+     * @param renter Renter address.
+     * @return Rental agreement count.
+     */
+    function userRentalCount(address renter) external view returns (uint256);
+
+    /**
+     * @dev Returns the paginated list of currently registered rental agreements for particular renter account.
+     * @param renter Renter address.
+     * @param offset Starting index.
+     * @param limit Max number of items.
+     * @return Rental agreement IDs.
+     * @return Rental agreements.
+     */
+    function userRentalAgreements(
+        address renter,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Rentings.Agreement[] memory);
 }
