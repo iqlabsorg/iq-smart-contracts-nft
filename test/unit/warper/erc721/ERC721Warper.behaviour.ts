@@ -1,9 +1,9 @@
-import { shouldBehaveLikeApprove } from './_ERC721/effects/approve';
-import { shouldBehaveLikeSetApprovalForAl } from './_ERC721/effects/setApprovalForAll';
-import { shouldBehaveTransfer } from './_ERC721/effects/transfers';
-import { shouldBehaveLikeBalanceOf } from './_ERC721/view/balanceOf';
-import { shouldBehaveLikeGetApproved } from './_ERC721/view/getApproved';
-import { shouldBehaveLikeOwnerOf } from './_ERC721/view/ownerOf';
+import { shouldBehaveLikeApprove } from './_ERC721/approve';
+import { shouldBehaveLikeSetApprovalForAl } from './_ERC721/setApprovalForAll';
+import { shouldBehaveTransfer } from './_ERC721/transfers';
+import { shouldBehaveLikeBalanceOf } from './_ERC721/balanceOf';
+import { shouldBehaveLikeGetApproved } from './_ERC721/getApproved';
+import { shouldBehaveLikeOwnerOf } from './_ERC721/ownerOf';
 
 /**
  * Core functionality tests of public ERC721 warper methods

@@ -10,9 +10,9 @@ import {
   IERC721Warper,
   IERC721WarperController,
   Metahub,
-} from '../../../../../../typechain';
-import { AddressZero } from '../../../../../shared/types';
-import { AssetRentalStatus } from '../../../../../shared/utils';
+} from '../../../../../typechain';
+import { AddressZero } from '../../../../shared/types';
+import { AssetRentalStatus } from '../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {

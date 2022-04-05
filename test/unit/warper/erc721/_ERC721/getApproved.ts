@@ -1,7 +1,7 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { IERC721Warper, Metahub } from '../../../../../../typechain';
+import { IERC721Warper, Metahub } from '../../../../../typechain';
 
 export function shouldBehaveLikeGetApproved(): void {
   describe('getApproved', function () {
