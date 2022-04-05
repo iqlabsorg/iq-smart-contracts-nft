@@ -1,57 +1,58 @@
 import { task, types } from 'hardhat/config';
 import { wait } from '..';
-import { Metahub, Metahub__factory, UniverseRegistry__factory, WarperPresetFactory__factory } from '../../typechain';
+import { Metahub, Metahub__factory, UniverseRegistry__factory } from '../../typechain';
 
-task('deploy:metahub-family', 'Deploy the `Metahub`, `UniverseToken` and `WarperPresetFactory` contracts.')
+task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
   .addParam('baseToken', 'The base token contract address', undefined, types.string)
   .addParam('listingStrategyRegistry', 'The `ListingStrategyRegistry` contract address', undefined, types.string)
   .addParam('assetClassRegistry', 'The `AssetClassRegistry` contract address', undefined, types.string)
   .addParam('rentalFeePercent', 'The rental fee percent on metahub', undefined, types.int)
-  .setAction(async ({ acl, baseToken, rentalFeePercent, assetClassRegistry, listingStrategyRegistry }, hre) => {
-    const deployer = await hre.ethers.getNamedSigner('deployer');
+  .addParam('warperPresetFactory', 'The address of warper preset factory', undefined, types.string)
+  .setAction(
+    async (
+      { acl, baseToken, rentalFeePercent, assetClassRegistry, listingStrategyRegistry, warperPresetFactory },
+      hre,
+    ) => {
+      const deployer = await hre.ethers.getNamedSigner('deployer');
 
-    // Delete the previous deployment
-    await hre.deployments.delete('Metahub_Proxy');
-    await hre.deployments.delete('Metahub_Implementation');
+      // Delete the previous deployment
+      await hre.deployments.delete('Metahub_Proxy');
+      await hre.deployments.delete('Metahub_Implementation');
 
-    // Deploy warper preset factory.
-    const warperPresetFactory = new WarperPresetFactory__factory(deployer).attach(
-      await hre.run('deploy:warper-preset-factory'),
-    );
+      // Deploy Metahub
+      const metahub = (await hre.upgrades.deployProxy(new Metahub__factory(deployer), [], {
+        kind: 'uups',
+        initializer: false,
+        unsafeAllow: ['delegatecall'],
+      })) as Metahub;
 
-    // Deploy Metahub
-    const metahub = (await hre.upgrades.deployProxy(new Metahub__factory(deployer), [], {
-      kind: 'uups',
-      initializer: false,
-      unsafeAllow: ['delegatecall'],
-    })) as Metahub;
+      // Deploy Universe token
+      const universeRegistry = new UniverseRegistry__factory(deployer).attach(
+        await hre.run('deploy:universe-registry', {
+          acl: acl,
+          metahub: metahub.address,
+        }),
+      );
 
-    // Deploy Universe token
-    const deployedUniverseToken = await hre.run('deploy:universe-registry', {
-      acl: acl,
-      metahub: metahub.address,
-    });
-    const universeRegistry = new UniverseRegistry__factory(deployer).attach(deployedUniverseToken);
+      // Initializing Metahub.
+      await wait(
+        metahub.initialize({
+          warperPresetFactory: warperPresetFactory,
+          universeRegistry: universeRegistry.address,
+          listingStrategyRegistry,
+          assetClassRegistry,
+          acl,
+          baseToken,
+          rentalFeePercent,
+        }),
+      );
 
-    // Initializing Metahub.
-    await wait(
-      metahub.initialize({
-        warperPresetFactory: warperPresetFactory.address,
+      return {
+        metahub: metahub.address,
         universeRegistry: universeRegistry.address,
-        listingStrategyRegistry,
-        assetClassRegistry,
-        acl,
-        baseToken,
-        rentalFeePercent,
-      }),
-    );
-
-    return {
-      metahub: metahub.address,
-      universeRegistry: universeRegistry.address,
-      warperPresetFactory: warperPresetFactory.address,
-    };
-  });
+      };
+    },
+  );
 
 export {};
