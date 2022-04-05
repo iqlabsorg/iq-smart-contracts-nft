@@ -29,6 +29,14 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
     }
 
     /**
+     * @dev Modifier to check that the universe has been registered.
+     */
+    modifier onlyRegisteredUniverse(uint256 universeId) {
+        _checkUniverseRegistered(universeId);
+        _;
+    }
+
+    /**
      * @dev Constructor that gets called for the implementation contract.
      * @custom:oz-upgrades-unsafe-allow constructor
      */
@@ -67,6 +75,7 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
      */
     function setUniverseName(uint256 universeId, string memory name)
         external
+        onlyRegisteredUniverse(universeId)
         onlyValidUniverseName(name)
         onlyUniverseOwner(universeId)
     {
@@ -78,7 +87,11 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function setUniverseRentalFee(uint256 universeId, uint16 rentalFeePercent) external onlyUniverseOwner(universeId) {
+    function setUniverseRentalFee(uint256 universeId, uint16 rentalFeePercent)
+        external
+        onlyRegisteredUniverse(universeId)
+        onlyUniverseOwner(universeId)
+    {
         _universes[universeId].rentalFeePercent = rentalFeePercent;
 
         emit UniverseRentalFeeChanged(universeId, rentalFeePercent);
@@ -90,6 +103,7 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
     function universe(uint256 universeId)
         external
         view
+        onlyRegisteredUniverse(universeId)
         returns (
             string memory name,
             string memory symbol,
@@ -113,35 +127,45 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function universeFeePercent(uint256 universeId) external view returns (uint16 rentalFeePercent) {
+    function universeFeePercent(uint256 universeId)
+        external
+        view
+        onlyRegisteredUniverse(universeId)
+        returns (uint16 rentalFeePercent)
+    {
         return _universes[universeId].rentalFeePercent;
     }
 
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function universeName(uint256 universeId) external view returns (string memory) {
+    function universeName(uint256 universeId) external view onlyRegisteredUniverse(universeId) returns (string memory) {
         return _universes[universeId].name;
     }
 
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function checkUniverseOwner(uint256 universeId, address account) external view {
+    function checkUniverseOwner(uint256 universeId, address account) external view onlyRegisteredUniverse(universeId) {
         _checkUniverseOwner(universeId, account);
     }
 
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function universeOwner(uint256 universeId) external view returns (address) {
+    function universeOwner(uint256 universeId) external view onlyRegisteredUniverse(universeId) returns (address) {
         return _universeToken.ownerOf(universeId);
     }
 
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function isUniverseOwner(uint256 universeId, address account) external view returns (bool) {
+    function isUniverseOwner(uint256 universeId, address account)
+        external
+        view
+        onlyRegisteredUniverse(universeId)
+        returns (bool)
+    {
         return _isUniverseOwner(universeId, account);
     }
 
@@ -157,6 +181,20 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
      */
     function _checkUniverseOwner(uint256 universeId, address account) internal view {
         if (!_isUniverseOwner(universeId, account)) revert AccountIsNotUniverseOwner(account);
+    }
+
+    /**
+     * @dev Revert if the universe has been registered properly.
+     */
+    function _checkUniverseRegistered(uint256 universeId) internal view {
+        if (!_isValidUniverseName(universeId)) revert QueryForNonexistentUniverse(universeId);
+    }
+
+    /**
+     * @dev Return `true` if the universe name is valid.
+     */
+    function _isValidUniverseName(uint256 universeId) internal view returns (bool) {
+        return bytes(_universes[universeId].name).length != 0;
     }
 
     /**

@@ -46,7 +46,7 @@ export function shouldBehaveLikeWarperManager(): void {
         it('reverts', async () => {
           await expect(
             warperManager.registerWarper('0xfbe4805Fd0ebe0Dd46b7ED8f6fcFD96798FFC742', warperRegistrationParams),
-          ).to.be.revertedWith('ERC721: owner query for nonexistent token');
+          ).to.be.revertedWith('QueryForNonexistentUniverse(1)');
         });
       });
 

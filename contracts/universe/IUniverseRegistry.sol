@@ -13,6 +13,11 @@ interface IUniverseRegistry {
     error InvalidUniverseName();
 
     /**
+     * @dev Thrown when trying to read universe data for a universe is not registered.
+     */
+    error QueryForNonexistentUniverse(uint256 universeId);
+
+    /**
      * @dev Emitted when a universe is created.
      * @param universeId Universe ID.
      * @param name Universe name.
