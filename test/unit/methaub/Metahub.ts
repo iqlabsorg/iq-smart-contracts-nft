@@ -77,16 +77,22 @@ export function unitTestMetahub(): void {
       await hre.run('deploy:warper-preset-factory', { acl: acl.address }),
     );
 
-    const deployedAddresses = await hre.run('deploy:metahub', {
-      acl: acl.address,
-      warperPresetFactory: warperPresetFactory.address,
-      listingStrategyRegistry: listingStrategyRegistry.address,
-      assetClassRegistry: assetClassRegistry.address,
-      baseToken: baseToken.address,
-      rentalFeePercent: 100,
-    });
-    const metahub = new Metahub__factory(deployer).attach(deployedAddresses.metahub);
-    const universeRegistry = new UniverseRegistry__factory(deployer).attach(deployedAddresses.universeRegistry);
+    // Deploy Universe token
+    const universeRegistry = new UniverseRegistry__factory(deployer).attach(
+      await hre.run('deploy:universe-registry', { acl: acl.address }),
+    );
+
+    const metahub = new Metahub__factory(deployer).attach(
+      await hre.run('deploy:metahub', {
+        acl: acl.address,
+        universeRegistry: universeRegistry.address,
+        warperPresetFactory: warperPresetFactory.address,
+        listingStrategyRegistry: listingStrategyRegistry.address,
+        assetClassRegistry: assetClassRegistry.address,
+        baseToken: baseToken.address,
+        rentalFeePercent: 100,
+      }),
+    );
     await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
 
     const erc721Controller = await new ERC721WarperController__factory(deployer).deploy();

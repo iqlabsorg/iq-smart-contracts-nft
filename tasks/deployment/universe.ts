@@ -4,8 +4,7 @@ import { UniverseRegistry, UniverseRegistry__factory } from '../../typechain';
 
 task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
-  .addParam('metahub', 'The base token contract address', undefined, types.string)
-  .setAction(async ({ acl, metahub }, hre) => {
+  .setAction(async ({ acl }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     // Delete the previous deployment
@@ -19,7 +18,7 @@ task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
       unsafeAllow: ['delegatecall'],
     })) as UniverseRegistry;
 
-    await wait(universeRegistry.initialize(metahub, acl));
+    await wait(universeRegistry.initialize(acl));
 
     return universeRegistry.address;
   });

@@ -12,11 +12,6 @@ import "./UniverseToken.sol";
  */
 contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlledUpgradeable {
     /**
-     * @dev Metahub address.
-     */
-    address private _metahub;
-
-    /**
      * @dev ACL contract address.
      */
     IACL private _aclContract;
@@ -47,13 +42,11 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
 
     /**
      * @dev UniverseRegistry initializer.
-     * @param metahub Address of the Metahub contract.
      * @param acl Address of the ACL contract.
      */
-    function initialize(address metahub, address acl) external initializer {
+    function initialize(address acl) external initializer {
         __UUPSUpgradeable_init();
 
-        _metahub = metahub;
         _aclContract = IACL(acl);
 
         _universeToken = new UniverseToken(address(this));

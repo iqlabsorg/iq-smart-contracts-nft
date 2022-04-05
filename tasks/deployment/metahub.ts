@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import { wait } from '..';
-import { Metahub, Metahub__factory, UniverseRegistry__factory } from '../../typechain';
+import { Metahub, Metahub__factory } from '../../typechain';
 
 task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -9,9 +9,18 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('assetClassRegistry', 'The `AssetClassRegistry` contract address', undefined, types.string)
   .addParam('rentalFeePercent', 'The rental fee percent on metahub', undefined, types.int)
   .addParam('warperPresetFactory', 'The address of warper preset factory', undefined, types.string)
+  .addParam('universeRegistry', 'The address of the universe registry', undefined, types.string)
   .setAction(
     async (
-      { acl, baseToken, rentalFeePercent, assetClassRegistry, listingStrategyRegistry, warperPresetFactory },
+      {
+        acl,
+        baseToken,
+        rentalFeePercent,
+        assetClassRegistry,
+        listingStrategyRegistry,
+        warperPresetFactory,
+        universeRegistry,
+      },
       hre,
     ) => {
       const deployer = await hre.ethers.getNamedSigner('deployer');
@@ -27,19 +36,11 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         unsafeAllow: ['delegatecall'],
       })) as Metahub;
 
-      // Deploy Universe token
-      const universeRegistry = new UniverseRegistry__factory(deployer).attach(
-        await hre.run('deploy:universe-registry', {
-          acl: acl,
-          metahub: metahub.address,
-        }),
-      );
-
       // Initializing Metahub.
       await wait(
         metahub.initialize({
           warperPresetFactory: warperPresetFactory,
-          universeRegistry: universeRegistry.address,
+          universeRegistry: universeRegistry,
           listingStrategyRegistry,
           assetClassRegistry,
           acl,
@@ -48,10 +49,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         }),
       );
 
-      return {
-        metahub: metahub.address,
-        universeRegistry: universeRegistry.address,
-      };
+      return metahub.address;
     },
   );
 
