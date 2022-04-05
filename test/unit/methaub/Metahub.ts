@@ -7,7 +7,6 @@ import {
   Metahub__factory,
   WarperPresetFactory__factory,
   AssetClassRegistry__factory,
-  ERC721AssetController__factory,
   ListingStrategyRegistry__factory,
   IListingManager__factory,
   IRentingManager__factory,
@@ -15,7 +14,6 @@ import {
   ERC721AssetVault__factory,
   UUPSUpgradeable__factory,
   IMetahub__factory,
-  IACL__factory,
   IERC721AssetVault__factory,
   IAssetController__factory,
   IAssetClassRegistry__factory,
@@ -108,11 +106,9 @@ export function unitTestMetahub(): void {
     };
   }
 
-  describe.skip('Metahub', function () {
+  describe('Metahub', function () {
     beforeEach(async function () {
-      const acl = this.contracts.acl;
-      // TODO: the `acl` is not being defined inside the test fixture
-      console.log('acl', acl.address);
+      acl = this.contracts.acl;
 
       const {
         metahub,
@@ -145,7 +141,6 @@ export function unitTestMetahub(): void {
         universeRegistry.address,
         universeRegistry.signer,
       );
-      this.contracts.acl = IACL__factory.connect(acl.address, acl.signer);
       this.contracts.warperPresetFactory = IWarperPresetFactory__factory.connect(
         warperPresetFactory.address,
         warperPresetFactory.signer,
