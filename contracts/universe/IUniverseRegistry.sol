@@ -10,7 +10,7 @@ interface IUniverseRegistry {
     /**
      * @dev Thrown when a the supplied universe name is not valid.
      */
-    error InvalidUniverseName(string universeName);
+    error InvalidUniverseName();
 
     /**
      * @dev Emitted when a universe is created.

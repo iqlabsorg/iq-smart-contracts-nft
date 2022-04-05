@@ -38,7 +38,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
      * @dev Modifier to check if the universe name is valid.
      */
     modifier onlyValidUniverseName(string memory universeNameToCheck) {
-        if (bytes(universeNameToCheck).length == 0) revert InvalidUniverseName(universeNameToCheck);
+        if (bytes(universeNameToCheck).length == 0) revert InvalidUniverseName();
         _;
     }
 
