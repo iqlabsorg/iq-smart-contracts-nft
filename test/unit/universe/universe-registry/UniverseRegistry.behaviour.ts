@@ -3,6 +3,15 @@ import { expect } from 'chai';
 import { IUniverseRegistry } from '../../../../typechain';
 import { AddressZero } from '../../../shared/types';
 
+const universeName = 'Universe One';
+const universeId = 1;
+const universeRentalFeePercent = 1000;
+
+const createUniverseData: IUniverseRegistry.UniverseParamsStruct = {
+  name: universeName,
+  rentalFeePercent: universeRentalFeePercent,
+};
+
 /**
  * The contract behaves like IUniverseRegistry
  */
@@ -21,10 +30,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
 
     describe('createUniverse', () => {
       it('emits event on creation', async () => {
-        const universeName = 'Universe One';
-        const universeId = 1;
-
-        await expect(universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 }))
+        await expect(universeRegistry.createUniverse(createUniverseData))
           .to.emit(universeRegistry, 'UniverseChanged')
           .withArgs(universeId, universeName);
       });
@@ -34,7 +40,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
           const universeName = '';
 
           await expect(
-            universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 }),
+            universeRegistry.createUniverse({ ...createUniverseData, name: universeName }),
           ).to.be.revertedWith('EmptyUniverseName()');
         });
       });
@@ -48,11 +54,8 @@ export function shouldBehaveLikeUniverseRegistry(): void {
 
     describe('setUniverseName', () => {
       context('Universe created', () => {
-        const universeName = 'Universe One';
-        const universeId = 1;
-
         beforeEach(async () => {
-          await universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.createUniverse(createUniverseData);
         });
 
         context('Empty universe name', () => {
@@ -67,8 +70,6 @@ export function shouldBehaveLikeUniverseRegistry(): void {
 
         context('Valid universe name', () => {
           it('emits an event on tx', async () => {
-            const universeName = 'Universe One';
-
             await expect(universeRegistry.setUniverseName(universeId, universeName))
               .to.emit(universeRegistry, `UniverseNameChanged`)
               .withArgs(universeId, universeName);
@@ -78,9 +79,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
 
       context('Universe not created', () => {
         it('reverts', async () => {
-          const universeName = 'Universe One';
-
-          await expect(universeRegistry.setUniverseName(1, universeName)).to.be.revertedWith(
+          await expect(universeRegistry.setUniverseName(universeId, universeName)).to.be.revertedWith(
             `QueryForNonexistentUniverse(${1})`,
           );
         });
@@ -88,14 +87,11 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('setUniverseRentalFee', () => {
-      const universeId = 1;
       const universeRentalFee = 3333;
 
       context('Universe created', () => {
-        const universeName = 'Universe One';
-
         beforeEach(async () => {
-          await universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.createUniverse(createUniverseData);
         });
 
         it('emits an event on tx', async () => {
@@ -115,12 +111,9 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('universeName', () => {
-      const universeName = 'Universe One';
-      const universeId = 1;
-
       context('When Universe is created', () => {
         beforeEach(async () => {
-          await universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.createUniverse(createUniverseData);
         });
 
         it('can retrieve universe name', async () => {
@@ -138,12 +131,9 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('isUniverseOwner', () => {
-      const universeName = 'Universe One';
-      const universeId = 1;
-
       context('When Universe is created', () => {
         beforeEach(async () => {
-          await universeRegistry.connect(deployer).createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.connect(deployer).createUniverse(createUniverseData);
         });
 
         it('returns `true` for the real owner', async () => {
@@ -165,12 +155,9 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('checkUniverseOwner', () => {
-      const universeName = 'Universe One';
-      const universeId = 1;
-
       context('When Universe is created', () => {
         beforeEach(async () => {
-          await universeRegistry.connect(deployer).createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.connect(deployer).createUniverse(createUniverseData);
         });
 
         it('returns `true` for the real owner', async () => {
@@ -194,12 +181,9 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('universeOwner', () => {
-      const universeName = 'Universe One';
-      const universeId = 1;
-
       context('When Universe is created', () => {
         beforeEach(async () => {
-          await universeRegistry.connect(deployer).createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.connect(deployer).createUniverse(createUniverseData);
         });
 
         it('returns the real owner', async () => {
@@ -217,16 +201,13 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('universeFeePercent', () => {
-      const universeName = 'Universe One';
-      const universeId = 1;
-
       context('When Universe is created', () => {
         beforeEach(async () => {
-          await universeRegistry.connect(deployer).createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.connect(deployer).createUniverse(createUniverseData);
         });
 
         it('returns the real owner', async () => {
-          await expect(universeRegistry.universeFeePercent(universeId)).to.eventually.eq(1000);
+          await expect(universeRegistry.universeFeePercent(universeId)).to.eventually.eq(universeRentalFeePercent);
         });
       });
 
@@ -240,12 +221,9 @@ export function shouldBehaveLikeUniverseRegistry(): void {
     });
 
     describe('universe', () => {
-      const universeName = 'Universe One';
-      const universeId = 1;
-
       context('When Universe is created', () => {
         beforeEach(async () => {
-          await universeRegistry.connect(deployer).createUniverse({ name: universeName, rentalFeePercent: 1000 });
+          await universeRegistry.connect(deployer).createUniverse(createUniverseData);
         });
 
         it('returns the real owner', async () => {
@@ -253,7 +231,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
             name: 'IQVerse',
             symbol: 'IQV',
             universeName,
-            rentalFeePercent: 1000,
+            rentalFeePercent: universeRentalFeePercent,
           });
         });
       });
