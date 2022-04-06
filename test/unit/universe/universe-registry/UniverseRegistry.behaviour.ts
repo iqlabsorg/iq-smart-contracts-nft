@@ -29,13 +29,13 @@ export function shouldBehaveLikeUniverseRegistry(): void {
           .withArgs(universeId, universeName);
       });
 
-      context('empty universe name', () => {
+      context('Empty universe name', () => {
         it('reverts', async () => {
           const universeName = '';
 
           await expect(
             universeRegistry.createUniverse({ name: universeName, rentalFeePercent: 1000 }),
-          ).to.be.revertedWith('InvalidUniverseName()');
+          ).to.be.revertedWith('EmptyUniverseName()');
         });
       });
     });
@@ -60,7 +60,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
             const universeName = '';
 
             await expect(universeRegistry.setUniverseName(universeId, universeName)).to.be.revertedWith(
-              'InvalidUniverseName()',
+              'EmptyUniverseName()',
             );
           });
         });

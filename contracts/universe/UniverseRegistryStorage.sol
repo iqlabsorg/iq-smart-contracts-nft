@@ -9,6 +9,11 @@ import "./IUniverseRegistry.sol";
  * @title Universe Registry storage contract.
  */
 abstract contract UniverseRegistryStorage {
+    struct Universe {
+        string name;
+        uint16 rentalFeePercent;
+    }
+
     /**
      * @dev ACL contract address.
      */
@@ -22,5 +27,5 @@ abstract contract UniverseRegistryStorage {
     /**
      * @dev Mapping from token ID to the Universe structure.
      */
-    mapping(uint256 => IUniverseRegistry.UniverseParams) internal _universes;
+    mapping(uint256 => Universe) internal _universes;
 }

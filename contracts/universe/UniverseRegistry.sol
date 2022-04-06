@@ -11,7 +11,7 @@ import "./UniverseRegistryStorage.sol";
 /**
  * @title Universe Registry contract.
  */
-contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpgradeable, AccessControlledUpgradeable {
+contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlledUpgradeable, UniverseRegistryStorage {
     /**
      * @dev Modifier to make a function callable only by the universe owner.
      */
@@ -24,7 +24,7 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
      * @dev Modifier to check if the universe name is valid.
      */
     modifier onlyValidUniverseName(string memory universeNameToCheck) {
-        if (bytes(universeNameToCheck).length == 0) revert InvalidUniverseName();
+        if (bytes(universeNameToCheck).length == 0) revert EmptyUniverseName();
         _;
     }
 
@@ -63,7 +63,7 @@ contract UniverseRegistry is IUniverseRegistry, UniverseRegistryStorage, UUPSUpg
         returns (uint256)
     {
         uint256 universeId = _universeToken.mint(_msgSender());
-        _universes[universeId] = params;
+        _universes[universeId] = Universe({name: params.name, rentalFeePercent: params.rentalFeePercent});
 
         emit UniverseChanged(universeId, params.name);
 

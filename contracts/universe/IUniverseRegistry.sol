@@ -8,9 +8,9 @@ interface IUniverseRegistry {
     error AccountIsNotUniverseOwner(address account);
 
     /**
-     * @dev Thrown when a the supplied universe name is not valid.
+     * @dev Thrown when a the supplied universe name is empty.
      */
-    error InvalidUniverseName();
+    error EmptyUniverseName();
 
     /**
      * @dev Thrown when trying to read universe data for a universe is not registered.
