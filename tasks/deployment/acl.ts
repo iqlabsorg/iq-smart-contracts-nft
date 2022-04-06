@@ -1,4 +1,4 @@
-import { task, types } from 'hardhat/config';
+import { task } from 'hardhat/config';
 
 task('deploy:acl', 'Deploy the `ACL` contract').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');

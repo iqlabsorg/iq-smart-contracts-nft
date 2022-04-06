@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore, func-name-mixedcase
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -90,12 +91,16 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
      *
      * If overridden should call `super._beforeFallback()`.
      */
-    function _beforeFallback() internal virtual {}
+    function _beforeFallback() internal virtual {
+        // solhint-disable-previous-line no-empty-blocks
+    }
 
     /**
      * @dev Validates the original NFT.
      *
      * If overridden should call `super._validateOriginal()`.
      */
-    function _validateOriginal(address original) internal virtual {}
+    function _validateOriginal(address original) internal virtual {
+        // solhint-disable-previous-line no-empty-blocks
+    }
 }

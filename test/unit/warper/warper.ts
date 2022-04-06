@@ -1,36 +1,24 @@
 import { smock } from '@defi-wonderland/smock';
-import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import hre, { ethers } from 'hardhat';
 import {
   AssetClassRegistry,
   AssetClassRegistry__factory,
-  ConfigurableAvailabilityPeriodExtension,
   ConfigurableAvailabilityPeriodExtension__factory,
-  ConfigurableRentalPeriodExtension,
   ConfigurableRentalPeriodExtension__factory,
   ERC20Mock__factory,
-  ERC721,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
-  ERC721Warper,
   ERC721WarperController__factory,
-  ERC721Warper__factory,
-  IAvailabilityPeriodMechanics,
   IAvailabilityPeriodMechanics__factory,
-  IERC165__factory,
-  IERC721WarperController__factory,
   IERC721Warper__factory,
-  IRentalPeriodMechanics,
+  IERC721WarperController__factory,
   IRentalPeriodMechanics__factory,
-  IWarperPreset,
   IWarperPreset__factory,
   Metahub,
   Metahub__factory,
-  Multicall,
   Multicall__factory,
 } from '../../../typechain';
-import { AddressZero } from '../../shared/types';
 import { shouldBehavesLikeMulticall } from '../shared/Multicall.behaviour';
 import { shouldBehaveLikeERC721Warper } from './erc721/ERC721Warper.behaviour';
 import { shouldBehaveLikeERC721PresetConfigurable } from './erc721/presets/ERC721Configurable.behaviour';

@@ -3,7 +3,6 @@ import { TASK_TEST_SETUP_TEST_ENVIRONMENT } from 'hardhat/builtin-tasks/task-nam
 import { subtask } from 'hardhat/config';
 import chai, { Assertion } from 'chai';
 import { BigNumber } from 'ethers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 declare global {
   //eslint-disable-next-line @typescript-eslint/no-namespace

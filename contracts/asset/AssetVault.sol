@@ -9,9 +9,12 @@ import "../acl/AccessControlled.sol";
 import "./IAssetVault.sol";
 
 /**
- * @dev During the normal operation time, only Metahub contract is allowed to initiate asset return to the original asset owner.
- * In case of emergency, the vault admin can switch vault to recovery mode, therefore allowing anyone to initiate asset return.
- * NOTE: There is no way to transfer asset from the vault to an arbitrary address. The asset can only be returned to the rightful owner.
+ * @dev During the normal operation time, only Metahub contract is allowed to initiate asset return to the original
+ * asset owner. In case of emergency, the vault admin can switch vault to recovery mode, therefore allowing anyone to
+ * initiate asset return.
+ *
+ * NOTE: There is no way to transfer asset from the vault to an arbitrary address. The asset can only be returned to
+ * the rightful owner.
  *
  * Warning: All tokens transferred to the vault contract directly (not by Metahub contract) will be lost forever!!!
  *
@@ -31,21 +34,6 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
      * @dev ACL contract.
      */
     IACL private _aclContract;
-
-    /**
-     * @dev Constructor.
-     * @param metahubContract Metahub contract address.
-     * @param aclContract ACL contract address.
-     */
-    constructor(address metahubContract, address aclContract) {
-        _recovery = false;
-
-        // todo validate interface
-        _metahub = metahubContract;
-
-        // todo validate interface
-        _aclContract = IACL(aclContract);
-    }
 
     /**
      * @dev Modifier to check asset deposit possibility.
@@ -72,10 +60,18 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
     }
 
     /**
-     * @inheritdoc IERC165
+     * @dev Constructor.
+     * @param metahubContract Metahub contract address.
+     * @param aclContract ACL contract address.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return interfaceId == type(IAssetVault).interfaceId || super.supportsInterface(interfaceId);
+    constructor(address metahubContract, address aclContract) {
+        _recovery = false;
+
+        // todo validate interface
+        _metahub = metahubContract;
+
+        // todo validate interface
+        _aclContract = IACL(aclContract);
     }
 
     /**
@@ -98,6 +94,13 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
     function switchToRecoveryMode() external onlyAdmin whenNotRecovery {
         _recovery = true;
         emit RecoveryModeActivated(_msgSender());
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IAssetVault).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**

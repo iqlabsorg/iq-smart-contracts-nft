@@ -49,7 +49,8 @@ interface IUniverseRegistry {
     }
 
     /**
-     * @dev Creates new Universe. This includes minting new universe NFT, where the caller of this method becomes the universe owner.
+     * @dev Creates new Universe. This includes minting new universe NFT,
+     * where the caller of this method becomes the universe owner.
      * @param params The universe properties & initial configuration params.
      * @return Universe ID (universe token ID).
      */

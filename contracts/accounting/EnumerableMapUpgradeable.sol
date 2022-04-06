@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.1 (utils/structs/EnumerableMap.sol)
+// solhint-disable private-vars-leading-underscore, ordering
 
 pragma solidity 0.8.13;
 

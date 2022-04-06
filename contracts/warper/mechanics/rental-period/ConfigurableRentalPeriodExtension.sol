@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore, func-name-mixedcase, ordering
 pragma solidity 0.8.13;
 
 import "../../Warper.sol";
@@ -11,10 +12,10 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      */
     bytes32 private constant _RENTAL_PERIOD_SLOT = bytes32(uint256(keccak256("iq.warper.params.rentalPeriod")) - 1);
 
-    uint256 private constant MAX_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000;
-    uint256 private constant MIN_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF;
-    uint256 private constant MAX_PERIOD_BITSHIFT = 0;
-    uint256 private constant MIN_PERIOD_BITSHIFT = 32;
+    uint256 private constant _MAX_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000;
+    uint256 private constant _MIN_PERIOD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF;
+    uint256 private constant _MAX_PERIOD_BITSHIFT = 0;
+    uint256 private constant _MIN_PERIOD_BITSHIFT = 32;
 
     /**
      * @dev Extension initializer.
@@ -81,8 +82,8 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      * @dev Stores warper rental period.
      */
     function _setRentalPeriods(uint32 minRentalPeriod, uint32 maxRentalPeriod) internal {
-        uint256 data = (0 & MAX_PERIOD_MASK) | (uint256(maxRentalPeriod) << MAX_PERIOD_BITSHIFT);
-        data = (data & MIN_PERIOD_MASK) | (uint256(minRentalPeriod) << MIN_PERIOD_BITSHIFT);
+        uint256 data = (0 & _MAX_PERIOD_MASK) | (uint256(maxRentalPeriod) << _MAX_PERIOD_BITSHIFT);
+        data = (data & _MIN_PERIOD_MASK) | (uint256(minRentalPeriod) << _MIN_PERIOD_BITSHIFT);
 
         StorageSlot.getUint256Slot(_RENTAL_PERIOD_SLOT).value = data;
     }
@@ -92,7 +93,7 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
      */
     function _rentalPeriods() internal view returns (uint32 minRentalPeriod, uint32 maxRentalPeriod) {
         uint256 data = StorageSlot.getUint256Slot(_RENTAL_PERIOD_SLOT).value;
-        minRentalPeriod = uint32((data & ~MIN_PERIOD_MASK) >> MIN_PERIOD_BITSHIFT);
-        maxRentalPeriod = uint32((data & ~MAX_PERIOD_MASK) >> MAX_PERIOD_BITSHIFT);
+        minRentalPeriod = uint32((data & ~_MIN_PERIOD_MASK) >> _MIN_PERIOD_BITSHIFT);
+        maxRentalPeriod = uint32((data & ~_MAX_PERIOD_MASK) >> _MAX_PERIOD_BITSHIFT);
     }
 }

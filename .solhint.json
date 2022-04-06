@@ -4,14 +4,16 @@
   "rules": {
     "prettier/prettier": "error",
     "compiler-version": ["error", "^0.8.10"],
-    "func-visibility": ["warn", { "ignoreConstructors": true }],
-    "code-complexity": ["warn", 5],
+    "func-visibility": ["error", { "ignoreConstructors": true }],
+    "code-complexity": ["error", 5],
     "comprehensive-interface": "off",
-    "func-param-name-mixedcase": "warn",
-    "ordering": "warn",
-    "private-vars-leading-underscore": ["warn", { "strict": false }],
+    "func-param-name-mixedcase": "error",
+    "ordering": "error",
+    "private-vars-leading-underscore": ["error", { "strict": true }],
     "no-inline-assembly": "off",
     "reason-string": "off",
-    "no-empty-blocks": "off"
+    "no-empty-blocks": "error",
+    "not-rely-on-time": "off",
+    "max-line-length": ["error", 120]
   }
 }

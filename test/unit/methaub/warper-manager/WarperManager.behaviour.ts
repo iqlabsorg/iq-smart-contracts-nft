@@ -16,7 +16,6 @@ export function shouldBehaveLikeWarperManager(): void {
     let universeRegistry: IUniverseRegistry;
     let originalAsset: ERC721Mock;
 
-    let deployer: SignerWithAddress;
     let stranger: SignerWithAddress;
 
     const warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct = {
@@ -25,7 +24,7 @@ export function shouldBehaveLikeWarperManager(): void {
       paused: true,
     };
 
-    const universeRegisatrationParams = {
+    const universeRegistrationParams = {
       name: 'IQ Universe',
       rentalFeePercent: 1000,
     };
@@ -37,7 +36,6 @@ export function shouldBehaveLikeWarperManager(): void {
       universeRegistry = this.contracts.universeRegistry;
       metahub = this.contracts.metahub;
 
-      deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
     });
 
@@ -54,7 +52,7 @@ export function shouldBehaveLikeWarperManager(): void {
         let universeId: BigNumber;
         beforeEach(async () => {
           // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
-          universeId = await createUniverse(universeRegistry, universeRegisatrationParams);
+          universeId = await createUniverse(universeRegistry, universeRegistrationParams);
           warperRegistrationParams.universeId = universeId;
         });
 
@@ -121,7 +119,7 @@ export function shouldBehaveLikeWarperManager(): void {
 
       context('When warpers are registered', () => {
         beforeEach(async () => {
-          universeId = await createUniverse(universeRegistry, universeRegisatrationParams);
+          universeId = await createUniverse(universeRegistry, universeRegistrationParams);
           warperRegistrationParams.universeId = universeId;
           warperAddress1 = await deployWarperPreset(
             warperPresetFactory,
@@ -159,7 +157,7 @@ export function shouldBehaveLikeWarperManager(): void {
 
       context('When warpers are registered', () => {
         beforeEach(async () => {
-          universeId = await createUniverse(universeRegistry, universeRegisatrationParams);
+          universeId = await createUniverse(universeRegistry, universeRegistrationParams);
           warperRegistrationParams.universeId = universeId;
           warperAddress1 = await deployWarperPreset(
             warperPresetFactory,

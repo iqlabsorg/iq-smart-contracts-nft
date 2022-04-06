@@ -99,7 +99,8 @@ library Warpers {
      * @param presetFactory Warper preset factory contract.
      * @param warperIndex Set of registered warper addresses.
      * @param universeWarperIndex Mapping from a universe ID to the set of warper addresses registered by the universe.
-     * @param assetWarperIndex Mapping from an original asset address to the set of warper addresses registered for the asset.
+     * @param assetWarperIndex Mapping from an original asset address to the set of warper addresses,
+     * registered for the asset.
      * @param warpers Mapping from a warper address to the warper details.
      */
     struct Registry {

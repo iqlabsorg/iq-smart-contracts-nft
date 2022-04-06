@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore
 pragma solidity 0.8.13;
 
 import "../ERC721Warper.sol";
@@ -12,6 +13,9 @@ contract ERC721PresetConfigurable is
     ConfigurableAvailabilityPeriodExtension,
     ConfigurableRentalPeriodExtension
 {
+    /**
+     * @inheritdoc IWarperPreset
+     */
     function __initialize(bytes calldata config) external virtual initializer {
         // Decode config
         (address original, address metahub) = abi.decode(config, (address, address));

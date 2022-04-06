@@ -27,8 +27,96 @@ contract ERC721Warper is IERC721Warper, Warper {
     /**
      * @inheritdoc IWarper
      */
+    // solhint-disable-next-line private-vars-leading-underscore
     function __assetClass() external pure returns (bytes4) {
         return Assets.ERC721;
+    }
+
+    /**
+     * @inheritdoc IERC721
+     * @dev Method is disabled, kept only for interface compatibility purposes.
+     */
+    function setApprovalForAll(address, bool) public virtual override {
+        revert MethodNotAllowed();
+    }
+
+    /**
+     * @inheritdoc IERC721
+     * @dev Method is disabled, kept only for interface compatibility purposes.
+     */
+    function approve(address, uint256) public virtual override {
+        revert MethodNotAllowed();
+    }
+
+    /**
+     * @dev Safely mints `tokenId` and transfers it to `to`.
+     *
+     * Requirements:
+     *
+     * - needs to pass validation of `_beforeTokenTransfer()`.
+     * - `tokenId` must not exist.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received},
+     * which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
+     */
+    function mint(
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public {
+        if (to == address(0)) revert MintToTheZeroAddress();
+        if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
+
+        _beforeTokenTransfer(address(0), to, tokenId);
+
+        _owners[tokenId] = to;
+
+        emit Transfer(address(0), to, tokenId);
+
+        if (!_checkOnERC721Received(address(0), to, tokenId, data)) {
+            revert TransferToNonERC721ReceiverImplementer(to);
+        }
+    }
+
+    /**
+     * @inheritdoc IERC721
+     *
+     * @dev Need to fulfill all the requirements of `_transfer()`
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
+        _transfer(from, to, tokenId);
+    }
+
+    /**
+     * @inheritdoc IERC721
+     *
+     * @dev Need to fulfill all the requirements of `_transfer()`
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
+        safeTransferFrom(from, to, tokenId, "");
+    }
+
+    /**
+     * @inheritdoc IERC721
+     *
+     * @dev Need to fulfill all the requirements of `_transfer()`
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public virtual override {
+        _safeTransfer(from, to, tokenId, data);
     }
 
     /**
@@ -81,23 +169,7 @@ contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function approve(address, uint256) public virtual override {
-        revert MethodNotAllowed();
-    }
-
-    /**
-     * @inheritdoc IERC721
-     * @dev Method is disabled, kept only for interface compatibility purposes.
-     */
     function getApproved(uint256) public view virtual override returns (address) {
-        revert MethodNotAllowed();
-    }
-
-    /**
-     * @inheritdoc IERC721
-     * @dev Method is disabled, kept only for interface compatibility purposes.
-     */
-    function setApprovalForAll(address, bool) public virtual override {
         revert MethodNotAllowed();
     }
 
@@ -107,46 +179,6 @@ contract ERC721Warper is IERC721Warper, Warper {
      */
     function isApprovedForAll(address, address) public view virtual override returns (bool) {
         revert MethodNotAllowed();
-    }
-
-    /**
-     * @inheritdoc IERC721
-     *
-     * @dev Need to fulfill all the requirements of `_transfer()`
-     */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override {
-        _transfer(from, to, tokenId);
-    }
-
-    /**
-     * @inheritdoc IERC721
-     *
-     * @dev Need to fulfill all the requirements of `_transfer()`
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override {
-        safeTransferFrom(from, to, tokenId, "");
-    }
-
-    /**
-     * @inheritdoc IERC721
-     *
-     * @dev Need to fulfill all the requirements of `_transfer()`
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) public virtual override {
-        _safeTransfer(from, to, tokenId, _data);
     }
 
     /**
@@ -160,10 +192,35 @@ contract ERC721Warper is IERC721Warper, Warper {
     }
 
     /**
+     * @dev ONLY THE METAHUB CAN CALL THIS METHOD.
+     *      This validates every single transfer that the warper can perform.
+     *      Metahub can be the only source of transfers, so it can properly synchronise
+     *      the rental agreement ownership.
+     * @dev Hook that is called before any token transfer. This includes minting
+     * and burning.
+     *
+     * Calling conditions:
+     *
+     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
+     * transferred to `to`.
+     * - When `from` is zero, `tokenId` will be minted for `to`.
+     * - When `to` is zero, ``from``'s `tokenId` will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual onlyMetahub {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
+    /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
      * are aware of the ERC721 protocol to prevent tokens from being forever locked.
      *
-     * `_data` is additional data, it has no specified format and it is sent in call to `to`.
+     * `data` is additional data, it has no specified format and it is sent in call to `to`.
      *
      * This internal function is equivalent to {safeTransferFrom}, and can be used to e.g.
      * implement alternative mechanisms to perform token transfer, such as signature-based.
@@ -174,7 +231,8 @@ contract ERC721Warper is IERC721Warper, Warper {
      * - `from` cannot be the zero address.
      * - `to` cannot be the zero address.
      * - `tokenId` token must exist and be owned by `from`.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received},
+     * which is called upon a safe transfer.
      *
      * Emits a {Transfer} event.
      */
@@ -182,52 +240,10 @@ contract ERC721Warper is IERC721Warper, Warper {
         address from,
         address to,
         uint256 tokenId,
-        bytes memory _data
+        bytes memory data
     ) internal virtual {
         _transfer(from, to, tokenId);
-        if (!_checkOnERC721Received(from, to, tokenId, _data)) {
-            revert TransferToNonERC721ReceiverImplementer(to);
-        }
-    }
-
-    /**
-     * @dev Returns whether `tokenId` exists.
-     *
-     * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
-     *
-     * Tokens start existing when they are minted (`_mint`),
-     * and stop existing when they are burned (`_burn`).
-     */
-    function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        return _owners[tokenId] != address(0);
-    }
-
-    /**
-     * @dev Safely mints `tokenId` and transfers it to `to`.
-     *
-     * Requirements:
-     *
-     * - needs to pass validation of `_beforeTokenTransfer()`.
-     * - `tokenId` must not exist.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
-     */
-    function mint(
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public {
-        if (to == address(0)) revert MintToTheZeroAddress();
-        if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
-
-        _beforeTokenTransfer(address(0), to, tokenId);
-
-        _owners[tokenId] = to;
-
-        emit Transfer(address(0), to, tokenId);
-
-        if (!_checkOnERC721Received(address(0), to, tokenId, data)) {
+        if (!_checkOnERC721Received(from, to, tokenId, data)) {
             revert TransferToNonERC721ReceiverImplementer(to);
         }
     }
@@ -258,24 +274,43 @@ contract ERC721Warper is IERC721Warper, Warper {
     }
 
     /**
+     * @dev Returns whether `tokenId` exists.
+     *
+     * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
+     *
+     * Tokens start existing when they are minted (`_mint`),
+     * and stop existing when they are burned (`_burn`).
+     */
+    function _exists(uint256 tokenId) internal view virtual returns (bool) {
+        return _owners[tokenId] != address(0);
+    }
+
+    /**
+     * @dev Get the associated warper controller.
+     */
+    function _warperController() internal view returns (IERC721WarperController) {
+        return IERC721WarperController(IWarperManager(_metahub()).warperController(address(this)));
+    }
+
+    /**
      * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
      * The call is not executed if the target address is not a contract.
      *
      * @param from address representing the previous owner of the given token ID
      * @param to target address that will receive the tokens
      * @param tokenId uint256 ID of the token to be transferred
-     * @param _data bytes optional data to send along with the call
+     * @param data bytes optional data to send along with the call
      * @return bool whether the call correctly returned the expected magic value
      */
     function _checkOnERC721Received(
         address from,
         address to,
         uint256 tokenId,
-        bytes memory _data
+        bytes memory data
     ) private returns (bool) {
         if (!to.isContract()) return true;
 
-        try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 result) {
+        try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 result) {
             return result == IERC721Receiver.onERC721Received.selector;
         } catch (bytes memory reason) {
             if (reason.length == 0) {
@@ -286,35 +321,5 @@ contract ERC721Warper is IERC721Warper, Warper {
                 }
             }
         }
-    }
-
-    /**
-     * @dev ONLY THE METAHUB CAN CALL THIS METHOD.
-     *      This validates every single transfer that the warper can perform.
-     *      Metahub can be the only source of transfers, so it can properly synchronise
-     *      the rental agreement ownership.
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` and `to` are never both zero.
-     *
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual onlyMetahub {}
-
-    /**
-     * @dev Get the associated warper controller.
-     */
-    function _warperController() internal view returns (IERC721WarperController) {
-        return IERC721WarperController(IWarperManager(_metahub()).warperController(address(this)));
     }
 }

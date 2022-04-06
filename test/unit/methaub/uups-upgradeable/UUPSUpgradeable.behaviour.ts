@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { upgrades } from 'hardhat';
-import { MetahubV2Mock, MetahubV2Mock__factory, UUPSUpgradeable, IACL, ACL } from '../../../../typechain';
+import { IACL, MetahubV2Mock, MetahubV2Mock__factory, UUPSUpgradeable } from '../../../../typechain';
 
 // TODO make this generic so it can be re-used for multiple contracts
 export function shouldBehaveLikeUUPSUpgradeable(): void {

@@ -26,7 +26,9 @@ contract AssetClassRegistry is
     /**
      * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor() initializer {}
+    constructor() initializer {
+        // solhint-disable-previous-line no-empty-blocks
+    }
 
     /**
      * @dev AssetClassRegistry initializer.
@@ -105,6 +107,13 @@ contract AssetClassRegistry is
     }
 
     /**
+     * @inheritdoc UUPSUpgradeable
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
+    /**
      * @dev Throws if provided address is not a valid asset controller address.
      * @param assetClass Asset class ID.
      * @param controller Asset controller address.
@@ -132,6 +141,4 @@ contract AssetClassRegistry is
     function _acl() internal view override returns (IACL) {
         return _aclContract;
     }
-
-    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }

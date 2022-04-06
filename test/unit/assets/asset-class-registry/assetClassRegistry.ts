@@ -1,12 +1,5 @@
-import hre, { ethers, upgrades } from 'hardhat';
-import { wait } from '../../../../tasks';
-import {
-  ACL,
-  AssetClassRegistry,
-  AssetClassRegistry__factory,
-  IACL,
-  IAssetClassRegistry__factory,
-} from '../../../../typechain';
+import hre, { ethers } from 'hardhat';
+import { AssetClassRegistry__factory, IACL, IAssetClassRegistry__factory } from '../../../../typechain';
 import { shouldBehaveLikeAssetClassRegistry } from './AssetClassRegistry.behaviour';
 
 export function unitTestAssetClassRegistry(): void {

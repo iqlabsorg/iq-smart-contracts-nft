@@ -15,9 +15,15 @@ library Rentings {
     using Assets for Assets.AssetId;
 
     /**
-     * @dev Defines the maximal allowed number of cycles when looking for expired rental agreements.
+     * @dev Thrown when a rental agreement is being registered for a specific warper ID,
+     * while the previous rental agreement for this warper is still effective.
      */
-    uint256 private constant GC_CYCLES = 20;
+    error RentalAgreementConflict(uint256 conflictingRentalId);
+
+    /**
+     * @dev Thrown when attempting to delete effective rental agreement data (before expiration).
+     */
+    error CannotDeleteEffectiveRentalAgreement(uint256 rentalId);
 
     /**
      * @dev Warper rental status.
@@ -32,15 +38,9 @@ library Rentings {
     }
 
     /**
-     * @dev Thrown when a rental agreement is being registered for a specific warper ID,
-     * while the previous rental agreement for this warper is still effective.
+     * @dev Defines the maximal allowed number of cycles when looking for expired rental agreements.
      */
-    error RentalAgreementConflict(uint256 conflictingRentalId);
-
-    /**
-     * @dev Thrown when attempting to delete effective rental agreement data (before expiration).
-     */
-    error CannotDeleteEffectiveRentalAgreement(uint256 rentalId);
+    uint256 private constant _GC_CYCLES = 20;
 
     /**
      * @dev Rental fee breakdown.
@@ -55,7 +55,8 @@ library Rentings {
     }
 
     /**
-     * @dev Renting parameters structure. It is used to encode all the necessary information to estimate and/or fulfill a particular renting request.
+     * @dev Renting parameters structure.
+     * It is used to encode all the necessary information to estimate and/or fulfill a particular renting request.
      * @param listingId Listing ID. Also allows to identify the asset being rented.
      * @param warper Warper address.
      * @param renter Renter address.
@@ -167,7 +168,7 @@ library Rentings {
         uint256 rentalCount = rentalIndex.length();
         if (rentalCount == 0 || toBeRemoved == 0) return;
 
-        uint256 maxCycles = rentalCount < GC_CYCLES ? rentalCount : GC_CYCLES;
+        uint256 maxCycles = rentalCount < _GC_CYCLES ? rentalCount : _GC_CYCLES;
         uint256 removed = 0;
         for (uint256 i = 0; i < maxCycles; i++) {
             uint256 rentalId = rentalIndex.at(i);

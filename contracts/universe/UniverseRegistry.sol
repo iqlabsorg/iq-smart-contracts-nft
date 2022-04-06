@@ -40,7 +40,9 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
      * @dev Constructor that gets called for the implementation contract.
      * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor() initializer {}
+    constructor() initializer {
+        // solhint-disable-previous-line no-empty-blocks
+    }
 
     /**
      * @dev UniverseRegistry initializer.
@@ -170,6 +172,13 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     }
 
     /**
+     * @inheritdoc UUPSUpgradeable
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
+    /**
      * @inheritdoc AccessControlledUpgradeable
      */
     function _acl() internal view override returns (IACL) {
@@ -203,6 +212,4 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     function _isUniverseOwner(uint256 universeId, address account) internal view returns (bool) {
         return _universeToken.ownerOf(universeId) == account;
     }
-
-    function _authorizeUpgrade(address newImplementation) internal virtual override onlyAdmin {}
 }

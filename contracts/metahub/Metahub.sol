@@ -47,6 +47,26 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     using Protocol for Protocol.Config;
 
     /**
+     * @dev Metahub initialization params.
+     * @param warperPresetFactory Warper preset factory address.
+     * @param assetClassRegistry
+     * @param listingStrategyRegistry
+     * @param universeRegistry
+     * @param acl
+     * @param baseToken
+     * @param rentalFeePercent
+     */
+    struct MetahubInitParams {
+        IWarperPresetFactory warperPresetFactory;
+        IAssetClassRegistry assetClassRegistry;
+        IListingStrategyRegistry listingStrategyRegistry;
+        IUniverseRegistry universeRegistry;
+        IACL acl;
+        IERC20Upgradeable baseToken;
+        uint16 rentalFeePercent;
+    }
+
+    /**
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
@@ -89,26 +109,8 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor() initializer {}
-
-    /**
-     * @dev Metahub initialization params.
-     * @param warperPresetFactory Warper preset factory address.
-     * @param assetClassRegistry
-     * @param listingStrategyRegistry
-     * @param universeRegistry
-     * @param acl
-     * @param baseToken
-     * @param rentalFeePercent
-     */
-    struct MetahubInitParams {
-        IWarperPresetFactory warperPresetFactory;
-        IAssetClassRegistry assetClassRegistry;
-        IListingStrategyRegistry listingStrategyRegistry;
-        IUniverseRegistry universeRegistry;
-        IACL acl;
-        IERC20Upgradeable baseToken;
-        uint16 rentalFeePercent;
+    constructor() initializer {
+        // solhint-disable-previous-line no-empty-blocks
     }
 
     /**
@@ -133,203 +135,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     function setProtocolRentalFeePercent(uint16 rentalFeePercent) external onlyAdmin {
         _protocolConfig.rentalFeePercent = rentalFeePercent;
         emit ProtocolRentalFeeChanged(rentalFeePercent);
-    }
-
-    /**
-     * @inheritdoc IProtocolConfigManager
-     */
-    function protocolRentalFeePercent() external view returns (uint16) {
-        return _protocolConfig.rentalFeePercent;
-    }
-
-    /**
-     * @inheritdoc IProtocolConfigManager
-     */
-    function baseToken() external view returns (address) {
-        return address(_protocolConfig.baseToken);
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory) {
-        _validateRentingParams(rentingParams);
-        return _calculateRentalFees(rentingParams);
-    }
-
-    /**
-     * @dev Main renting request validation function.
-     */
-    function _validateRentingParams(Rentings.Params calldata params) internal view {
-        // Validate from the protocol perspective.
-        _protocolConfig.checkBaseToken(params.paymentToken);
-
-        // Validate from the listing perspective.
-        _listingRegistry.checkListed(params.listingId);
-        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
-        listing.checkNotPaused();
-        listing.checkValidLockPeriod(params.rentalPeriod);
-
-        // Validate from the warper perspective.
-        Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
-        warper.checkCompatibleAsset(listing.asset);
-        warper.checkNotPaused();
-        warper.controller.validateRentingParams(listing.asset, params);
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256) {
-        // Currently payer must match the renter address since the estimation might be renter specific.
-        if (_msgSender() != rentingParams.renter) revert CallerIsNotRenter();
-
-        // Validate renting parameters.
-        _validateRentingParams(rentingParams);
-
-        // Handle payments.
-        _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
-
-        // Deliver warper asset to the renter!
-        (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
-            rentingParams.listingId,
-            rentingParams.warper,
-            rentingParams.renter
-        );
-
-        // Register new rental agreement.
-        uint32 blockTimestamp = uint32(block.timestamp);
-        Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
-            warpedAsset: warpedAsset,
-            collectionId: collectionId,
-            listingId: rentingParams.listingId,
-            renter: rentingParams.renter,
-            startTime: blockTimestamp,
-            endTime: blockTimestamp + rentingParams.rentalPeriod
-        });
-
-        // Register new rental agreement.
-        uint256 rentalId = _rentingRegistry.register(rentalAgreement);
-
-        // Update listing lock time.
-        _listingRegistry.listings[rentingParams.listingId].addLock(rentalAgreement.endTime);
-
-        // Clean up x2 expired rental agreements.
-        _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
-
-        // todo: emit AssetRented event
-
-        return rentalId;
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function rentalAgreementInfo(uint256 rentalId) external view returns (Rentings.Agreement memory) {
-        return _rentingRegistry.agreements[rentalId];
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function userRentalCount(address renter) external view returns (uint256) {
-        return _rentingRegistry.userRentalCount(renter);
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function userRentalAgreements(
-        address renter,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (uint256[] memory, Rentings.Agreement[] memory) {
-        return _rentingRegistry.userRentalAgreements(renter, offset, limit);
-    }
-
-    /**
-     * @dev Finds the listed asset and warps it, using corresponding warper controller.
-     * @param listingId Listing ID.
-     * @param warper Warper address.
-     * @param renter Renter address.
-     * @return collectionId Warped collection ID.
-     * @return warpedAsset Warped asset structure.
-     */
-    function _warpListedAsset(
-        uint256 listingId,
-        address warper,
-        address renter
-    ) internal returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
-        Assets.Asset memory asset = _listingRegistry.listings[listingId].asset;
-        address controller = address(_warperRegistry.warpers[warper].controller);
-        (collectionId, warpedAsset) = abi.decode(
-            controller.functionDelegateCall(
-                abi.encodeWithSelector(IWarperController.warp.selector, asset, warper, renter)
-            ),
-            (bytes32, Assets.Asset)
-        );
-    }
-
-    /**
-     * @dev Handles all rental payments.
-     */
-    function _handleRentalPayment(
-        Rentings.Params calldata rentingParams,
-        address payer,
-        uint256 maxPaymentAmount
-    ) internal {
-        // Get precise estimation.
-        Rentings.RentalFees memory fees = _calculateRentalFees(rentingParams);
-        address paymentToken = rentingParams.paymentToken;
-
-        // Ensure no rental fee payment slippage.
-        if (fees.total > maxPaymentAmount) revert RentalFeeSlippage();
-
-        // The amount of payment tokens to be accumulated on the Metahub for future payouts.
-        // This will include all fees which are not being paid out immediately.
-        uint256 accumulatedTokens = 0;
-
-        // Handle lister fee component.
-        Listings.Listing storage listing = _listingRegistry.listings[rentingParams.listingId];
-        uint256 listerFee = fees.listerBaseFee + fees.listerPremium;
-        // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
-        // Otherwise increase the lister balance.
-        address lister = listing.lister;
-        if (listing.immediatePayout) {
-            IERC20Upgradeable(paymentToken).safeTransferFrom(payer, lister, listerFee);
-        } else {
-            _accountRegistry.users[lister].increaseBalance(paymentToken, listerFee);
-            accumulatedTokens += listerFee;
-        }
-
-        // Handle universe fee component.
-        uint256 universeId = _warperRegistry.warpers[rentingParams.warper].universeId;
-        uint256 universeFee = fees.universeBaseFee + fees.universePremium;
-        // Increase universe balance.
-        _accountRegistry.universes[universeId].increaseBalance(paymentToken, universeFee);
-        accumulatedTokens += universeFee;
-
-        // Handle protocol fee component.
-        _accountRegistry.protocol.increaseBalance(paymentToken, fees.protocolFee);
-        accumulatedTokens += fees.protocolFee;
-
-        // Transfer the accumulated token amount from payer to the metahub.
-        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
-        // todo: event with balance changes;
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function collectionRentedValue(bytes32 warpedCollectionId, address renter) external view returns (uint256) {
-        return _rentingRegistry.collectionRentedValue(renter, warpedCollectionId);
-    }
-
-    /**
-     * @inheritdoc IRentingManager
-     */
-    function assetRentalStatus(Assets.AssetId calldata warpedAssetId) external view returns (Rentings.RentalStatus) {
-        return _rentingRegistry.assetRentalStatus(warpedAssetId);
     }
 
     /**
@@ -372,6 +177,22 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         }
 
         emit WarperRegistered(params.universeId, warper, original);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function pauseWarper(address warper) external onlyWarperAdmin(warper) {
+        _warperRegistry.warpers[warper].pause();
+        emit WarperPaused(warper);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function unpauseWarper(address warper) external onlyWarperAdmin(warper) {
+        _warperRegistry.warpers[warper].unpause();
+        emit WarperUnpaused(warper);
     }
 
     /**
@@ -453,19 +274,143 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
-     * @inheritdoc IWarperManager
+     * @inheritdoc IPaymentManager
      */
-    function pauseWarper(address warper) external onlyWarperAdmin(warper) {
-        _warperRegistry.warpers[warper].pause();
-        emit WarperPaused(warper);
+    function withdrawProtocolFunds(
+        address token,
+        uint256 amount,
+        address to
+    ) external onlyAdmin {
+        _accountRegistry.protocol.withdraw(token, amount, to);
     }
 
     /**
-     * @inheritdoc IWarperManager
+     * @inheritdoc IPaymentManager
      */
-    function unpauseWarper(address warper) external onlyWarperAdmin(warper) {
-        _warperRegistry.warpers[warper].unpause();
-        emit WarperUnpaused(warper);
+    function withdrawUniverseFunds(
+        uint256 universeId,
+        address token,
+        uint256 amount,
+        address to
+    ) external onlyUniverseOwner(universeId) {
+        _accountRegistry.universes[universeId].withdraw(token, amount, to);
+    }
+
+    /**
+     * @inheritdoc IPaymentManager
+     */
+    function withdrawFunds(
+        address token,
+        uint256 amount,
+        address to
+    ) external {
+        _accountRegistry.users[_msgSender()].withdraw(token, amount, to);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256) {
+        // Currently payer must match the renter address since the estimation might be renter specific.
+        if (_msgSender() != rentingParams.renter) revert CallerIsNotRenter();
+
+        // Validate renting parameters.
+        _validateRentingParams(rentingParams);
+
+        // Handle payments.
+        _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
+
+        // Deliver warper asset to the renter!
+        (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
+            rentingParams.listingId,
+            rentingParams.warper,
+            rentingParams.renter
+        );
+
+        // Register new rental agreement.
+        uint32 blockTimestamp = uint32(block.timestamp);
+        Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
+            warpedAsset: warpedAsset,
+            collectionId: collectionId,
+            listingId: rentingParams.listingId,
+            renter: rentingParams.renter,
+            startTime: blockTimestamp,
+            endTime: blockTimestamp + rentingParams.rentalPeriod
+        });
+
+        // Register new rental agreement.
+        uint256 rentalId = _rentingRegistry.register(rentalAgreement);
+
+        // Update listing lock time.
+        _listingRegistry.listings[rentingParams.listingId].addLock(rentalAgreement.endTime);
+
+        // Clean up x2 expired rental agreements.
+        _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
+
+        // todo: emit AssetRented event
+
+        return rentalId;
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory) {
+        _validateRentingParams(rentingParams);
+        return _calculateRentalFees(rentingParams);
+    }
+
+    /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function protocolRentalFeePercent() external view returns (uint16) {
+        return _protocolConfig.rentalFeePercent;
+    }
+
+    /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function baseToken() external view returns (address) {
+        return address(_protocolConfig.baseToken);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function rentalAgreementInfo(uint256 rentalId) external view returns (Rentings.Agreement memory) {
+        return _rentingRegistry.agreements[rentalId];
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function userRentalCount(address renter) external view returns (uint256) {
+        return _rentingRegistry.userRentalCount(renter);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function userRentalAgreements(
+        address renter,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Rentings.Agreement[] memory) {
+        return _rentingRegistry.userRentalAgreements(renter, offset, limit);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function collectionRentedValue(bytes32 warpedCollectionId, address renter) external view returns (uint256) {
+        return _rentingRegistry.collectionRentedValue(renter, warpedCollectionId);
+    }
+
+    /**
+     * @inheritdoc IRentingManager
+     */
+    function assetRentalStatus(Assets.AssetId calldata warpedAssetId) external view returns (Rentings.RentalStatus) {
+        return _rentingRegistry.assetRentalStatus(warpedAssetId);
     }
 
     /**
@@ -520,41 +465,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IPaymentManager
      */
-    function withdrawProtocolFunds(
-        address token,
-        uint256 amount,
-        address to
-    ) external onlyAdmin {
-        _accountRegistry.protocol.withdraw(token, amount, to);
-    }
-
-    /**
-     * @inheritdoc IPaymentManager
-     */
-    function withdrawUniverseFunds(
-        uint256 universeId,
-        address token,
-        uint256 amount,
-        address to
-    ) external onlyUniverseOwner(universeId) {
-        _accountRegistry.universes[universeId].withdraw(token, amount, to);
-    }
-
-    /**
-     * @inheritdoc IPaymentManager
-     */
-    function withdrawFunds(
-        address token,
-        uint256 amount,
-        address to
-    ) external {
-        _accountRegistry.users[_msgSender()].withdraw(token, amount, to);
-    }
-
-    /**
-     * @inheritdoc IPaymentManager
-     */
-    function protocolBalance(address token) public view returns (uint256) {
+    function protocolBalance(address token) external view returns (uint256) {
         return _accountRegistry.protocol.balance(token);
     }
 
@@ -568,7 +479,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IPaymentManager
      */
-    function universeBalance(uint256 universeId, address token) public view returns (uint256) {
+    function universeBalance(uint256 universeId, address token) external view returns (uint256) {
         return _accountRegistry.universes[universeId].balance(token);
     }
 
@@ -594,16 +505,90 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc UUPSUpgradeable
+     * @dev Checks whether the caller is authorized to upgrade the Metahub implementation.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
+    /**
+     * @dev Finds the listed asset and warps it, using corresponding warper controller.
+     * @param listingId Listing ID.
+     * @param warper Warper address.
+     * @param renter Renter address.
+     * @return collectionId Warped collection ID.
+     * @return warpedAsset Warped asset structure.
+     */
+    function _warpListedAsset(
+        uint256 listingId,
+        address warper,
+        address renter
+    ) internal returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
+        Assets.Asset memory asset = _listingRegistry.listings[listingId].asset;
+        address controller = address(_warperRegistry.warpers[warper].controller);
+        (collectionId, warpedAsset) = abi.decode(
+            controller.functionDelegateCall(
+                abi.encodeWithSelector(IWarperController.warp.selector, asset, warper, renter)
+            ),
+            (bytes32, Assets.Asset)
+        );
+    }
+
+    /**
+     * @dev Handles all rental payments.
+     */
+    function _handleRentalPayment(
+        Rentings.Params calldata rentingParams,
+        address payer,
+        uint256 maxPaymentAmount
+    ) internal {
+        // Get precise estimation.
+        Rentings.RentalFees memory fees = _calculateRentalFees(rentingParams);
+        address paymentToken = rentingParams.paymentToken;
+
+        // Ensure no rental fee payment slippage.
+        if (fees.total > maxPaymentAmount) revert RentalFeeSlippage();
+
+        // The amount of payment tokens to be accumulated on the Metahub for future payouts.
+        // This will include all fees which are not being paid out immediately.
+        uint256 accumulatedTokens = 0;
+
+        // Handle lister fee component.
+        Listings.Listing storage listing = _listingRegistry.listings[rentingParams.listingId];
+        uint256 listerFee = fees.listerBaseFee + fees.listerPremium;
+        // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
+        // Otherwise increase the lister balance.
+        address lister = listing.lister;
+        if (listing.immediatePayout) {
+            IERC20Upgradeable(paymentToken).safeTransferFrom(payer, lister, listerFee);
+        } else {
+            _accountRegistry.users[lister].increaseBalance(paymentToken, listerFee);
+            accumulatedTokens += listerFee;
+        }
+
+        // Handle universe fee component.
+        uint256 universeId = _warperRegistry.warpers[rentingParams.warper].universeId;
+        uint256 universeFee = fees.universeBaseFee + fees.universePremium;
+        // Increase universe balance.
+        _accountRegistry.universes[universeId].increaseBalance(paymentToken, universeFee);
+        accumulatedTokens += universeFee;
+
+        // Handle protocol fee component.
+        _accountRegistry.protocol.increaseBalance(paymentToken, fees.protocolFee);
+        accumulatedTokens += fees.protocolFee;
+
+        // Transfer the accumulated token amount from payer to the metahub.
+        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
+        // todo: event with balance changes;
+    }
+
+    /**
      * @inheritdoc AccessControlledUpgradeable
      */
     function _acl() internal view override returns (IACL) {
         return _aclContract;
     }
-
-    /**
-     * @dev Checks whether the caller is authorized to upgrade the Metahub implementation.
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 
     /**
      * @dev Throws if the warpers universe owner is not the provided account address.
@@ -612,6 +597,26 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function _checkWarperAdmin(address warper, address account) internal view {
         _universeRegistry.checkUniverseOwner(_warperRegistry.warpers[warper].universeId, account);
+    }
+
+    /**
+     * @dev Main renting request validation function.
+     */
+    function _validateRentingParams(Rentings.Params calldata params) internal view {
+        // Validate from the protocol perspective.
+        _protocolConfig.checkBaseToken(params.paymentToken);
+
+        // Validate from the listing perspective.
+        _listingRegistry.checkListed(params.listingId);
+        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
+        listing.checkNotPaused();
+        listing.checkValidLockPeriod(params.rentalPeriod);
+
+        // Validate from the warper perspective.
+        Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
+        warper.checkCompatibleAsset(listing.asset);
+        warper.checkNotPaused();
+        warper.controller.validateRentingParams(listing.asset, params);
     }
 
     /**

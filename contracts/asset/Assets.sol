@@ -39,7 +39,8 @@ library Assets {
 
     /**
      * @dev Communicates asset identification information.
-     * The structure designed to be token-standard agnostic, so the layout of `data` might vary for different token standards.
+     * The structure designed to be token-standard agnostic,
+     * so the layout of `data` might vary for different token standards.
      * For example, in case of ERC721 token, the `data` will contain contract address and tokenId.
      * @param class Asset class ID
      * @param data Asset identification data.

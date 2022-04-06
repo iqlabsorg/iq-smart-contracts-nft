@@ -11,7 +11,8 @@ interface IListingStrategyRegistry {
     error InvalidListingControllerInterface();
 
     /**
-     * @dev Thrown when the listing cannot be processed by the specific controller due to the listing strategy ID mismatch.
+     * @dev Thrown when the listing cannot be processed by the specific controller due to the listing strategy ID
+     * mismatch.
      * @param provided Provided listing strategy ID.
      * @param required Required listing strategy ID.
      */

@@ -68,7 +68,7 @@ interface IListingManager {
      * @param asset Asset to be listed.
      * @param params Listing strategy parameters.
      * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
-     * @param immediatePayout Indicates whether the rental fee must be transferred to the lister account on every renting.
+     * @param immediatePayout Indicates whether the rental fee must be transferred to the lister on every renting.
      * If FALSE, the rental fees get accumulated until withdrawn manually.
      * @return New listing ID.
      */

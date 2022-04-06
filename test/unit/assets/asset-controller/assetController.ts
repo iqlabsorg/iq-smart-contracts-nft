@@ -5,7 +5,6 @@ import {
   ERC721AssetController__factory,
   ERC721Mock__factory,
   ERC721PresetConfigurable__factory,
-  IAssetController,
   IAssetController__factory,
   IWarper__factory,
   Metahub,

@@ -8,13 +8,6 @@ import "./IERC721AssetVault.sol";
 
 contract ERC721AssetVault is IERC721AssetVault, AssetVault {
     /**
-     * @inheritdoc IAssetVault
-     */
-    function assetClass() external pure returns (bytes4) {
-        return Assets.ERC721;
-    }
-
-    /**
      * @dev Vault inventory
      * Mapping token address -> token ID -> owner.
      */
@@ -25,13 +18,8 @@ contract ERC721AssetVault is IERC721AssetVault, AssetVault {
      * @param operator First operator account.
      * @param acl ACL contract address
      */
-    constructor(address operator, address acl) AssetVault(operator, acl) {}
-
-    /**
-     * @inheritdoc IERC165
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(AssetVault, IERC165) returns (bool) {
-        return interfaceId == type(IERC721AssetVault).interfaceId || super.supportsInterface(interfaceId);
+    constructor(address operator, address acl) AssetVault(operator, acl) {
+        // solhint-disable-previous-line no-empty-blocks
     }
 
     /**
@@ -61,5 +49,19 @@ contract ERC721AssetVault is IERC721AssetVault, AssetVault {
         // Return asset to the owner.
         delete _inventory[token][tokenId];
         IERC721(token).transferFrom(address(this), owner, tokenId);
+    }
+
+    /**
+     * @inheritdoc IAssetVault
+     */
+    function assetClass() external pure returns (bytes4) {
+        return Assets.ERC721;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AssetVault, IERC165) returns (bool) {
+        return interfaceId == type(IERC721AssetVault).interfaceId || super.supportsInterface(interfaceId);
     }
 }

@@ -1,7 +1,7 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ContractTransaction, Signer } from 'ethers';
+import { ContractTransaction } from 'ethers';
 import { IUniverseToken, Metahub } from '../../../../typechain';
 import { AddressZero } from '../../../shared/types';
 

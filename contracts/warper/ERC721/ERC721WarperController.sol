@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable code-complexity
 pragma solidity 0.8.13;
 
 import "../../asset/ERC721/ERC721AssetController.sol";
@@ -14,23 +15,31 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
     using Assets for Assets.Asset;
 
     /**
-     * @inheritdoc IERC165
-     */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(AssetController, IERC165)
-        returns (bool)
-    {
-        return interfaceId == type(IERC721WarperController).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    /**
      * @inheritdoc IWarperController
+     * @dev Needs to be called with `delegatecall` from Metahub,
+     * otherwise warpers will reject the call.
      */
-    function isCompatibleWarper(address warper) public view returns (bool) {
-        return IWarper(warper).supportsInterface(type(IERC721Warper).interfaceId);
+    function warp(
+        Assets.Asset calldata asset,
+        address warper,
+        address to
+    ) external onlyDelegatecall returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
+        _validateAsset(asset);
+        (address original, uint256 tokenId) = _decodeAssetId(asset.id);
+        // Make sure the correct warper is used for the asset.
+        if (original != IWarper(warper).__original()) revert InvalidAssetForWarper(warper, original);
+
+        // Encode warped asset. The tokenId of the warped asset is identical to the original one,
+        // but the address is changed to warper contract.
+        warpedAsset = Assets.Asset(_encodeAssetId(warper, tokenId), asset.value);
+        collectionId = _collectionId(warper);
+
+        // If the warped asset has never been rented before, create new instance, otherwise transfer existing one.
+        if (rentalStatus(address(this), warper, tokenId) == Rentings.RentalStatus.NONE) {
+            IERC721Warper(warper).mint(to, tokenId, new bytes(0));
+        } else {
+            _transferAsset(warpedAsset, address(this), to, new bytes(0));
+        }
     }
 
     /**
@@ -113,31 +122,23 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
     }
 
     /**
-     * @inheritdoc IWarperController
-     * @dev Needs to be called with `delegatecall` from Metahub,
-     * otherwise warpers will reject the call.
+     * @inheritdoc IERC165
      */
-    function warp(
-        Assets.Asset calldata asset,
-        address warper,
-        address to
-    ) external onlyDelegatecall returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
-        _validateAsset(asset);
-        (address original, uint256 tokenId) = _decodeAssetId(asset.id);
-        // Make sure the correct warper is used for the asset.
-        if (original != IWarper(warper).__original()) revert InvalidAssetForWarper(warper, original);
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(AssetController, IERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IERC721WarperController).interfaceId || super.supportsInterface(interfaceId);
+    }
 
-        // Encode warped asset. The tokenId of the warped asset is identical to the original one,
-        // but the address is changed to warper contract.
-        warpedAsset = Assets.Asset(_encodeAssetId(warper, tokenId), asset.value);
-        collectionId = _collectionId(warper);
-
-        // If the warped asset has never been rented before, create new instance, otherwise transfer existing one.
-        if (rentalStatus(address(this), warper, tokenId) == Rentings.RentalStatus.NONE) {
-            IERC721Warper(warper).mint(to, tokenId, new bytes(0));
-        } else {
-            _transferAsset(warpedAsset, address(this), to, new bytes(0));
-        }
+    /**
+     * @inheritdoc IWarperController
+     */
+    function isCompatibleWarper(address warper) public view returns (bool) {
+        return IWarper(warper).supportsInterface(type(IERC721Warper).interfaceId);
     }
 
     /**
