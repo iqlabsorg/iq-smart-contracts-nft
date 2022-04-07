@@ -7,12 +7,11 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "./IACL.sol";
 import "./AccessControlledUpgradeable.sol";
 import "./Roles.sol";
-import "./ACLStorage.sol";
 
 /**
  * @title Access Control List contract
  */
-contract ACL is IACL, AccessControlEnumerableUpgradeable, AccessControlledUpgradeable, UUPSUpgradeable, ACLStorage {
+contract ACL is IACL, AccessControlEnumerableUpgradeable, AccessControlledUpgradeable, UUPSUpgradeable {
     /**
      * @dev Constructor that gets called for the implementation contract.
      * @custom:oz-upgrades-unsafe-allow constructor
