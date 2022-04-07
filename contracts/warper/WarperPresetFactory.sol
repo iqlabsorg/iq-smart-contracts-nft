@@ -43,6 +43,14 @@ contract WarperPresetFactory is
     }
 
     /**
+     * @dev Modifier to check that the preset is registered.
+     */
+    modifier presetIsRegistered(bytes32 presetId) {
+        if (_presets[presetId].implementation == address(0)) revert WarperPresetNotRegistered(presetId);
+        _;
+    }
+
+    /**
      * @dev Constructor that gets called for the implementation contract.
      * @custom:oz-upgrades-unsafe-allow constructor
      */
@@ -90,7 +98,12 @@ contract WarperPresetFactory is
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function enablePreset(bytes32 presetId) external whenDisabled(presetId) onlySupervisor {
+    function enablePreset(bytes32 presetId)
+        external
+        presetIsRegistered(presetId)
+        whenDisabled(presetId)
+        onlySupervisor
+    {
         _presets[presetId].enabled = true;
         emit WarperPresetEnabled(presetId);
     }
@@ -98,7 +111,12 @@ contract WarperPresetFactory is
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function disablePreset(bytes32 presetId) external whenEnabled(presetId) onlySupervisor {
+    function disablePreset(bytes32 presetId)
+        external
+        presetIsRegistered(presetId)
+        whenEnabled(presetId)
+        onlySupervisor
+    {
         _presets[presetId].enabled = false;
         emit WarperPresetDisabled(presetId);
     }
@@ -125,7 +143,7 @@ contract WarperPresetFactory is
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function presetEnabled(bytes32 presetId) external view returns (bool) {
+    function presetEnabled(bytes32 presetId) external view presetIsRegistered(presetId) returns (bool) {
         return _presets[presetId].enabled;
     }
 
@@ -144,7 +162,7 @@ contract WarperPresetFactory is
     /**
      * @inheritdoc IWarperPresetFactory
      */
-    function preset(bytes32 presetId) external view returns (WarperPreset memory) {
+    function preset(bytes32 presetId) external view presetIsRegistered(presetId) returns (WarperPreset memory) {
         return _presets[presetId];
     }
 

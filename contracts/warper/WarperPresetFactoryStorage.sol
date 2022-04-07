@@ -11,7 +11,7 @@ abstract contract WarperPresetFactoryStorage {
     /**
      * @dev The ACL contract address.
      */
-    IACL _aclContract;
+    IACL internal _aclContract;
 
     /**
      * @dev Mapping presetId to preset struct.

@@ -1,6 +1,5 @@
 import { parseEther } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
-import { InterfacePrinter__factory } from '../../typechain/factories/InterfacePrinter__factory';
 
 const TOTAL_TOKENS = 1_000_000_000;
 const TOKEN_DECIMALS = 18;

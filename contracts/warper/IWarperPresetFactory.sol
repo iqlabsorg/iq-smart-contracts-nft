@@ -7,6 +7,7 @@ interface IWarperPresetFactory {
     error DuplicateWarperPresetId(bytes32 presetId);
     error DisabledWarperPreset(bytes32 presetId);
     error EnabledWarperPreset(bytes32 presetId);
+    error WarperPresetNotRegistered(bytes32 presetId);
 
     /**
      * @dev Thrown when the provided preset initialization data is empty.
