@@ -29,5 +29,5 @@ abstract contract AccessControlledUpgradeable is ContextUpgradeable {
     /**
      * @dev return the IACL address
      */
-    function _acl() internal virtual returns (IACL);
+    function _acl() internal view virtual returns (IACL);
 }
