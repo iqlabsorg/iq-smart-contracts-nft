@@ -218,4 +218,36 @@ library Listings {
     function checkListed(Registry storage self, uint256 listingId) internal view {
         if (!self.listings[listingId].listed()) revert NotListed(listingId);
     }
+
+    /**
+     * @dev Returns the number of currently registered listings for a particular lister account.
+     */
+    function userListingCount(Registry storage self, address lister) internal view returns (uint256) {
+        return self.listers[lister].listingIndex.length();
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered listing for particular lister account.
+     */
+    function userListings(
+        Registry storage self,
+        address lister,
+        uint256 offset,
+        uint256 limit
+    ) internal view returns (uint256[] memory, Listing[] memory) {
+        EnumerableSetUpgradeable.UintSet storage userListingIndex = self.listers[lister].listingIndex;
+        uint256 listingCount = userListingIndex.length();
+        if (limit > listingCount - offset) {
+            limit = listingCount - offset;
+        }
+
+        Listing[] memory listings = new Listing[](limit);
+        uint256[] memory listingIds = new uint256[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            listingIds[i] = userListingIndex.at(i);
+            listings[i] = self.listings[listingIds[i]];
+        }
+
+        return (listingIds, listings);
+    }
 }

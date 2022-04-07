@@ -114,4 +114,25 @@ interface IListingManager {
      * @return Listing details.
      */
     function listingInfo(uint256 listingId) external view returns (Listings.Listing memory);
+
+    /**
+     * @dev Returns the number of currently registered listings for the particular lister account.
+     * @param lister Lister address.
+     * @return Listing count.
+     */
+    function userListingCount(address lister) external view returns (uint256);
+
+    /**
+     * @dev Returns the paginated list of currently registered listings for the particular lister account.
+     * @param lister Lister address.
+     * @param offset Starting index.
+     * @param limit Max number of items.
+     * @return Listing IDs.
+     * @return Listings.
+     */
+    function userListings(
+        address lister,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Listings.Listing[] memory);
 }

@@ -428,6 +428,24 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc IListingManager
+     */
+    function userListingCount(address lister) external view returns (uint256) {
+        return _listingRegistry.userListingCount(lister);
+    }
+
+    /**
+     * @inheritdoc IListingManager
+     */
+    function userListings(
+        address lister,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Listings.Listing[] memory) {
+        return _listingRegistry.userListings(lister, offset, limit);
+    }
+
+    /**
      * @inheritdoc IWarperManager
      */
     function warperPresetFactory() external view returns (address) {

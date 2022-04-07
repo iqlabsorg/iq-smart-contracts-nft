@@ -87,10 +87,10 @@ interface IWarperManager {
 
     /**
      * @dev Returns registered warper details.
-     * @param warperInfo Warper address.
+     * @param warper Warper address.
      * @return Warper details.
      */
-    function warperInfo(address warperInfo) external view returns (Warpers.Warper memory);
+    function warperInfo(address warper) external view returns (Warpers.Warper memory);
 
     /**
      * @dev Returns warper controller address.
