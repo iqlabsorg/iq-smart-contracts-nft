@@ -1,5 +1,6 @@
 import { parseEther } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
+import { InterfacePrinter__factory } from '../../typechain/factories/InterfacePrinter__factory';
 
 const TOTAL_TOKENS = 1_000_000_000;
 const TOKEN_DECIMALS = 18;
@@ -44,6 +45,19 @@ task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAc
   await hre.deployments.delete('WarperPresetMock');
 
   const deployment = await hre.deployments.deploy('WarperPresetMock', {
+    from: deployer.address,
+    args: [],
+    log: true,
+  });
+  return deployment.address;
+});
+
+task('deploy:interfaces-printer', 'Print interfaces IDs to the stdout').setAction(async (_args, hre) => {
+  const deployer = await hre.ethers.getNamedSigner('deployer');
+
+  await hre.deployments.delete('InterfacePrinter');
+
+  const deployment = await hre.deployments.deploy('InterfacePrinter', {
     from: deployer.address,
     args: [],
     log: true,

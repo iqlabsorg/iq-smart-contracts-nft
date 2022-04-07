@@ -19,6 +19,7 @@ import {
   IERC721WarperController,
   IListingManager,
   IMetahub,
+  InterfacePrinter,
   IRentalPeriodMechanics,
   IRentingManager,
   IUniverseRegistry,
@@ -89,6 +90,7 @@ export interface Mocks {
   metahub: FakeContract<Metahub>;
   assetClassRegistry: FakeContract<AssetClassRegistry>;
   assetsLib: AssetsMock;
+  interfacePrinter: InterfacePrinter;
   assets: {
     erc721: ERC721Mock;
     erc20: ERC20Mock;
