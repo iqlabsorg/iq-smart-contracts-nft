@@ -20,7 +20,7 @@ interface IRentingManager {
      * @param rentalId Rental agreement ID.
      * @param renter The renter account address.
      * @param listingId The corresponding ID of the original asset listing.
-     * @param asset Rented asset.
+     * @param warpedAsset Rented warped asset.
      * @param startTime The rental agreement staring time.
      * @param endTime The rental agreement ending time.
      */
@@ -28,7 +28,7 @@ interface IRentingManager {
         uint256 indexed rentalId,
         address indexed renter,
         uint256 indexed listingId,
-        Assets.Asset asset,
+        Assets.Asset warpedAsset,
         uint32 startTime,
         uint32 endTime
     );
