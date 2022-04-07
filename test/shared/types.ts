@@ -29,7 +29,6 @@ import {
   IWarperPresetFactory,
   Metahub,
   Multicall,
-  Ownable,
   UUPSUpgradeable,
   WarperPresetMock,
 } from '../../typechain';
@@ -82,7 +81,6 @@ export interface Contracts {
   assetController: IAssetController;
 
   // Misc, non-interface tests
-  ownable: Ownable;
   multicall: Multicall;
   uupsUpgradeable: UUPSUpgradeable;
 }

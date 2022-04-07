@@ -1,4 +1,5 @@
-import { task } from 'hardhat/config';
+import { task, types } from 'hardhat/config';
+import { WarperPresetFactory, WarperPresetFactory__factory } from '../../typechain';
 
 task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
@@ -13,15 +14,18 @@ task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').s
   return deployment.address;
 });
 
-task('deploy:warper-preset-factory', 'Deploy Warper preset factory').setAction(async (_args, hre) => {
-  const deployer = await hre.ethers.getNamedSigner('deployer');
+task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
+  .addParam('acl', 'The ACL contract address', undefined, types.string)
+  .setAction(async ({ acl }, hre) => {
+    const deployer = await hre.ethers.getNamedSigner('deployer');
 
-  await hre.deployments.delete('WarperPresetFactory');
+    // Delete the previous deployment
+    await hre.deployments.delete('WarperPresetFactory_Proxy');
+    await hre.deployments.delete('WarperPresetFactory_Implementation');
 
-  const deployment = await hre.deployments.deploy('WarperPresetFactory', {
-    from: deployer.address,
-    args: [],
-    log: true,
+    const deployment = (await hre.upgrades.deployProxy(new WarperPresetFactory__factory(deployer), [acl], {
+      kind: 'uups',
+      initializer: 'initialize(address)',
+    })) as WarperPresetFactory;
+    return deployment.address;
   });
-  return deployment.address;
-});

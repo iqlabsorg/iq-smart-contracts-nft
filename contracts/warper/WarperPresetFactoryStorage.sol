@@ -7,7 +7,7 @@ import "../acl/IACL.sol";
 import "./WarperPresetFactoryStorage.sol";
 import "./IWarperPresetFactory.sol";
 
-contract WarperPresetFactoryStorage {
+abstract contract WarperPresetFactoryStorage {
     /**
      * @dev The ACL contract address.
      */

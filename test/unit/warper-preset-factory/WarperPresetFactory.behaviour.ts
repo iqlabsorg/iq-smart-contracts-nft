@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { defaultAbiCoder, formatBytes32String } from 'ethers/lib/utils';
 import { IWarperPresetFactory, WarperPresetMock, WarperPresetMock__factory } from '../../../typechain';
-import { deployWarperPresetWithInitData } from '../../shared/utils';
+import { AccessControlledHelper, deployWarperPresetWithInitData } from '../../shared/utils';
 
 const presetId1 = formatBytes32String('ERC721Basic');
 const presetId2 = formatBytes32String('ERC721Advanced');
@@ -16,17 +16,17 @@ const expectWarperPresetData = async (preset: unknown | Promise<unknown>, data: 
  * Warper preset factory tests
  */
 export function shouldBehaveWarperPresetFactory(): void {
+  let warperPresetFactory: IWarperPresetFactory;
+
+  beforeEach(function () {
+    warperPresetFactory = this.contracts.warperPresetFactory;
+  });
+
   describe('add a new preset', function () {
-    let warperPresetFactory: IWarperPresetFactory;
     let warperImpl1: WarperPresetMock;
     let warperImpl2: WarperPresetMock;
 
-    let stranger: SignerWithAddress;
-
     beforeEach(function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-
-      [stranger] = this.signers.unnamed;
       warperImpl1 = this.mocks.warperPreset[0];
       warperImpl2 = this.mocks.warperPreset[1];
     });
@@ -39,16 +39,9 @@ export function shouldBehaveWarperPresetFactory(): void {
         );
       });
 
-      it('allows owner to add new preset', async () => {
-        await expect(warperPresetFactory.addPreset(presetId1, warperImpl1.address))
-          .to.emit(warperPresetFactory, 'WarperPresetAdded')
-          .withArgs(presetId1, warperImpl1.address);
-      });
-
-      it('forbids stranger to add preset', async () => {
-        await expect(
-          warperPresetFactory.connect(stranger).addPreset(presetId1, warperImpl1.address),
-        ).to.be.revertedWith('caller is not the owner');
+      AccessControlledHelper.onlySupervisorCan(async signer => {
+        const tx = await warperPresetFactory.connect(signer).addPreset(presetId1, warperImpl1.address);
+        await expect(tx).to.emit(warperPresetFactory, 'WarperPresetAdded').withArgs(presetId1, warperImpl1.address);
       });
     });
 
@@ -91,19 +84,18 @@ export function shouldBehaveWarperPresetFactory(): void {
   });
 
   describe('deploy warper preset', function () {
-    let warperPresetFactory: IWarperPresetFactory;
     let warperImpl1: WarperPresetMock;
 
     let stranger: SignerWithAddress;
     let deployer: SignerWithAddress;
 
     beforeEach(async function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-
       deployer = this.signers.named['deployer'];
       [stranger] = this.signers.unnamed;
+
       await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
       await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
+
       warperImpl1 = this.mocks.warperPreset[0];
     });
 
@@ -140,39 +132,21 @@ export function shouldBehaveWarperPresetFactory(): void {
   });
 
   describe('disable preset', function () {
-    let warperPresetFactory: IWarperPresetFactory;
-    let stranger: SignerWithAddress;
-
     beforeEach(async function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-
-      [stranger] = this.signers.unnamed;
       await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
       await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
     });
 
-    it('allows owner to disable preset', async () => {
-      await expect(warperPresetFactory.disablePreset(presetId2))
-        .to.emit(warperPresetFactory, 'WarperPresetDisabled')
-        .withArgs(presetId2);
-      await expectWarperPresetData(warperPresetFactory.preset(presetId2), { enabled: false });
-    });
+    AccessControlledHelper.onlySupervisorCan(async signer => {
+      const tx = await warperPresetFactory.connect(signer).disablePreset(presetId2);
 
-    it('forbids stranger to disable preset', async () => {
-      await expect(warperPresetFactory.connect(stranger).disablePreset(presetId2)).to.be.revertedWith(
-        'caller is not the owner',
-      );
+      await expect(tx).to.emit(warperPresetFactory, 'WarperPresetDisabled').withArgs(presetId2);
+      await expectWarperPresetData(warperPresetFactory.preset(presetId2), { enabled: false });
     });
   });
 
   describe('enable preset', function () {
-    let warperPresetFactory: IWarperPresetFactory;
-    let stranger: SignerWithAddress;
-
     beforeEach(async function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-
-      [stranger] = this.signers.unnamed;
       await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
       await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
     });
@@ -182,17 +156,11 @@ export function shouldBehaveWarperPresetFactory(): void {
         await warperPresetFactory.disablePreset(presetId2);
       });
 
-      it('allows owner to enable preset', async () => {
-        await expect(warperPresetFactory.enablePreset(presetId2))
-          .to.emit(warperPresetFactory, 'WarperPresetEnabled')
-          .withArgs(presetId2);
-        await expectWarperPresetData(warperPresetFactory.preset(presetId2), { enabled: true });
-      });
+      AccessControlledHelper.onlySupervisorCan(async signer => {
+        const tx = await warperPresetFactory.connect(signer).enablePreset(presetId2);
 
-      it('forbids stranger to enable preset', async () => {
-        await expect(warperPresetFactory.connect(stranger).enablePreset(presetId2)).to.be.revertedWith(
-          'caller is not the owner',
-        );
+        await expect(tx).to.emit(warperPresetFactory, 'WarperPresetEnabled').withArgs(presetId2);
+        await expectWarperPresetData(warperPresetFactory.preset(presetId2), { enabled: true });
       });
 
       it('forbids to deploy preset', async () => {
@@ -204,28 +172,15 @@ export function shouldBehaveWarperPresetFactory(): void {
   });
 
   describe('remove preset', function () {
-    let warperPresetFactory: IWarperPresetFactory;
-    let stranger: SignerWithAddress;
-
     beforeEach(async function () {
-      warperPresetFactory = this.contracts.warperPresetFactory;
-
-      [stranger] = this.signers.unnamed;
       await warperPresetFactory.addPreset(presetId1, this.mocks.warperPreset[0].address);
       await warperPresetFactory.addPreset(presetId2, this.mocks.warperPreset[1].address);
     });
 
-    it('allows owner to remove preset', async () => {
-      await expect(warperPresetFactory.removePreset(presetId2))
-        .to.emit(warperPresetFactory, 'WarperPresetRemoved')
-        .withArgs(presetId2);
+    AccessControlledHelper.onlySupervisorCan(async signer => {
+      const tx = await warperPresetFactory.connect(signer).removePreset(presetId2);
+      await expect(tx).to.emit(warperPresetFactory, 'WarperPresetRemoved').withArgs(presetId2);
       await expectWarperPresetData(warperPresetFactory.preset(presetId2), { id: formatBytes32String('') });
-    });
-
-    it('forbids stranger to remove preset', async () => {
-      await expect(warperPresetFactory.connect(stranger).removePreset(presetId2)).to.be.revertedWith(
-        'caller is not the owner',
-      );
     });
   });
 }
