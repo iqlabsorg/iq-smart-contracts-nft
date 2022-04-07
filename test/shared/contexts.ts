@@ -18,8 +18,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       this.loadFixture = hre.waffle.createFixtureLoader();
 
       const deployer = await ethers.getNamedSigner('deployer');
-      const deployedACL = await hre.run('deploy:acl');
-      const acl = IACL__factory.connect(deployedACL, deployer);
+      const acl = IACL__factory.connect(await hre.run('deploy:acl'), deployer);
       await acl.connect(deployer).grantRole(await acl.adminRole(), this.signers.named.admin.address);
       await acl.connect(deployer).grantRole(await acl.supervisorRole(), this.signers.named.supervisor.address);
 

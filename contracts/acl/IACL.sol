@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/access/IAccessControlEnumerable.sol";
+import "@openzeppelin/contracts-upgradeable/access/IAccessControlEnumerableUpgradeable.sol";
 
 /**
  * @title Access Control List contract interface.
  */
-interface IACL is IAccessControlEnumerable {
+interface IACL is IAccessControlEnumerableUpgradeable {
     // TODO: Docs
     error RolesContractIncorrectlyConfigured();
 
