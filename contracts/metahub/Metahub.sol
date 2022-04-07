@@ -347,7 +347,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         // Clean up x2 expired rental agreements.
         _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
 
-        // todo: emit AssetRented event
+        emit AssetRented(
+            rentalId,
+            rentalAgreement.renter,
+            rentalAgreement.listingId,
+            rentalAgreement.warpedAsset,
+            rentalAgreement.startTime,
+            rentalAgreement.endTime
+        );
 
         return rentalId;
     }

@@ -71,7 +71,17 @@ library Rentings {
         address paymentToken;
     }
 
-    // todo: docs
+    /**
+     * @dev Rental agreement information.
+     * @param warpedAsset Rented asset.
+     * @param collectionId Warped collection ID.
+     * @param listingId The corresponding ID of the original asset listing.
+     * @param renter The renter account address.
+     * @param startTime The rental agreement staring time. This is the timestamp after which the `renter`
+     * considered to be an warped asset owner.
+     * @param endTime The rental agreement ending time. After this timestamp, the rental agreement is terminated
+     * and the `renter` is no longer the owner of the warped asset.
+     */
     struct Agreement {
         Assets.Asset warpedAsset;
         bytes32 collectionId;

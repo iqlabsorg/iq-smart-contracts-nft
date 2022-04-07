@@ -16,6 +16,24 @@ interface IRentingManager {
     error CallerIsNotRenter();
 
     /**
+     * @dev Emitted when the warped asset is rented.
+     * @param rentalId Rental agreement ID.
+     * @param renter The renter account address.
+     * @param listingId The corresponding ID of the original asset listing.
+     * @param asset Rented asset.
+     * @param startTime The rental agreement staring time.
+     * @param endTime The rental agreement ending time.
+     */
+    event AssetRented(
+        uint256 indexed rentalId,
+        address indexed renter,
+        uint256 indexed listingId,
+        Assets.Asset asset,
+        uint32 startTime,
+        uint32 endTime
+    );
+
+    /**
      * @dev Returns token amount from specific collection rented by particular account.
      * @param warpedCollectionId Warped collection ID.
      * @param renter The renter account address.
