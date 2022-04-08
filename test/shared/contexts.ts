@@ -1,5 +1,5 @@
 import hre, { ethers } from 'hardhat';
-import { IACL__factory, InterfacePrinter__factory } from '../../typechain';
+import { IACL, InterfacePrinter } from '../../typechain';
 
 import type { Contracts, Mocks, Signers } from './types';
 import { AccessControlledHelper } from './utils';
@@ -19,7 +19,7 @@ export function baseContext(description: string, testSuite: () => void): void {
 
       // ACL contract setup
       const deployer = await ethers.getNamedSigner('deployer');
-      const acl = IACL__factory.connect(await hre.run('deploy:acl'), deployer);
+      const acl = (await hre.run('deploy:acl')) as IACL;
       await acl.connect(deployer).grantRole(await acl.adminRole(), this.signers.named.admin.address);
       await acl.connect(deployer).grantRole(await acl.supervisorRole(), this.signers.named.supervisor.address);
 
@@ -30,7 +30,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       await AccessControlledHelper.registerSupervisor(this.signers.named.supervisor, stranger, acl);
 
       // Interface printer setup
-      const interfacePrinter = InterfacePrinter__factory.connect(await hre.run('deploy:interfaces-printer'), deployer);
+      const interfacePrinter = (await hre.run('deploy:interfaces-printer')) as InterfacePrinter;
       this.mocks.interfacePrinter = interfacePrinter;
     });
 

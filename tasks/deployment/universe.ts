@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import { wait } from '..';
-import { UniverseRegistry, UniverseRegistry__factory } from '../../typechain';
+import { IUniverseRegistry__factory, UniverseRegistry, UniverseRegistry__factory } from '../../typechain';
 
 task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -20,7 +20,7 @@ task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
 
     await wait(universeRegistry.initialize(acl));
 
-    return universeRegistry.address;
+    return IUniverseRegistry__factory.connect(universeRegistry.address, deployer);
   });
 
 export {};

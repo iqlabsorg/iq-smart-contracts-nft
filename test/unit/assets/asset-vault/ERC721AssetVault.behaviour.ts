@@ -19,7 +19,7 @@ export function shouldBehaveLikeERC721AssetVault(): void {
 
     beforeEach(async function () {
       operator = this.signers.named['operator'];
-      deployer = this.signers.named['deployer'];
+      deployer = this.signers.named.deployer;
 
       [assetOwner, admin] = this.signers.unnamed;
       asset = this.mocks.assets.erc721;

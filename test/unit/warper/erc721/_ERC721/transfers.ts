@@ -32,7 +32,7 @@ export function shouldBehaveTransfer(): void {
 
     beforeEach(async function () {
       assetOwner = this.signers.named['assetOwner'];
-      deployer = this.signers.named['deployer'];
+      deployer = this.signers.named.deployer;
       metahub = this.mocks.metahub;
       erc721WarperController = this.contracts.erc721WarperController;
       warper = this.contracts.erc721Warper;

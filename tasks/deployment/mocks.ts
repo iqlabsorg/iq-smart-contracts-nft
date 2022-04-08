@@ -1,5 +1,11 @@
 import { parseEther } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
+import {
+  ERC20Mock__factory,
+  ERC721Mock__factory,
+  InterfacePrinter__factory,
+  WarperPresetMock__factory,
+} from '../../typechain';
 
 const TOTAL_TOKENS = 1_000_000_000;
 const TOKEN_DECIMALS = 18;
@@ -19,7 +25,8 @@ task('deploy:mock:ERC20', 'Deploy an ERC20 contract')
       args: [name, symbol, decimals, parseEther(totalSupply.toString())],
       log: true,
     });
-    return deployment.address;
+
+    return new ERC20Mock__factory(deployer).attach(deployment.address);
   });
 
 task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
@@ -35,7 +42,8 @@ task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
       args: [name, symbol],
       log: true,
     });
-    return deployment.address;
+
+    return new ERC721Mock__factory(deployer).attach(deployment.address);
   });
 
 task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAction(async (_args, hre) => {
@@ -48,7 +56,8 @@ task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAc
     args: [],
     log: true,
   });
-  return deployment.address;
+
+  return new WarperPresetMock__factory(deployer).attach(deployment.address);
 });
 
 task('deploy:interfaces-printer', 'Print interfaces IDs to the stdout').setAction(async (_args, hre) => {
@@ -58,10 +67,10 @@ task('deploy:interfaces-printer', 'Print interfaces IDs to the stdout').setActio
 
   const deployment = await hre.deployments.deploy('InterfacePrinter', {
     from: deployer.address,
-    args: [],
     log: true,
   });
-  return deployment.address;
+
+  return new InterfacePrinter__factory(deployer).attach(deployment.address);
 });
 
 export {};

@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { ACL, ACL__factory } from '../../typechain';
+import { ACL__factory, IACL } from '../../typechain';
 
 task('deploy:acl', 'Deploy the `ACL` contract').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
@@ -11,9 +11,9 @@ task('deploy:acl', 'Deploy the `ACL` contract').setAction(async (_args, hre) => 
   const deployment = (await hre.upgrades.deployProxy(new ACL__factory(deployer), [], {
     kind: 'uups',
     initializer: 'initialize()',
-  })) as ACL;
+  })) as IACL;
 
-  return deployment.address;
+  return deployment;
 });
 
 export {};

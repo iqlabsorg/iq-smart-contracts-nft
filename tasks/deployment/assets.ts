@@ -1,10 +1,12 @@
 import { task, types } from 'hardhat/config';
 import { wait } from '..';
 import {
+  IAssetClassRegistry__factory,
   AssetClassRegistry,
   AssetClassRegistry__factory,
   ListingStrategyRegistry,
   ListingStrategyRegistry__factory,
+  IListingStrategyRegistry__factory,
 } from '../../typechain';
 
 task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
@@ -22,7 +24,7 @@ task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
     })) as AssetClassRegistry;
     await wait(assetClassRegistry.initialize(acl));
 
-    return assetClassRegistry.address;
+    return IAssetClassRegistry__factory.connect(assetClassRegistry.address, deployer);
   });
 
 task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.')
@@ -43,7 +45,7 @@ task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.'
       },
     )) as ListingStrategyRegistry;
 
-    return listingStrategyRegistry.address;
+    return IListingStrategyRegistry__factory.connect(listingStrategyRegistry.address, deployer);
   });
 
 export {};

@@ -1,28 +1,22 @@
-import hre, { ethers } from 'hardhat';
-import {
-  IACL,
-  IWarperPresetFactory__factory,
-  WarperPresetFactory__factory,
-  WarperPresetMock__factory,
-} from '../../../typechain';
+import hre from 'hardhat';
+import { IACL, IWarperPresetFactory, WarperPresetMock } from '../../../typechain';
 import { shouldBehaveWarperPresetFactory } from './WarperPresetFactory.behaviour';
 
 export function unitTestWarperPresetFactory(): void {
   let acl: IACL;
 
   async function unitFixtureWarperPresetFactory() {
-    // Resolve primary roles
-    const deployer = await ethers.getNamedSigner('deployer');
+    const warperImplMock1 = (await hre.run('deploy:mock:warper-preset')) as WarperPresetMock;
+    const warperImplMock2 = (await hre.run('deploy:mock:warper-preset')) as WarperPresetMock;
 
-    const warperImplMock1 = new WarperPresetMock__factory(deployer).attach(await hre.run('deploy:mock:warper-preset'));
-    const warperImplMock2 = new WarperPresetMock__factory(deployer).attach(await hre.run('deploy:mock:warper-preset'));
-
-    const deployedWarperFactory = await hre.run('deploy:warper-preset-factory', { acl: acl.address });
+    const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
+      acl: acl.address,
+    })) as IWarperPresetFactory;
 
     return {
       warperImplMock1,
       warperImplMock2,
-      warperPresetFactory: new WarperPresetFactory__factory(deployer).attach(deployedWarperFactory),
+      warperPresetFactory,
     };
   }
 
@@ -34,10 +28,7 @@ export function unitTestWarperPresetFactory(): void {
         unitFixtureWarperPresetFactory,
       );
 
-      this.contracts.warperPresetFactory = IWarperPresetFactory__factory.connect(
-        warperPresetFactory.address,
-        warperPresetFactory.signer,
-      );
+      this.contracts.warperPresetFactory = warperPresetFactory;
       this.mocks.warperPreset = [warperImplMock1, warperImplMock2];
     });
 

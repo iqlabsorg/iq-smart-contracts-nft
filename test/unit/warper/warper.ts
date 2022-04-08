@@ -1,23 +1,23 @@
 import { smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import hre, { ethers } from 'hardhat';
+import hre from 'hardhat';
 import {
   AssetClassRegistry,
   AssetClassRegistry__factory,
   ConfigurableAvailabilityPeriodExtension__factory,
   ConfigurableRentalPeriodExtension__factory,
-  ERC20Mock__factory,
   ERC721Mock__factory,
-  ERC721PresetConfigurable__factory,
-  ERC721WarperController__factory,
   IAvailabilityPeriodMechanics__factory,
   IERC721Warper__factory,
-  IERC721WarperController__factory,
   IRentalPeriodMechanics__factory,
   IWarperPreset__factory,
   Metahub,
   Metahub__factory,
   Multicall__factory,
+  IERC721WarperController,
+  ERC721Mock,
+  ERC721PresetConfigurable,
+  ERC20Mock,
 } from '../../../typechain';
 import { shouldBehavesLikeMulticall } from '../shared/Multicall.behaviour';
 import { shouldBehaveLikeERC721Warper } from './erc721/ERC721Warper.behaviour';
@@ -29,46 +29,32 @@ import { shouldBehaveLikeRentalPeriod } from './mechanics/rental-period/RentalPe
 import { shouldBehaveLikeWarper } from './warper.behaviour';
 
 export async function unitFixtureERC721WarperConfigurable() {
-  // Resolve primary roles
-  const deployer = await ethers.getNamedSigner('deployer');
-  const nftCreator = await ethers.getNamedSigner('nftCreator');
-
   // Deploy original asset mock.
-  const oNFT = new ERC721Mock__factory(nftCreator).attach(
-    await hre.run('deploy:mock:ERC721', {
-      name: 'Test ERC721',
-      symbol: 'ONFT',
-    }),
-  );
+  const oNFT = (await hre.run('deploy:mock:ERC721', {
+    name: 'Test ERC721',
+    symbol: 'ONFT',
+  })) as ERC721Mock;
 
   // Deploy ERC721 Warper controller.
-  const erc721WarperController = new ERC721WarperController__factory(deployer).attach(
-    await hre.run('deploy:erc721-warper-controller'),
-  );
+  const erc721WarperController = (await hre.run('deploy:erc721-warper-controller')) as IERC721WarperController;
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
   const assetClassRegistry = await smock.fake<AssetClassRegistry>(AssetClassRegistry__factory);
 
   // Deploy preset.
-  const erc721Warper = new ERC721PresetConfigurable__factory(deployer).attach(
-    await hre.run('deploy:erc721-preset-configurable'),
-  );
+  const erc721Warper = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
   await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
 
-  const uninitializedErc721Warper = new ERC721PresetConfigurable__factory(deployer).attach(
-    await hre.run('deploy:erc721-preset-configurable'),
-  );
+  const uninitializedErc721Warper = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
 
   // Deploy erc20 token
-  const erc20Token = new ERC20Mock__factory(nftCreator).attach(
-    await hre.run('deploy:mock:ERC20', {
-      name: 'Random ERC20',
-      symbol: 'TST',
-      decimals: 18,
-      totalSupply: 1,
-    }),
-  );
+  const erc20Token = (await hre.run('deploy:mock:ERC20', {
+    name: 'Random ERC20',
+    symbol: 'TST',
+    decimals: 18,
+    totalSupply: 1,
+  })) as ERC20Mock;
 
   // Set balance to the MetaHub account so we can perform the minting operation here
   await hre.network.provider.send('hardhat_setBalance', [metahub.address, '0x99999999999999999999']);
@@ -92,10 +78,7 @@ export function unitTestWarpers(): void {
       );
       this.mocks.assetClassRegistry = assetClassRegistry;
       this.mocks.metahub = metahub;
-      this.contracts.erc721WarperController = IERC721WarperController__factory.connect(
-        erc721WarperController.address,
-        erc721WarperController.signer,
-      );
+      this.contracts.erc721WarperController = erc721WarperController;
       this.mocks.assets.erc721 = oNFT;
 
       // Mechanics under test

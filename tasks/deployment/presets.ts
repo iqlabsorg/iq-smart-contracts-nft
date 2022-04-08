@@ -1,5 +1,10 @@
 import { task, types } from 'hardhat/config';
-import { WarperPresetFactory, WarperPresetFactory__factory } from '../../typechain';
+import {
+  ERC721PresetConfigurable__factory,
+  IWarperPresetFactory__factory,
+  WarperPresetFactory,
+  WarperPresetFactory__factory,
+} from '../../typechain';
 
 task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
@@ -11,7 +16,8 @@ task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').s
     args: [],
     log: true,
   });
-  return deployment.address;
+
+  return new ERC721PresetConfigurable__factory(deployer).attach(deployment.address);
 });
 
 task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
@@ -24,8 +30,8 @@ task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
     await hre.deployments.delete('WarperPresetFactory_Implementation');
 
     const deployment = (await hre.upgrades.deployProxy(new WarperPresetFactory__factory(deployer), [acl], {
-      kind: 'uups',
       initializer: 'initialize(address)',
     })) as WarperPresetFactory;
-    return deployment.address;
+
+    return IWarperPresetFactory__factory.connect(deployment.address, deployer);
   });

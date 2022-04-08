@@ -1,4 +1,5 @@
 import { task, types } from 'hardhat/config';
+import { IERC721AssetVault__factory } from '../../typechain';
 
 task('deploy:erc721-asset-vault', 'Deploy ERC721 Asset Vault')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -18,5 +19,6 @@ task('deploy:erc721-asset-vault', 'Deploy ERC721 Asset Vault')
       args: [operator, acl],
       log: true,
     });
-    return deployment.address;
+
+    return IERC721AssetVault__factory.connect(deployment.address, deployer);
   });

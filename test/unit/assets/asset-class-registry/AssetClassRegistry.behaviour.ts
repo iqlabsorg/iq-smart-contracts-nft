@@ -14,7 +14,7 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
     let stranger: SignerWithAddress;
 
     beforeEach(function () {
-      deployer = this.signers.named['deployer'];
+      deployer = this.signers.named.deployer;
       [stranger] = this.signers.unnamed;
       assetClassRegistry = this.contracts.assetClassRegistry;
     });

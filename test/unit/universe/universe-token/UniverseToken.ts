@@ -12,6 +12,7 @@ export async function unitFixtureUniverseTokenMock() {
   const metahub = await smock.fake<Metahub>(Metahub__factory);
 
   // Deploy Universe Token
+  // NOTE: Not using deployment task because universe token is not deployed manually in a production setting.
   const universeToken = await new UniverseToken__factory(deployer).deploy(metahub.address);
 
   // Set balance to the MetaHub account so we can perform the minting operation here

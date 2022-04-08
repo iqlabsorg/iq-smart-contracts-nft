@@ -16,7 +16,7 @@ export function shouldBehaveLikeUUPSUpgradeable(): void {
       upgradeable = this.contracts.uupsUpgradeable;
       acl = this.contracts.acl;
 
-      deployer = this.signers.named['deployer'];
+      deployer = this.signers.named.deployer;
       [stranger] = this.signers.unnamed;
     });
 

@@ -11,7 +11,7 @@ export function shouldBehaveACL(): void {
   let deployer: SignerWithAddress;
 
   beforeEach(function () {
-    deployer = this.signers.named['deployer'];
+    deployer = this.signers.named.deployer;
     acl = this.contracts.acl;
   });
 

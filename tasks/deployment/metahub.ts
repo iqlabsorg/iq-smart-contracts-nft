@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import { wait } from '..';
-import { Metahub, Metahub__factory } from '../../typechain';
+import { Metahub, Metahub__factory, IMetahub__factory } from '../../typechain';
 
 task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -49,7 +49,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         }),
       );
 
-      return metahub.address;
+      return IMetahub__factory.connect(metahub.address, deployer);
     },
   );
 

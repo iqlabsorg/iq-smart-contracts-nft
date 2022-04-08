@@ -1,46 +1,36 @@
-import hre, { ethers } from 'hardhat';
+import hre from 'hardhat';
 import { smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import {
-  ERC721AssetController__factory,
-  ERC721Mock__factory,
-  ERC721PresetConfigurable__factory,
-  IAssetController__factory,
+  ERC721Mock,
+  ERC721PresetConfigurable,
+  IAssetController,
   IWarper__factory,
   Metahub,
   Metahub__factory,
-  Warper,
 } from '../../../../typechain';
 import { shouldBehaveLikeIAssetController } from './assetController.behaviour';
 
 export async function unitFixtureERC721AssetsController() {
-  // Resolve primary roles
-  const deployer = await ethers.getNamedSigner('deployer');
-  const nftCreator = await ethers.getNamedSigner('nftCreator');
-
   // Deploy original asset mock.
-  const oNFT = new ERC721Mock__factory(nftCreator).attach(
-    await hre.run('deploy:mock:ERC721', {
-      name: 'Test ERC721',
-      symbol: 'ONFT',
-    }),
-  );
+  const oNFT = (await hre.run('deploy:mock:ERC721', {
+    name: 'Test ERC721',
+    symbol: 'ONFT',
+  })) as ERC721Mock;
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
 
   // Deploy preset.
-  const deployedERC721PresetConfigurable = await hre.run('deploy:erc721-preset-configurable');
-  const erc721Warper = new ERC721PresetConfigurable__factory(deployer).attach(deployedERC721PresetConfigurable);
+  const erc721Warper = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
   await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
 
-  const deployedERC721AssetController = await hre.run('deploy:erc721-asset-controller');
-  const erc721AssetController = new ERC721AssetController__factory(deployer).attach(deployedERC721AssetController);
+  const erc721AssetController = (await hre.run('deploy:erc721-asset-controller')) as IAssetController;
 
   return {
     originalNft: oNFT,
     erc721AssetController,
-    warper: erc721Warper as unknown as Warper,
+    warper: erc721Warper,
   };
 }
 
@@ -51,10 +41,7 @@ export function unitTestAssetController(): void {
 
       this.mocks.assets.erc721 = originalNft;
       this.contracts.warper = IWarper__factory.connect(warper.address, warper.signer);
-      this.contracts.assetController = IAssetController__factory.connect(
-        erc721AssetController.address,
-        erc721AssetController.signer,
-      );
+      this.contracts.assetController = erc721AssetController;
     });
 
     shouldBehaveLikeIAssetController();
