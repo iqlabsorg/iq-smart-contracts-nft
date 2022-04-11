@@ -141,7 +141,7 @@ library Warpers {
         // Clean up universe index.
         self.universeWarperIndex[warper.universeId].remove(warperAddress);
         // Clean up asset index.
-        self.assetWarperIndex[warper.original].add(warperAddress);
+        self.assetWarperIndex[warper.original].remove(warperAddress);
         // Clean up main index.
         self.warperIndex.remove(warperAddress);
         // Delete warper data.
