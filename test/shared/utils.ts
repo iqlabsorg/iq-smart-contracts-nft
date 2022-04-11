@@ -1,17 +1,15 @@
 import hre, { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
+import { wait } from '../../tasks';
 import {
-  ERC721Mock,
   IACL,
   IUniverseRegistry,
   IWarperManager,
-  IWarperPreset__factory,
   IWarperPresetFactory,
+  IWarperPreset__factory,
   WarperPresetFactory,
 } from '../../typechain';
 import { Assets } from '../../typechain/Metahub';
-import { wait } from '../../tasks';
-import { expect } from 'chai';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 
@@ -152,7 +150,7 @@ export function makeFixedPriceStrategy(baseRate: BigNumberish) {
 export function makeAsset(assetClass: BytesLike, data: BytesLike, value: BigNumberish): Assets.AssetStruct {
   return {
     id: { class: assetClass, data },
-    value,
+    value: BigNumber.from(value),
   };
 }
 

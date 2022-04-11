@@ -1,4 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { formatBytes32String } from 'ethers/lib/utils';
 import {
@@ -107,14 +108,29 @@ export function shouldBehaveLikeListingManager(): void {
             });
 
             it('lists the item successfully', async () => {
+              // Test setup
               const asset = makeERC721Asset(originalAsset.address, 1);
               const params = makeFixedPriceStrategy(100);
               const maxLockPeriod = 86400;
 
-              await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
-              // await expect(listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false))
-              //   .to.emit(listingManager, 'AssetListed')
-              //   .withArgs(1, nftCreator.address, [asset.id, asset.value], params.);
+              // Execute tx
+              const tx = await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
+              const receipt = await tx.wait();
+
+              // Assert
+              const events = await listingManager.queryFilter(
+                listingManager.filters.AssetListed(),
+                receipt.blockNumber,
+              );
+              const assetListed = events[0].args;
+              await expect(tx).to.emit(listingManager, 'AssetListed');
+              expect(assetListed).to.equalStruct({
+                asset: asset,
+                lister: nftCreator.address,
+                listingId: BigNumber.from(1),
+                maxLockPeriod: maxLockPeriod,
+                params: params,
+              });
             });
           });
         });
@@ -140,40 +156,5 @@ export function shouldBehaveLikeListingManager(): void {
     describe('listingInfo', () => {
       // todo
     });
-
-    // TODO
-    // describe('listAsset', function () {
-    //   it.only('prevents listing asset without registered warper', async () => {
-    //     const asset = makeERC721Asset('0x2B328CCD2d38ACBF7103b059a8EB94171C68f745', 1); // unregistered asset
-    //     const params = makeFixedPriceStrategy(100);
-    //     const maxLockPeriod = 86400;
-
-    //     await expect(listingManager.listAsset(asset, params, maxLockPeriod, false)).to.eventually.revertedWithError(
-    //       'AssetHasNoWarpers',
-    //       asset,
-    //     );
-    //   });
-
-    //   it.skip('emits correct events', async () => {
-    //     const asset = makeERC721Asset(originalAsset.address, 1);
-    //     const params = makeFixedPriceStrategy(100);
-    //     const maxLockPeriod = 86400;
-
-    //     await expect(listingManager.listAsset(asset, params, maxLockPeriod, false))
-    //       .to.emit(listingManager, 'AssetListed')
-    //       .withArgs(asset, 1);
-    //   });
-
-    //   it.skip('puts listed asset into vault', async () => {
-    //     await originalAsset.connect(nftCreator).approve(listingManager.address, 1);
-    //     const asset = makeERC721Asset(originalAsset.address, 1);
-    //     const params = makeFixedPriceStrategy(100);
-    //     const maxLockPeriod = 86400;
-
-    //     await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
-
-    //     await expect(originalAsset.ownerOf(1)).to.eventually.eq(erc721Vault.address);
-    //   });
-    // });
   });
 }
