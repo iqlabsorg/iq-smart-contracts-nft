@@ -131,6 +131,7 @@ export function shouldBehaveLikeListingManager(): void {
                 maxLockPeriod: maxLockPeriod,
                 params: params,
               });
+              await expect(originalAsset.ownerOf(1)).to.eventually.equal(erc721assetVault.address);
             });
           });
         });

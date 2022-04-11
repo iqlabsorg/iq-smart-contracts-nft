@@ -98,6 +98,7 @@ export function unitTestMetahub(): void {
       listingStrategyRegistry,
       warperPresetFactory,
       metahub,
+      baseToken,
     };
   }
 
@@ -114,6 +115,7 @@ export function unitTestMetahub(): void {
         fixedPriceListingController,
         assetClassRegistry,
         erc721Controller,
+        baseToken,
         erc721Vault,
       } = await this.loadFixture(unitFixtureMetahub);
 
@@ -138,6 +140,7 @@ export function unitTestMetahub(): void {
 
       // Mocks
       this.mocks.assets.erc721 = originalAsset;
+      this.mocks.assets.erc20 = baseToken;
     });
 
     shouldBehaveLikeMetahub();
