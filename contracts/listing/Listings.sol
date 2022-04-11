@@ -150,12 +150,14 @@ library Listings {
      * @dev Listing registry.
      * @param idTracker Listing ID tracker (incremental counter).
      * @param strategyRegistry Listing strategy registry contract.
+     * @param listingIndex The global set of registered listing IDs.
      * @param listings Mapping from listing ID to the listing info.
      * @param listers Mapping from lister address to the lister info.
      */
     struct Registry {
         CountersUpgradeable.Counter idTracker;
         IListingStrategyRegistry strategyRegistry;
+        EnumerableSetUpgradeable.UintSet listingIndex;
         mapping(uint256 => Listing) listings;
         mapping(address => ListerInfo) listers;
     }
@@ -170,6 +172,8 @@ library Listings {
         listingId = self.idTracker.current();
         // Store new listing record.
         self.listings[listingId] = listing;
+        // Add new listing ID to the global index.
+        self.listingIndex.add(listingId);
         // Add user listing data.
         self.listers[listing.lister].listingIndex.add(listingId);
     }
@@ -180,6 +184,8 @@ library Listings {
      */
     function remove(Registry storage self, uint256 listingId) external {
         address lister = self.listings[listingId].lister;
+        // Remove the listing ID from the global index.
+        self.listingIndex.remove(listingId);
         // Remove user listing data.
         self.listers[lister].listingIndex.remove(listingId);
         // Delete listing.
@@ -187,7 +193,18 @@ library Listings {
     }
 
     /**
-     * @dev Returns the paginated list of currently registered listing for particular lister account.
+     * @dev Returns the paginated list of currently registered listings.
+     */
+    function allListings(
+        Registry storage self,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Listing[] memory) {
+        return self.paginateIndexedListings(self.listingIndex, offset, limit);
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered listings for the particular lister account.
      */
     function userListings(
         Registry storage self,
@@ -195,20 +212,7 @@ library Listings {
         uint256 offset,
         uint256 limit
     ) external view returns (uint256[] memory, Listing[] memory) {
-        EnumerableSetUpgradeable.UintSet storage userListingIndex = self.listers[lister].listingIndex;
-        uint256 listingCount = userListingIndex.length();
-        if (limit > listingCount - offset) {
-            limit = listingCount - offset;
-        }
-
-        Listing[] memory listings = new Listing[](limit);
-        uint256[] memory listingIds = new uint256[](limit);
-        for (uint256 i = 0; i < limit; i++) {
-            listingIds[i] = userListingIndex.at(i);
-            listings[i] = self.listings[listingIds[i]];
-        }
-
-        return (listingIds, listings);
+        return self.paginateIndexedListings(self.listers[lister].listingIndex, offset, limit);
     }
 
     /**
@@ -245,9 +249,40 @@ library Listings {
     }
 
     /**
+     * @dev Returns the number of currently registered listings.
+     */
+    function listingCount(Registry storage self) internal view returns (uint256) {
+        return self.listingIndex.length();
+    }
+
+    /**
      * @dev Returns the number of currently registered listings for a particular lister account.
      */
     function userListingCount(Registry storage self, address lister) internal view returns (uint256) {
         return self.listers[lister].listingIndex.length();
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered listing using provided index reference.
+     */
+    function paginateIndexedListings(
+        Registry storage self,
+        EnumerableSetUpgradeable.UintSet storage listingIndex,
+        uint256 offset,
+        uint256 limit
+    ) internal view returns (uint256[] memory, Listing[] memory) {
+        uint256 totalListingCount = listingIndex.length();
+        if (limit > totalListingCount - offset) {
+            limit = totalListingCount - offset;
+        }
+
+        Listing[] memory listings = new Listing[](limit);
+        uint256[] memory listingIds = new uint256[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            listingIds[i] = listingIndex.at(i);
+            listings[i] = self.listings[listingIds[i]];
+        }
+
+        return (listingIds, listings);
     }
 }
