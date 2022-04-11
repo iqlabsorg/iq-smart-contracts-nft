@@ -6,3 +6,4 @@ import './vaults';
 import './controllers';
 import './universe';
 import './assets';
+import './listings';

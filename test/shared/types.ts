@@ -9,6 +9,7 @@ import {
   ConfigurableRentalPeriodExtension,
   ERC20Mock,
   ERC721Mock,
+  FixedPriceListingController,
   IACL,
   IAssetClassRegistry,
   IAssetController,
@@ -18,6 +19,7 @@ import {
   IERC721Warper,
   IERC721WarperController,
   IListingManager,
+  IListingStrategyRegistry,
   IMetahub,
   InterfacePrinter,
   IRentalPeriodMechanics,
@@ -55,6 +57,11 @@ export interface Contracts {
 
   // Universe registry
   universeRegistry: IUniverseRegistry;
+
+  // Listing strategy
+  listingStrategyRegistry: IListingStrategyRegistry;
+  // Listing controllers
+  fixedPriceListingController: FixedPriceListingController;
 
   // Assets
   assetClassRegistry: IAssetClassRegistry;

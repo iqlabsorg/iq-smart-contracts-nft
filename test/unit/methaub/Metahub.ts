@@ -1,9 +1,10 @@
-import hre, { ethers } from 'hardhat';
 import { formatBytes32String } from 'ethers/lib/utils';
+import hre, { ethers } from 'hardhat';
 import {
   ERC20Mock,
   ERC721Mock,
   ERC721PresetConfigurable,
+  FixedPriceListingController,
   IACL,
   IAssetClassRegistry,
   IAssetController__factory,
@@ -18,9 +19,7 @@ import {
   IWarperPresetFactory,
   UUPSUpgradeable__factory,
 } from '../../../typechain';
-
 import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
-import { AssetClass } from '../../shared/utils';
 
 export const warperPresetId = formatBytes32String('ERC721Basic');
 
@@ -79,25 +78,24 @@ export function unitTestMetahub(): void {
       rentalFeePercent: 100,
     })) as IMetahub;
 
-    // TODO Deploy via tasks
     const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as IERC721WarperController;
     const erc721Vault = (await hre.run('deploy:erc721-asset-vault', {
       operator: metahub.address,
       acl: acl.address,
     })) as IERC721AssetVault;
 
-    // Register ERC721 asset class.
-    await assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
-      controller: erc721Controller.address,
-      vault: erc721Vault.address,
-    });
+    const fixedPriceListingController = (await hre.run(
+      'deploy:fixed-price-listing-controller',
+    )) as FixedPriceListingController;
 
     return {
       assetClassRegistry,
       universeRegistry,
+      fixedPriceListingController,
       originalAsset,
       erc721Controller,
       erc721Vault,
+      listingStrategyRegistry,
       warperPresetFactory,
       metahub,
     };
@@ -111,7 +109,9 @@ export function unitTestMetahub(): void {
         metahub,
         originalAsset,
         universeRegistry,
+        listingStrategyRegistry,
         warperPresetFactory,
+        fixedPriceListingController,
         assetClassRegistry,
         erc721Controller,
         erc721Vault,
@@ -125,6 +125,7 @@ export function unitTestMetahub(): void {
       this.contracts.uupsUpgradeable = UUPSUpgradeable__factory.connect(metahub.address, metahub.signer);
 
       // Common dependencies
+      this.contracts.listingStrategyRegistry = listingStrategyRegistry;
       this.contracts.erc721assetVault = erc721Vault;
       this.contracts.assetController = IAssetController__factory.connect(
         erc721Controller.address,
@@ -133,6 +134,7 @@ export function unitTestMetahub(): void {
       this.contracts.assetClassRegistry = assetClassRegistry;
       this.contracts.universeRegistry = universeRegistry;
       this.contracts.warperPresetFactory = warperPresetFactory;
+      this.contracts.fixedPriceListingController = fixedPriceListingController;
 
       // Mocks
       this.mocks.assets.erc721 = originalAsset;
