@@ -112,6 +112,43 @@ library Warpers {
     }
 
     /**
+     * @dev Performs warper registration.
+     */
+    function register(
+        Registry storage self,
+        address warperAddress,
+        Warper memory warper
+    ) external {
+        if (!self.warperIndex.add(warperAddress)) revert WarperIsAlreadyRegistered(warperAddress);
+
+        // Ensure warper compatibility with the current generation of asset controller.
+        warper.controller.checkCompatibleWarper(warperAddress);
+        //todo: check warper count against limits to prevent uncapped enumeration.
+
+        // Create warper main registration record.
+        self.warpers[warperAddress] = warper;
+        // Associate the warper with the universe.
+        self.universeWarperIndex[warper.universeId].add(warperAddress);
+        // Associate the warper with the original asset.
+        self.assetWarperIndex[warper.original].add(warperAddress);
+    }
+
+    /**
+     * @dev Removes warper data from the registry.
+     */
+    function remove(Registry storage self, address warperAddress) external {
+        Warper storage warper = self.warpers[warperAddress];
+        // Clean up universe index.
+        self.universeWarperIndex[warper.universeId].remove(warperAddress);
+        // Clean up asset index.
+        self.assetWarperIndex[warper.original].add(warperAddress);
+        // Clean up main index.
+        self.warperIndex.remove(warperAddress);
+        // Delete warper data.
+        delete self.warpers[warperAddress];
+    }
+
+    /**
      * @dev Checks warper registration by address.
      */
     function isRegisteredWarper(Registry storage self, address warper) internal view returns (bool) {
@@ -140,44 +177,5 @@ library Warpers {
      */
     function isSupportedAsset(Registry storage self, address asset) internal view returns (bool) {
         return self.assetWarperIndex[asset].length() > 0;
-    }
-
-    /**
-     * @dev Performs warper registration.
-     */
-    function register(
-        Registry storage self,
-        address warperAddress,
-        Warper memory warper
-    ) internal {
-        if (self.warperIndex.add(warperAddress)) {
-            // Ensure warper compatibility with the current generation of asset controller.
-            warper.controller.checkCompatibleWarper(warperAddress);
-            //todo: check warper count against limits to prevent uncapped enumeration.
-
-            // Create warper main registration record.
-            self.warpers[warperAddress] = warper;
-            // Associate the warper with the universe.
-            self.universeWarperIndex[warper.universeId].add(warperAddress);
-            // Associate the warper with the original asset.
-            self.assetWarperIndex[warper.original].add(warperAddress);
-        } else {
-            revert WarperIsAlreadyRegistered(warperAddress);
-        }
-    }
-
-    /**
-     * @dev Removes warper data from the registry.
-     */
-    function remove(Registry storage self, address warperAddress) internal {
-        Warper storage warper = self.warpers[warperAddress];
-        // Clean up universe index.
-        self.universeWarperIndex[warper.universeId].remove(warperAddress);
-        // Clean up asset index.
-        self.assetWarperIndex[warper.original].add(warperAddress);
-        // Clean up main index.
-        self.warperIndex.remove(warperAddress);
-        // Delete warper data.
-        delete self.warpers[warperAddress];
     }
 }

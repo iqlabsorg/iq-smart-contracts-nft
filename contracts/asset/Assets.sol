@@ -120,13 +120,11 @@ library Assets {
         bytes4 assetClass,
         address asset
     ) internal {
-        if (self.assetIndex.add(asset)) {
-            IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
-            self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
-            self.assets[asset].controller = IAssetController(assetClassConfig.controller);
-        } else {
-            revert AssetIsAlreadyRegistered(asset);
-        }
+        if (!self.assetIndex.add(asset)) revert AssetIsAlreadyRegistered(asset);
+
+        IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
+        self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
+        self.assets[asset].controller = IAssetController(assetClassConfig.controller);
     }
 
     /**

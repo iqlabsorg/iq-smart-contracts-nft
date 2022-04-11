@@ -14,11 +14,6 @@ library Listings {
     using Listings for Registry;
     using Listings for Listing;
 
-    /*
-     * @dev Listing strategy identifiers to be used across the system:
-     */
-    bytes4 public constant FIXED_PRICE = bytes4(keccak256("FIXED_PRICE"));
-
     /**
      * @dev Thrown when the `listingId` is invalid or the asset has been delisted.
      */
@@ -44,6 +39,11 @@ library Listings {
      * @param strategyId Unsupported listing strategy ID.
      */
     error UnsupportedListingStrategy(bytes4 strategyId);
+
+    /*
+     * @dev Listing strategy identifiers to be used across the system:
+     */
+    bytes4 public constant FIXED_PRICE = bytes4(keccak256("FIXED_PRICE"));
 
     /**
      * @dev Listing params.
@@ -164,7 +164,7 @@ library Listings {
      * @dev Registers new listing.
      * @return listingId New listing ID.
      */
-    function register(Registry storage self, Listing memory listing) internal returns (uint256 listingId) {
+    function register(Registry storage self, Listing memory listing) external returns (uint256 listingId) {
         // Generate new listing ID.
         self.idTracker.increment();
         listingId = self.idTracker.current();
@@ -178,12 +178,37 @@ library Listings {
      * @dev Removes listing data.
      * @param listingId The ID of the listing to be deleted.
      */
-    function remove(Registry storage self, uint256 listingId) internal {
+    function remove(Registry storage self, uint256 listingId) external {
         address lister = self.listings[listingId].lister;
         // Remove user listing data.
         self.listers[lister].listingIndex.remove(listingId);
         // Delete listing.
         delete self.listings[listingId];
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered listing for particular lister account.
+     */
+    function userListings(
+        Registry storage self,
+        address lister,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Listing[] memory) {
+        EnumerableSetUpgradeable.UintSet storage userListingIndex = self.listers[lister].listingIndex;
+        uint256 listingCount = userListingIndex.length();
+        if (limit > listingCount - offset) {
+            limit = listingCount - offset;
+        }
+
+        Listing[] memory listings = new Listing[](limit);
+        uint256[] memory listingIds = new uint256[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            listingIds[i] = userListingIndex.at(i);
+            listings[i] = self.listings[listingIds[i]];
+        }
+
+        return (listingIds, listings);
     }
 
     /**
@@ -224,30 +249,5 @@ library Listings {
      */
     function userListingCount(Registry storage self, address lister) internal view returns (uint256) {
         return self.listers[lister].listingIndex.length();
-    }
-
-    /**
-     * @dev Returns the paginated list of currently registered listing for particular lister account.
-     */
-    function userListings(
-        Registry storage self,
-        address lister,
-        uint256 offset,
-        uint256 limit
-    ) internal view returns (uint256[] memory, Listing[] memory) {
-        EnumerableSetUpgradeable.UintSet storage userListingIndex = self.listers[lister].listingIndex;
-        uint256 listingCount = userListingIndex.length();
-        if (limit > listingCount - offset) {
-            limit = listingCount - offset;
-        }
-
-        Listing[] memory listings = new Listing[](limit);
-        uint256[] memory listingIds = new uint256[](limit);
-        for (uint256 i = 0; i < limit; i++) {
-            listingIds[i] = userListingIndex.at(i);
-            listings[i] = self.listings[listingIds[i]];
-        }
-
-        return (listingIds, listings);
     }
 }

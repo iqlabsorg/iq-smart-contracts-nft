@@ -4,6 +4,10 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "../asset/Assets.sol";
+import "../metahub/Protocol.sol";
+import "../listing/Listings.sol";
+import "../warper/Warpers.sol";
+import "../universe/IUniverseRegistry.sol";
 
 library Rentings {
     using CountersUpgradeable for CountersUpgradeable.Counter;
@@ -13,6 +17,11 @@ library Rentings {
     using Rentings for Agreement;
     using Rentings for Registry;
     using Assets for Assets.AssetId;
+    using Protocol for Protocol.Config;
+    using Listings for Listings.Registry;
+    using Listings for Listings.Listing;
+    //    using Warpers for Warpers.Registry;
+    using Warpers for Warpers.Warper;
 
     /**
      * @dev Thrown when a rental agreement is being registered for a specific warper ID,
@@ -146,7 +155,7 @@ library Rentings {
         address renter,
         uint256 offset,
         uint256 limit
-    ) internal view returns (uint256[] memory, Rentings.Agreement[] memory) {
+    ) external view returns (uint256[] memory, Rentings.Agreement[] memory) {
         EnumerableSetUpgradeable.UintSet storage userRentalIndex = self.renters[renter].rentalIndex;
         uint256 rentalCount = userRentalIndex.length();
         if (limit > rentalCount - offset) {
@@ -173,7 +182,7 @@ library Rentings {
         address renter,
         bytes32 collectionId,
         uint256 toBeRemoved
-    ) internal {
+    ) external {
         EnumerableSetUpgradeable.UintSet storage rentalIndex = self.renters[renter].collectionRentalIndex[collectionId];
         uint256 rentalCount = rentalIndex.length();
         if (rentalCount == 0 || toBeRemoved == 0) return;
@@ -192,7 +201,7 @@ library Rentings {
     /**
      * @dev Performs new rental agreement registration.
      */
-    function register(Registry storage self, Agreement memory agreement) internal returns (uint256 rentalId) {
+    function register(Registry storage self, Agreement memory agreement) external returns (uint256 rentalId) {
         // Make sure the there is no active rentals for the warper ID.
         bytes32 assetId = agreement.warpedAsset.id.hash();
         uint256 latestRentalId = self.assets[assetId].latestRentalId;
@@ -218,7 +227,7 @@ library Rentings {
     /**
      * @dev Safely removes expired rental data from the registry.
      */
-    function removeExpiredRentalAgreement(Registry storage self, uint256 rentalId) internal {
+    function removeExpiredRentalAgreement(Registry storage self, uint256 rentalId) external {
         if (self.agreements[rentalId].isEffective()) revert CannotDeleteEffectiveRentalAgreement(rentalId);
         _removeRentalAgreement(self, rentalId);
     }
@@ -246,7 +255,7 @@ library Rentings {
         Registry storage self,
         address renter,
         bytes32 collectionId
-    ) internal view returns (uint256 value) {
+    ) external view returns (uint256 value) {
         EnumerableSetUpgradeable.UintSet storage rentalIndex = self.renters[renter].collectionRentalIndex[collectionId];
         uint256 length = rentalIndex.length();
         for (uint256 i = 0; i < length; i++) {
@@ -261,7 +270,7 @@ library Rentings {
      * @dev Returns asset rental status based on latest rental agreement.
      */
     function assetRentalStatus(Registry storage self, Assets.AssetId memory assetId)
-        internal
+        external
         view
         returns (RentalStatus)
     {
@@ -269,5 +278,69 @@ library Rentings {
         if (latestRentalId == 0) return RentalStatus.NONE;
 
         return self.agreements[latestRentalId].isEffective() ? RentalStatus.RENTED : RentalStatus.AVAILABLE;
+    }
+
+    /**
+     * @dev Main renting request validation function.
+     */
+    function validateRentingParams(
+        Params calldata params,
+        Protocol.Config storage protocolConfig,
+        Listings.Registry storage listingRegistry,
+        Warpers.Registry storage warperRegistry
+    ) external view {
+        // Validate from the protocol perspective.
+        protocolConfig.checkBaseToken(params.paymentToken);
+
+        // Validate from the listing perspective.
+        listingRegistry.checkListed(params.listingId);
+        Listings.Listing storage listing = listingRegistry.listings[params.listingId];
+        listing.checkNotPaused();
+        listing.checkValidLockPeriod(params.rentalPeriod);
+
+        // Validate from the warper perspective.
+        Warpers.Warper storage warper = warperRegistry.warpers[params.warper];
+        warper.checkCompatibleAsset(listing.asset);
+        warper.checkNotPaused();
+        warper.controller.validateRentingParams(listing.asset, params);
+    }
+
+    /**
+     * @dev Performs rental fee calculation and returns the fee breakdown.
+     */
+    function calculateRentalFees(
+        Params calldata rentingParams,
+        Protocol.Config storage protocolConfig,
+        Listings.Registry storage listingRegistry,
+        Warpers.Registry storage warperRegistry,
+        IUniverseRegistry universeRegistry
+    ) external view returns (RentalFees memory fees) {
+        // Calculate lister base fee.
+        Listings.Listing storage listing = listingRegistry.listings[rentingParams.listingId];
+        Listings.Params memory listingParams = listing.params;
+        // Resolve listing controller to calculate lister fee based on selected listing strategy.
+        IListingController listingController = listingRegistry.listingController(listingParams.strategy);
+        fees.listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
+
+        // Calculate universe base fee.
+        Warpers.Warper storage warper = warperRegistry.warpers[rentingParams.warper];
+        uint16 universeRentalFeePercent = universeRegistry.universeFeePercent(warper.universeId);
+        fees.universeBaseFee = (fees.listerBaseFee * universeRentalFeePercent) / 10_000;
+
+        // Calculate protocol fee.
+        fees.protocolFee = (fees.listerBaseFee * protocolConfig.rentalFeePercent) / 10_000;
+
+        // Calculate warper premiums.
+        (uint256 universePremium, uint256 listerPremium) = warper.controller.calculatePremiums(
+            listing.asset,
+            rentingParams,
+            fees.universeBaseFee,
+            fees.listerBaseFee
+        );
+
+        // Calculate TOTAL rental fee.
+        fees.total += fees.listerBaseFee + listerPremium;
+        fees.total += fees.universeBaseFee + universePremium;
+        fees.total += fees.protocolFee;
     }
 }

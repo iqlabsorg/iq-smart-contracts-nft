@@ -315,9 +315,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         if (_msgSender() != rentingParams.renter) revert CallerIsNotRenter();
 
         // Validate renting parameters.
-        _validateRentingParams(rentingParams);
+        Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
-        // Handle payments.
+        // Make payments.
         _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
 
         // Deliver warper asset to the renter!
@@ -363,8 +363,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IRentingManager
      */
     function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory) {
-        _validateRentingParams(rentingParams);
-        return _calculateRentalFees(rentingParams);
+        Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
+        return
+            Rentings.calculateRentalFees(
+                rentingParams,
+                _protocolConfig,
+                _listingRegistry,
+                _warperRegistry,
+                _universeRegistry
+            );
     }
 
     /**
@@ -569,7 +576,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         uint256 maxPaymentAmount
     ) internal {
         // Get precise estimation.
-        Rentings.RentalFees memory fees = _calculateRentalFees(rentingParams);
+        Rentings.RentalFees memory fees = Rentings.calculateRentalFees(
+            rentingParams,
+            _protocolConfig,
+            _listingRegistry,
+            _warperRegistry,
+            _universeRegistry
+        );
         address paymentToken = rentingParams.paymentToken;
 
         // Ensure no rental fee payment slippage.
@@ -622,70 +635,5 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function _checkWarperAdmin(address warper, address account) internal view {
         _universeRegistry.checkUniverseOwner(_warperRegistry.warpers[warper].universeId, account);
-    }
-
-    /**
-     * @dev Main renting request validation function.
-     */
-    function _validateRentingParams(Rentings.Params calldata params) internal view {
-        // Validate from the protocol perspective.
-        _protocolConfig.checkBaseToken(params.paymentToken);
-
-        // Validate from the listing perspective.
-        _listingRegistry.checkListed(params.listingId);
-        Listings.Listing storage listing = _listingRegistry.listings[params.listingId];
-        listing.checkNotPaused();
-        listing.checkValidLockPeriod(params.rentalPeriod);
-
-        // Validate from the warper perspective.
-        Warpers.Warper storage warper = _warperRegistry.warpers[params.warper];
-        warper.checkCompatibleAsset(listing.asset);
-        warper.checkNotPaused();
-        warper.controller.validateRentingParams(listing.asset, params);
-    }
-
-    /**
-     * @dev Performs rental fee calculation and returns the fee breakdown.
-     */
-    function _calculateRentalFees(Rentings.Params calldata rentingParams)
-        internal
-        view
-        returns (Rentings.RentalFees memory)
-    {
-        // Calculate lister base fee.
-        Listings.Listing storage listing = _listingRegistry.listings[rentingParams.listingId];
-        Listings.Params memory listingParams = listing.params;
-        // Resolve listing controller to calculate lister fee based on selected listing strategy.
-        IListingController listingController = _listingRegistry.listingController(listingParams.strategy);
-        uint256 listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
-
-        // Calculate universe base fee.
-        Warpers.Warper storage warper = _warperRegistry.warpers[rentingParams.warper];
-        uint16 universeRentalFeePercent = _universeRegistry.universeFeePercent(warper.universeId);
-        uint256 universeBaseFee = (listerBaseFee * universeRentalFeePercent) / 10_000;
-
-        // Calculate protocol fee.
-        uint256 protocolFee = (listerBaseFee * _protocolConfig.rentalFeePercent) / 10_000;
-
-        // Calculate warper premiums.
-        (uint256 universePremium, uint256 listerPremium) = warper.controller.calculatePremiums(
-            listing.asset,
-            rentingParams,
-            universeBaseFee,
-            listerBaseFee
-        );
-
-        // Calculate TOTAL rental fee.
-        uint256 total = listerBaseFee + listerPremium + universeBaseFee + universePremium + protocolFee;
-
-        return
-            Rentings.RentalFees({
-                total: total,
-                protocolFee: protocolFee,
-                listerBaseFee: listerBaseFee,
-                listerPremium: listerPremium,
-                universeBaseFee: universeBaseFee,
-                universePremium: universePremium
-            });
     }
 }

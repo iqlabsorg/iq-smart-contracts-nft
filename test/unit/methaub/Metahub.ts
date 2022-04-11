@@ -28,7 +28,6 @@ export function unitTestMetahub(): void {
   let acl: IACL;
   async function unitFixtureMetahub() {
     // Resolve primary roles
-    const deployer = await ethers.getNamedSigner('deployer');
     const nftCreator = await ethers.getNamedSigner('nftCreator');
 
     // Deploy original NFT
