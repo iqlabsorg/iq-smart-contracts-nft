@@ -26,6 +26,12 @@ interface IWarperManager {
     event WarperRegistered(uint256 indexed universeId, address indexed warper, address indexed original);
 
     /**
+     * @dev Emitted when the warper is no longer registered.
+     * @param warper Warper address.
+     */
+    event WarperDeregistered(address indexed warper);
+
+    /**
      * @dev Emitted when the warper is paused.
      * @param warper Address.
      */
@@ -57,6 +63,13 @@ interface IWarperManager {
      * @param params Warper registration params.
      */
     function registerWarper(address warper, WarperRegistrationParams calldata params) external;
+
+    /**
+     * @dev Deletes warper registration information.
+     * All current rental agreements with the warper will stay intact, but the new rentals won't be possible.
+     * @param warper Warper address.
+     */
+    function deregisterWarper(address warper) external;
 
     /**
      * @dev Returns the list of warpers belonging to the particular universe.

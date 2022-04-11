@@ -20,7 +20,7 @@ library Rentings {
     using Protocol for Protocol.Config;
     using Listings for Listings.Registry;
     using Listings for Listings.Listing;
-    //    using Warpers for Warpers.Registry;
+    using Warpers for Warpers.Registry;
     using Warpers for Warpers.Warper;
 
     /**
@@ -299,6 +299,7 @@ library Rentings {
         listing.checkValidLockPeriod(params.rentalPeriod);
 
         // Validate from the warper perspective.
+        warperRegistry.checkRegisteredWarper(params.warper);
         Warpers.Warper storage warper = warperRegistry.warpers[params.warper];
         warper.checkCompatibleAsset(listing.asset);
         warper.checkNotPaused();

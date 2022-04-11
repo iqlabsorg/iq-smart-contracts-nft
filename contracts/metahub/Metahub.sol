@@ -182,6 +182,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IWarperManager
      */
+    function deregisterWarper(address warper) external onlyWarperAdmin(warper) {
+        _warperRegistry.remove(warper);
+        emit WarperDeregistered(warper);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
     function pauseWarper(address warper) external onlyWarperAdmin(warper) {
         _warperRegistry.warpers[warper].pause();
         emit WarperPaused(warper);
