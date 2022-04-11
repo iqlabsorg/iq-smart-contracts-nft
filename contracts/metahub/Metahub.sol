@@ -498,7 +498,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IWarperManager
      */
-    function warperController(address warper) external view returns (address) {
+    function warperController(address warper) external view registeredWarper(warper) returns (address) {
         return address(_warperRegistry.warpers[warper].controller);
     }
 
