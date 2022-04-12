@@ -189,11 +189,19 @@ library Rentings {
 
         uint256 maxCycles = rentalCount < _GC_CYCLES ? rentalCount : _GC_CYCLES;
         uint256 removed = 0;
+
         for (uint256 i = 0; i < maxCycles; i++) {
             uint256 rentalId = rentalIndex.at(i);
+
             if (!self.agreements[rentalId].isEffective()) {
+                // Warning: we are iterating an array that we are also modifying!
                 _removeRentalAgreement(self, rentalId);
-                if (removed++ == toBeRemoved) return;
+                removed += 1;
+
+                // Stop iterating if either:
+                //  1. we have cleaned up all that we must.
+                //  2. The next item is out of bounds
+                if (removed == toBeRemoved || (maxCycles - removed) == (i + 1)) return;
             }
         }
     }

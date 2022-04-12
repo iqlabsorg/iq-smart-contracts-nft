@@ -14,9 +14,12 @@ import {
   IMetahub,
   IRentingManager,
   IUniverseRegistry,
+  IWarperController__factory,
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
+import { Rentings } from '../../../../typechain/IRentingManager';
+import { AddressZero } from '../../../shared/types';
 import {
   AssetClass,
   createUniverse,
@@ -25,11 +28,24 @@ import {
   ListingStrategy,
   makeERC721Asset,
   makeFixedPriceStrategy,
+  waitBlockchainTime,
 } from '../../../shared/utils';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',
   rentalFeePercent: 1000,
+};
+
+const emptyRentingAgreement: Rentings.AgreementStruct = {
+  warpedAsset: {
+    id: { class: '0x00000000', data: '0x' },
+    value: BigNumber.from(0),
+  },
+  collectionId: '0x0000000000000000000000000000000000000000000000000000000000000000',
+  listingId: BigNumber.from(0),
+  renter: AddressZero,
+  startTime: 0,
+  endTime: 0,
 };
 
 const warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct = {
@@ -39,6 +55,8 @@ const warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct = 
 };
 
 export const warperPresetId = formatBytes32String('ERC721Basic');
+
+const maxPaymentAmount = 100_000_000;
 
 /**
  * The metahub contract behaves like IRentingManager
@@ -102,6 +120,7 @@ export function shouldBehaveLikeRentingManager(): void {
       await listingStrategyRegistry.registerListingStrategy(ListingStrategy.FIXED_PRICE, {
         controller: fixedPriceListingController.address,
       });
+
       const asset = makeERC721Asset(originalAsset.address, 1);
       const params = makeFixedPriceStrategy(100);
       const maxLockPeriod = 86400;
@@ -122,6 +141,12 @@ export function shouldBehaveLikeRentingManager(): void {
     });
 
     describe('rent', () => {
+      beforeEach(async () => {
+        // Setup
+        await paymentToken.mint(stranger.address, maxPaymentAmount);
+        await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
+      });
+
       context('Item is listed', () => {
         beforeEach(async () => {
           await listAsset();
@@ -134,10 +159,6 @@ export function shouldBehaveLikeRentingManager(): void {
             });
 
             it('successfully rents an asset', async () => {
-              // Setup
-              const maxPaymentAmount = 100_000_000;
-              await paymentToken.mint(stranger.address, maxPaymentAmount);
-              await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
               const rentalParams = {
                 listingId: listingId,
                 paymentToken: paymentToken.address,
@@ -167,17 +188,7 @@ export function shouldBehaveLikeRentingManager(): void {
                 listingId: rentalParams.listingId,
                 warpedAsset: asset,
                 startTime: blockTimestamp,
-                endTime: blockTimestamp! + rentalParams.rentalPeriod,
-              });
-            });
-
-            context('Asset rented', () => {
-              it('updates the owner of the warped asset to the renter');
-
-              it('creates a rental agreement');
-
-              context('Rental agreements already exist', () => {
-                it('clears 2 existing rental agreements');
+                endTime: blockTimestamp + rentalParams.rentalPeriod,
               });
             });
           });
@@ -190,15 +201,126 @@ export function shouldBehaveLikeRentingManager(): void {
     });
 
     describe('rentalAgreementInfo', () => {
-      // TODO
-    });
+      beforeEach(async () => {
+        // Setup
+        await paymentToken.mint(stranger.address, maxPaymentAmount);
+        await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
-    describe('userRentalCount', () => {
-      // TODO
+        await listAsset();
+        await metahub.unpauseWarper(warperAddress);
+      });
+
+      context('Asset rented', () => {
+        context('Multiple rental agreements already exist: idx [0],[1] are expired; [2] is active', () => {
+          let rentalIds: Array<BigNumber>;
+          let rentingParams: Rentings.ParamsStruct;
+          beforeEach(async () => {
+            rentingParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            // Create 3 existing rentals
+            rentalIds = [];
+            for (let index = 0; index < 3; index++) {
+              await waitBlockchainTime(20000);
+              rentalIds.push(await rentingManager.connect(stranger).callStatic.rent(rentingParams, maxPaymentAmount));
+              await rentingManager.connect(stranger).rent(rentingParams, maxPaymentAmount);
+            }
+          });
+
+          context('Accessing expired rental agreement (idx 0)', () => {
+            it('returns a cleared data structure', async () => {
+              await expect(rentingManager.rentalAgreementInfo(rentalIds[0])).to.eventually.equalStruct(
+                emptyRentingAgreement,
+              );
+            });
+          });
+
+          context('Accessing expired rental agreement (idx 1)', () => {
+            it('returns a cleared data structure', async () => {
+              await expect(rentingManager.rentalAgreementInfo(rentalIds[1])).to.eventually.equalStruct(
+                emptyRentingAgreement,
+              );
+            });
+          });
+
+          context('Accessing active rental agreement (idx 2)', () => {
+            it('returns the rental agreement', async () => {
+              const blockTimestamp = await latestBlockTimestamp();
+              const assetStruct = makeERC721Asset(warperAddress, 1);
+              const warperController = IWarperController__factory.connect(
+                await metahub.warperController(warperAddress),
+                metahub.signer,
+              );
+              const collectionId = await warperController.collectionId(assetStruct.id);
+              const rentingAgreement: Rentings.AgreementStruct = {
+                warpedAsset: makeERC721Asset(warperAddress, 1),
+                collectionId: collectionId,
+                listingId: listingId,
+                renter: stranger.address,
+                startTime: blockTimestamp,
+                endTime: blockTimestamp + Number(rentingParams.rentalPeriod),
+              };
+
+              await expect(rentingManager.rentalAgreementInfo(rentalIds[2])).to.eventually.equalStruct(
+                rentingAgreement,
+              );
+            });
+          });
+        });
+      });
     });
 
     describe('userRentalAgreements', () => {
       // TODO
+    });
+
+    describe('userRentalCount', () => {
+      beforeEach(async () => {
+        // Setup
+        await paymentToken.mint(stranger.address, maxPaymentAmount);
+        await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
+
+        await listAsset();
+        await metahub.unpauseWarper(warperAddress);
+      });
+
+      context('Multiple rental agreements already exist', () => {
+        beforeEach(async () => {
+          const rentalParams = {
+            listingId: listingId,
+            paymentToken: paymentToken.address,
+            rentalPeriod: 1000,
+            renter: stranger.address,
+            warper: warperAddress,
+          };
+
+          // Create 3 existing rentals
+          for (let index = 0; index < 3; index++) {
+            await waitBlockchainTime(20000);
+            await rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount);
+          }
+        });
+
+        context('Latest rental agreement is expired', () => {
+          beforeEach(async () => {
+            await waitBlockchainTime(20000);
+          });
+          it('returns the rental agreement count (1)', async () => {
+            await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(1);
+          });
+        });
+
+        context('Latest rental agreement is active', () => {
+          it('returns the rental agreement count (1)', async () => {
+            await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(1);
+          });
+        });
+      });
     });
   });
 }
