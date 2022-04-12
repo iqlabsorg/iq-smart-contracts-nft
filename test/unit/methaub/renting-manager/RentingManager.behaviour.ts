@@ -1,4 +1,5 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { formatBytes32String } from 'ethers/lib/utils';
 import {
@@ -20,6 +21,7 @@ import {
   AssetClass,
   createUniverse,
   deployWarperPreset,
+  latestBlockTimestamp,
   ListingStrategy,
   makeERC721Asset,
   makeFixedPriceStrategy,
@@ -132,20 +134,41 @@ export function shouldBehaveLikeRentingManager(): void {
             });
 
             it('successfully rents an asset', async () => {
+              // Setup
               const maxPaymentAmount = 100_000_000;
               await paymentToken.mint(stranger.address, maxPaymentAmount);
               await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
-              await rentingManager.connect(stranger).rent(
-                {
-                  listingId: listingId,
-                  paymentToken: paymentToken.address,
-                  rentalPeriod: 1000,
-                  renter: stranger.address,
-                  warper: warperAddress,
-                },
-                maxPaymentAmount,
+              const rentalParams = {
+                listingId: listingId,
+                paymentToken: paymentToken.address,
+                rentalPeriod: 1000,
+                renter: stranger.address,
+                warper: warperAddress,
+              };
+
+              // Execute tx
+              const rentalId = await rentingManager.connect(stranger).callStatic.rent(rentalParams, maxPaymentAmount);
+              const tx = await rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount);
+
+              // Assert
+              await expect(tx).to.emit(rentingManager, 'AssetRented');
+
+              const receipt = await tx.wait();
+              const events = await rentingManager.queryFilter(
+                rentingManager.filters.AssetRented(),
+                receipt.blockNumber,
               );
-              // TODO Emits an event
+              const assetRented = events[0].args;
+              const blockTimestamp = await latestBlockTimestamp();
+              const asset = makeERC721Asset(warperAddress, 1);
+              expect(assetRented).to.equalStruct({
+                rentalId: rentalId,
+                renter: stranger.address,
+                listingId: rentalParams.listingId,
+                warpedAsset: asset,
+                startTime: blockTimestamp,
+                endTime: blockTimestamp! + rentalParams.rentalPeriod,
+              });
             });
 
             context('Asset rented', () => {
