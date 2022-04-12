@@ -7,8 +7,15 @@ import "@openzeppelin/contracts-upgradeable/access/IAccessControlEnumerableUpgra
  * @title Access Control List contract interface.
  */
 interface IACL is IAccessControlEnumerableUpgradeable {
-    // TODO: Docs
+    /**
+     * @dev Thrown when the Admin roles bytes is incorrectly formatted.
+     */
     error RolesContractIncorrectlyConfigured();
+
+    /**
+     * @dev Thrown when the attempting to remove the very last admin from ACL.
+     */
+    error CannotRemoveLastAdmin();
 
     /**
      * @notice revert if the `account` does not have the specified role.

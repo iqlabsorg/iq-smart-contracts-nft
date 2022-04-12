@@ -62,6 +62,15 @@ contract ACL is IACL, AccessControlEnumerableUpgradeable, AccessControlledUpgrad
     }
 
     /**
+     * @inheritdoc AccessControlEnumerableUpgradeable
+     */
+    function _revokeRole(bytes32 role, address account) internal virtual override {
+        if (Roles.ADMIN == role && getRoleMemberCount(role) == 1) revert CannotRemoveLastAdmin();
+
+        super._revokeRole(role, account);
+    }
+
+    /**
      * @inheritdoc AccessControlledUpgradeable
      */
     function _acl() internal view virtual override returns (IACL) {
