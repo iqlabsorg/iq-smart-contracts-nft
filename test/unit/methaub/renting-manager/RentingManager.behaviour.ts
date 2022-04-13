@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { formatBytes32String } from 'ethers/lib/utils';
+import { beforeEach } from 'mocha';
 import {
   ERC20Mock,
   ERC721Mock,
@@ -20,17 +21,7 @@ import {
 } from '../../../../typechain';
 import { Rentings } from '../../../../typechain/IRentingManager';
 import { AddressZero } from '../../../shared/types';
-import {
-  AssetClass,
-  AssetListerHelper,
-  createUniverse,
-  deployWarperPreset,
-  latestBlockTimestamp,
-  ListingStrategy,
-  makeERC721Asset,
-  makeFixedPriceStrategy,
-  waitBlockchainTime,
-} from '../../../shared/utils';
+import { AssetListerHelper, latestBlockTimestamp, makeERC721Asset, waitBlockchainTime } from '../../../shared/utils';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',
@@ -200,75 +191,119 @@ export function shouldBehaveLikeRentingManager(): void {
     });
 
     describe('rentalAgreementInfo', () => {
+      let listingId2: BigNumber;
+
       beforeEach(async () => {
         // Setup
         await paymentToken.mint(stranger.address, maxPaymentAmount);
         await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
         warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+        // Listing for item 1
         listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+
+        // Listing for item 2
+        listingId2 = await assetListerHelper.listAsset(maxLockPeriod, baseRate, BigNumber.from(2));
         await metahub.unpauseWarper(warperAddress);
       });
 
       context('Asset rented', () => {
-        context('Multiple rental agreements already exist: idx [0],[1] are expired; [2] is active', () => {
+        context('Multiple rental agreements already exist: idx [0],[2] are expired; [1],[4] are active', () => {
           let rentalIds: Array<BigNumber>;
-          let rentingParams: Rentings.ParamsStruct;
+          let rentingParams1: Rentings.ParamsStruct;
+          let rentingParams2: Rentings.ParamsStruct;
+          let blockTimeActiveRental2: number;
+          let blockTimeActiveRental1: number;
+
           beforeEach(async () => {
-            rentingParams = {
+            rentingParams1 = {
               listingId: listingId,
               paymentToken: paymentToken.address,
-              rentalPeriod: 1000,
+              rentalPeriod: 100,
               renter: stranger.address,
               warper: warperAddress,
             };
 
-            // Create 3 existing rentals
+            rentingParams2 = {
+              listingId: listingId2,
+              paymentToken: paymentToken.address,
+              rentalPeriod: maxLockPeriod, // does not expire during the test
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            // Create 3 rentals
             rentalIds = [];
-            for (let index = 0; index < 3; index++) {
-              await waitBlockchainTime(20000);
-              rentalIds.push(await rentingManager.connect(stranger).callStatic.rent(rentingParams, maxPaymentAmount));
-              await rentingManager.connect(stranger).rent(rentingParams, maxPaymentAmount);
+            {
+              await waitBlockchainTime(2000);
+              rentalIds.push(await rentingManager.connect(stranger).callStatic.rent(rentingParams1, maxPaymentAmount));
+              await rentingManager.connect(stranger).rent(rentingParams1, maxPaymentAmount);
+
+              rentalIds.push(await rentingManager.connect(stranger).callStatic.rent(rentingParams2, maxPaymentAmount));
+              await rentingManager.connect(stranger).rent(rentingParams2, maxPaymentAmount);
+              blockTimeActiveRental2 = await latestBlockTimestamp();
+            }
+
+            {
+              await waitBlockchainTime(2000);
+              rentalIds.push(await rentingManager.connect(stranger).callStatic.rent(rentingParams1, maxPaymentAmount));
+              await rentingManager.connect(stranger).rent(rentingParams1, maxPaymentAmount);
+            }
+
+            {
+              await waitBlockchainTime(2000);
+              rentalIds.push(await rentingManager.connect(stranger).callStatic.rent(rentingParams1, maxPaymentAmount));
+              await rentingManager.connect(stranger).rent(rentingParams1, maxPaymentAmount);
+              blockTimeActiveRental1 = await latestBlockTimestamp();
             }
           });
 
-          context('Accessing expired rental agreement (idx 0)', () => {
+          context('Accessing expired rental agreement (idx [0],[1],[2])', () => {
             it('returns a cleared data structure', async () => {
-              await expect(rentingManager.rentalAgreementInfo(rentalIds[0])).to.eventually.equalStruct(
-                emptyRentingAgreement,
-              );
+              for (const iterator of [0, 2]) {
+                await expect(rentingManager.rentalAgreementInfo(rentalIds[iterator])).to.eventually.equalStruct(
+                  emptyRentingAgreement,
+                );
+              }
             });
           });
 
-          context('Accessing expired rental agreement (idx 1)', () => {
-            it('returns a cleared data structure', async () => {
-              await expect(rentingManager.rentalAgreementInfo(rentalIds[1])).to.eventually.equalStruct(
-                emptyRentingAgreement,
-              );
-            });
-          });
-
-          context('Accessing active rental agreement (idx 2)', () => {
+          context('Accessing active rental agreement (idx [3],[4])', () => {
             it('returns the rental agreement', async () => {
-              const blockTimestamp = await latestBlockTimestamp();
-              const assetStruct = makeERC721Asset(warperAddress, 1);
-              const warperController = IWarperController__factory.connect(
-                await metahub.warperController(warperAddress),
-                metahub.signer,
-              );
-              const collectionId = await warperController.collectionId(assetStruct.id);
-              const rentingAgreement: Rentings.AgreementStruct = {
-                warpedAsset: makeERC721Asset(warperAddress, 1),
-                collectionId: collectionId,
-                listingId: listingId,
-                renter: stranger.address,
-                startTime: blockTimestamp,
-                endTime: blockTimestamp + Number(rentingParams.rentalPeriod),
-              };
+              const validAgreements = [
+                {
+                  tokenId: 2,
+                  rentalIdx: 1,
+                  activatedAt: blockTimeActiveRental2,
+                  rentingParams: rentingParams2,
+                },
+                {
+                  tokenId: 1,
+                  rentalIdx: 3,
+                  activatedAt: blockTimeActiveRental1,
+                  rentingParams: rentingParams1,
+                },
+              ];
+              for (const iterator of validAgreements) {
+                const assetStruct = makeERC721Asset(warperAddress, iterator.tokenId);
+                const warperController = IWarperController__factory.connect(
+                  await metahub.warperController(warperAddress),
+                  metahub.signer,
+                );
+                const collectionId = await warperController.collectionId(assetStruct.id);
+                const rentingAgreement: Rentings.AgreementStruct = {
+                  warpedAsset: makeERC721Asset(warperAddress, iterator.tokenId),
+                  collectionId: collectionId,
+                  listingId: iterator.rentingParams.listingId,
+                  renter: stranger.address,
+                  startTime: iterator.activatedAt,
+                  endTime: iterator.activatedAt + Number(iterator.rentingParams.rentalPeriod),
+                };
 
-              await expect(rentingManager.rentalAgreementInfo(rentalIds[2])).to.eventually.equalStruct(
-                rentingAgreement,
-              );
+                await expect(
+                  rentingManager.rentalAgreementInfo(rentalIds[iterator.rentalIdx]),
+                ).to.eventually.equalStruct(rentingAgreement);
+              }
             });
           });
         });
@@ -280,17 +315,23 @@ export function shouldBehaveLikeRentingManager(): void {
     });
 
     describe('userRentalCount', () => {
+      let listingId2: BigNumber;
       beforeEach(async () => {
         // Setup
         await paymentToken.mint(stranger.address, maxPaymentAmount);
         await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
         warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+
+        // Listing for item 1
         listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+
+        // Listing for item 2
+        listingId2 = await assetListerHelper.listAsset(maxLockPeriod, baseRate, BigNumber.from(2));
         await metahub.unpauseWarper(warperAddress);
       });
 
-      context('Multiple rental agreements already exist', () => {
+      context('Multiple (4) rental agreements already exist', () => {
         beforeEach(async () => {
           const rentalParams = {
             listingId: listingId,
@@ -305,20 +346,34 @@ export function shouldBehaveLikeRentingManager(): void {
             await waitBlockchainTime(20000);
             await rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount);
           }
+          await rentingManager.connect(stranger).rent({ ...rentalParams, listingId: listingId2 }, maxPaymentAmount);
         });
 
-        context('Latest rental agreement is expired', () => {
+        context('All rental agreements are expired', () => {
           beforeEach(async () => {
             await waitBlockchainTime(20000);
           });
-          it('returns the rental agreement count (1)', async () => {
-            await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(1);
+
+          context('2 are not cleaned up', () => {
+            it('returns the rental agreement count (2)', async () => {
+              await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(2);
+            });
+          });
+
+          context('all are cleaned up', () => {
+            beforeEach(() => {
+              // TODO there's no method to clean up expired rentals without renting new ones
+            });
+
+            it.skip('returns the rental agreement count (0)', async () => {
+              await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(0);
+            });
           });
         });
 
-        context('Latest rental agreement is active', () => {
-          it('returns the rental agreement count (1)', async () => {
-            await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(1);
+        context('Latest 2 rental agreements are active', () => {
+          it('returns the rental agreement count (2)', async () => {
+            await expect(rentingManager.userRentalCount(stranger.address)).to.eventually.equal(2);
           });
         });
       });
