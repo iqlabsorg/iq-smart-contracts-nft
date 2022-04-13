@@ -1,8 +1,18 @@
 import hre, { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
+import { formatBytes32String } from 'ethers/lib/utils';
 import { wait } from '../../tasks';
 import {
+  AssetClassRegistry,
+  ERC721Mock,
+  FixedPriceListingController,
   IACL,
+  IAssetClassRegistry,
+  IListingManager,
+  IListingStrategyRegistry,
+  IMetahub,
   IUniverseRegistry,
   IWarperManager,
   IWarperPresetFactory,
@@ -215,5 +225,63 @@ export class AccessControlledHelper {
         );
       });
     });
+  }
+}
+
+export class AssetListerHelper {
+  warperPresetId = formatBytes32String('ERC721Basic');
+
+  constructor(
+    readonly nftCreator: SignerWithAddress,
+    readonly originalAsset: ERC721Mock,
+    readonly assetClassRegistry: IAssetClassRegistry,
+    readonly assetController: string,
+    readonly erc721assetVault: string,
+    readonly listingManager: IListingManager,
+    readonly metahub: IMetahub,
+    readonly universeRegistry: IUniverseRegistry,
+    readonly warperPresetFactory: IWarperPresetFactory,
+    readonly listingStrategyRegistry: IListingStrategyRegistry,
+    readonly fixedPriceListingController: FixedPriceListingController,
+  ) {}
+
+  async setupRegistries() {
+    await this.assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
+      controller: this.assetController,
+      vault: this.erc721assetVault,
+    });
+    await this.listingStrategyRegistry.registerListingStrategy(ListingStrategy.FIXED_PRICE, {
+      controller: this.fixedPriceListingController.address,
+    });
+  }
+
+  async setupUniverse(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct) {
+    const universeId = await createUniverse(this.universeRegistry, universeRegistrationParams);
+    return universeId;
+  }
+
+  async setupWarper(universeId: BigNumber, warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct) {
+    const warperAddress = await deployWarperPreset(
+      this.warperPresetFactory,
+      this.warperPresetId,
+      this.metahub.address,
+      this.originalAsset.address,
+    );
+    await this.metahub.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
+    return warperAddress;
+  }
+
+  async listAsset(maxLockPeriod: number, baseRate: number, tokenId: BigNumber) {
+    await this.originalAsset.connect(this.nftCreator).setApprovalForAll(this.metahub.address, true);
+
+    const asset = makeERC721Asset(this.originalAsset.address, tokenId);
+    const listingParams = makeFixedPriceStrategy(baseRate);
+
+    const listingId = await this.listingManager
+      .connect(this.nftCreator)
+      .callStatic.listAsset(asset, listingParams, maxLockPeriod, false);
+    await this.listingManager.connect(this.nftCreator).listAsset(asset, listingParams, maxLockPeriod, false);
+
+    return listingId;
   }
 }
