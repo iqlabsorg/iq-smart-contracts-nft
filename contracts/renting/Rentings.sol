@@ -197,11 +197,10 @@ library Rentings {
                 // Warning: we are iterating an array that we are also modifying!
                 _removeRentalAgreement(self, rentalId);
                 removed += 1;
+                maxCycles -= 1; // This is so we account for reduced `rentalCount`.
 
-                // Stop iterating if either:
-                //  1. we have cleaned up all that we must.
-                //  2. The next item is out of bounds
-                if (removed == toBeRemoved || (maxCycles - removed) == (i + 1)) return;
+                // Stop iterating if we have cleaned up enough desired items.
+                if (removed == toBeRemoved) break;
             }
         }
     }
