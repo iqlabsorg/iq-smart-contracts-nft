@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { formatBytes32String } from 'ethers/lib/utils';
+import hre from 'hardhat';
 import { beforeEach } from 'mocha';
 import {
   ERC20Mock,
@@ -134,6 +135,128 @@ export function shouldBehaveLikeRentingManager(): void {
         // Setup
         await paymentToken.mint(stranger.address, maxPaymentAmount);
         await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
+      });
+
+      context('msg.sender is not the renter', () => {
+        beforeEach(async () => {
+          await paymentToken.mint(stranger.address, maxPaymentAmount);
+          await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
+
+          warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+        });
+
+        it('reverts', async () => {
+          const rentalParams = {
+            listingId: listingId,
+            paymentToken: paymentToken.address,
+            rentalPeriod: 1000,
+            renter: nftCreator.address,
+            warper: warperAddress,
+          };
+
+          await expect(rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount)).to.be.revertedWith(
+            'CallerIsNotRenter()',
+          );
+        });
+      });
+
+      context('Invalid rental params', () => {
+        context('Base token does not match renting params', () => {
+          let anotherToken: ERC20Mock;
+
+          beforeEach(async () => {
+            anotherToken = (await hre.run('deploy:mock:ERC20', {
+              name: 'Random ERC20',
+              symbol: 'TST',
+              decimals: 18,
+              totalSupply: 1,
+            })) as ERC20Mock;
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: anotherToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount)).to.be.revertedWith(
+              'BaseTokenMismatch()',
+            );
+          });
+        });
+
+        context('Item is not listed', () => {
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: BigNumber.from(42),
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount)).to.be.revertedWith(
+              'NotListed(42)',
+            );
+          });
+        });
+
+        context('Item is listed', () => {
+          beforeEach(async () => {
+            warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+            listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+          });
+
+          context('listing is paused', () => {
+            beforeEach(async () => {
+              await listingManager.connect(nftCreator).pauseListing(listingId);
+            });
+
+            it('reverts', async () => {
+              const rentalParams = {
+                listingId: listingId,
+                paymentToken: paymentToken.address,
+                rentalPeriod: 1000,
+                renter: stranger.address,
+                warper: warperAddress,
+              };
+
+              await expect(rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount)).to.be.revertedWith(
+                'ListingIsPaused()',
+              );
+            });
+          });
+
+          // --------- ERC721 Warper Controller tests (remove ?) --------- //
+          describe('ERC721WarperController', () => {
+            context('Warper already rented', () => {
+              let rentalParams: Rentings.ParamsStruct;
+
+              beforeEach(async () => {
+                rentalParams = {
+                  listingId: listingId,
+                  paymentToken: paymentToken.address,
+                  rentalPeriod: 1000,
+                  renter: stranger.address,
+                  warper: warperAddress,
+                };
+
+                await metahub.unpauseWarper(warperAddress);
+                await rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount);
+              });
+
+              it('reverts', async () => {
+                await expect(rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount)).to.be.revertedWith(
+                  'AlreadyRented()',
+                );
+              });
+            });
+          });
+        });
       });
 
       context('Item is listed', () => {
