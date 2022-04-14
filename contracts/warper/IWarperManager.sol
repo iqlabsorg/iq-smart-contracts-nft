@@ -72,18 +72,60 @@ interface IWarperManager {
     function deregisterWarper(address warper) external;
 
     /**
-     * @dev Returns the list of warpers belonging to the particular universe.
+     * @dev Returns the number of warpers belonging to the particular universe.
      * @param universeId The universe ID.
-     * @return List of warper addresses.
+     * @return Warper count.
      */
-    function universeWarpers(uint256 universeId) external view returns (address[] memory);
+    function universeWarperCount(uint256 universeId) external view returns (uint256);
 
     /**
-     * @dev Returns the list of warpers associated wit the particular original asset.
-     * @param original Original asset address.
+     * @dev Returns the list of warpers belonging to the particular universe.
+     * @param universeId The universe ID.
+     * @param offset Starting index.
+     * @param limit Max number of items.
      * @return List of warper addresses.
+     * @return List of warpers.
      */
-    function assetWarpers(address original) external view returns (address[] memory);
+    function universeWarpers(
+        uint256 universeId,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory, Warpers.Warper[] memory);
+
+    /**
+     * @dev Returns the number of warpers associated with the particular original asset.
+     * @param original Original asset address.
+     * @return Warper count.
+     */
+    function assetWarperCount(address original) external view returns (uint256);
+
+    /**
+     * @dev Returns the list of warpers associated with the particular original asset.
+     * @param original Original asset address.
+     * @param offset Starting index.
+     * @param limit Max number of items.
+     * @return List of warper addresses.
+     * @return List of warpers.
+     */
+    function assetWarpers(
+        address original,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory, Warpers.Warper[] memory);
+
+    /**
+     * @dev Returns the number of currently supported assets.
+     * @return Asset count.
+     */
+    function supportedAssetCount() external view returns (uint256);
+
+    /**
+     * @dev Returns the list of all supported asset addresses.
+     * @param offset Starting index.
+     * @param limit Max number of items.
+     * @return List of original asset addresses.
+     */
+    function supportedAssets(uint256 offset, uint256 limit) external view returns (address[] memory);
 
     /**
      * @dev Returns warper preset factory address.

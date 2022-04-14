@@ -149,6 +149,30 @@ library Warpers {
     }
 
     /**
+     * @dev Returns the paginated list of warpers belonging to the particular universe.
+     */
+    function universeWarpers(
+        Registry storage self,
+        uint256 universeId,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory, Warpers.Warper[] memory) {
+        return self.paginateIndexedWarpers(self.universeWarperIndex[universeId], offset, limit);
+    }
+
+    /**
+     * @dev Returns the paginated list of warpers associated with the particular original asset.
+     */
+    function assetWarpers(
+        Registry storage self,
+        address original,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory, Warpers.Warper[] memory) {
+        return self.paginateIndexedWarpers(self.assetWarperIndex[original], offset, limit);
+    }
+
+    /**
      * @dev Checks warper registration by address.
      */
     function isRegisteredWarper(Registry storage self, address warper) internal view returns (bool) {
@@ -177,5 +201,43 @@ library Warpers {
      */
     function isSupportedAsset(Registry storage self, address asset) internal view returns (bool) {
         return self.assetWarperIndex[asset].length() > 0;
+    }
+
+    /**
+     * @dev Returns the number of warpers belonging to the particular universe.
+     */
+    function universeWarperCount(Registry storage self, uint256 universeId) internal view returns (uint256) {
+        return self.universeWarperIndex[universeId].length();
+    }
+
+    /**
+     * @dev Returns the number of warpers associated with the particular original asset.
+     */
+    function assetWarperCount(Registry storage self, address original) internal view returns (uint256) {
+        return self.assetWarperIndex[original].length();
+    }
+
+    /**
+     * @dev Returns the paginated list of registered warpers using provided index reference.
+     */
+    function paginateIndexedWarpers(
+        Registry storage self,
+        EnumerableSetUpgradeable.AddressSet storage warperIndex,
+        uint256 offset,
+        uint256 limit
+    ) internal view returns (address[] memory, Warper[] memory) {
+        uint256 indexSize = warperIndex.length();
+        if (limit > indexSize - offset) {
+            limit = indexSize - offset;
+        }
+
+        Warper[] memory warpers = new Warper[](limit);
+        address[] memory warperAddresses = new address[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            warperAddresses[i] = warperIndex.at(offset + i);
+            warpers[i] = self.warpers[warperAddresses[i]];
+        }
+
+        return (warperAddresses, warpers);
     }
 }

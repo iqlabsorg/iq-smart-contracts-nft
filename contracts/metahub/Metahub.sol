@@ -28,23 +28,18 @@ import "./Protocol.sol";
 import "../accounting/Accounts.sol";
 import "../accounting/Accounts.sol";
 
-// todo: review lib imports
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUpgradeable, MetahubStorage {
     using Address for address;
     using ERC165CheckerUpgradeable for address;
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
-    using CountersUpgradeable for CountersUpgradeable.Counter;
     using Accounts for Accounts.Account;
     using Assets for Assets.Asset;
-    using Assets for Assets.AssetConfig;
     using Assets for Assets.Registry;
     using Listings for Listings.Listing;
     using Listings for Listings.Registry;
     using Rentings for Rentings.Registry;
     using Warpers for Warpers.Warper;
     using Warpers for Warpers.Registry;
-    using Protocol for Protocol.Config;
 
     /**
      * @dev Metahub initialization params.
@@ -488,15 +483,51 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IWarperManager
      */
-    function universeWarpers(uint256 universeId) external view returns (address[] memory) {
-        return _warperRegistry.universeWarperIndex[universeId].values();
+    function universeWarperCount(uint256 universeId) external view returns (uint256) {
+        return _warperRegistry.universeWarperCount(universeId);
     }
 
     /**
      * @inheritdoc IWarperManager
      */
-    function assetWarpers(address original) external view returns (address[] memory) {
-        return _warperRegistry.assetWarperIndex[original].values();
+    function universeWarpers(
+        uint256 universeId,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory, Warpers.Warper[] memory) {
+        return _warperRegistry.universeWarpers(universeId, offset, limit);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function assetWarperCount(address original) external view returns (uint256) {
+        return _warperRegistry.assetWarperCount(original);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function assetWarpers(
+        address original,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory, Warpers.Warper[] memory) {
+        return _warperRegistry.assetWarpers(original, offset, limit);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function supportedAssetCount() external view returns (uint256) {
+        return _assetRegistry.assetCount();
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function supportedAssets(uint256 offset, uint256 limit) external view returns (address[] memory) {
+        return _assetRegistry.supportedAssets(offset, limit);
     }
 
     /**
