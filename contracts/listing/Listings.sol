@@ -271,15 +271,15 @@ library Listings {
         uint256 offset,
         uint256 limit
     ) internal view returns (uint256[] memory, Listing[] memory) {
-        uint256 totalListingCount = listingIndex.length();
-        if (limit > totalListingCount - offset) {
-            limit = totalListingCount - offset;
+        uint256 indexSize = listingIndex.length();
+        if (limit > indexSize - offset) {
+            limit = indexSize - offset;
         }
 
         Listing[] memory listings = new Listing[](limit);
         uint256[] memory listingIds = new uint256[](limit);
         for (uint256 i = 0; i < limit; i++) {
-            listingIds[i] = listingIndex.at(i);
+            listingIds[i] = listingIndex.at(offset + i);
             listings[i] = self.listings[listingIds[i]];
         }
 

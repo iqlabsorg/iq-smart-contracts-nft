@@ -157,15 +157,15 @@ library Rentings {
         uint256 limit
     ) external view returns (uint256[] memory, Rentings.Agreement[] memory) {
         EnumerableSetUpgradeable.UintSet storage userRentalIndex = self.renters[renter].rentalIndex;
-        uint256 rentalCount = userRentalIndex.length();
-        if (limit > rentalCount - offset) {
-            limit = rentalCount - offset;
+        uint256 indexSize = userRentalIndex.length();
+        if (limit > indexSize - offset) {
+            limit = indexSize - offset;
         }
 
         Rentings.Agreement[] memory agreements = new Rentings.Agreement[](limit);
         uint256[] memory rentalIds = new uint256[](limit);
         for (uint256 i = 0; i < limit; i++) {
-            rentalIds[i] = userRentalIndex.at(i);
+            rentalIds[i] = userRentalIndex.at(offset + i);
             agreements[i] = self.agreements[rentalIds[i]];
         }
 
