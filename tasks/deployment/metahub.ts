@@ -7,6 +7,7 @@ import {
   Rentings__factory,
   Listings__factory,
   Warpers__factory,
+  Assets__factory,
 } from '../../typechain';
 import { MetahubLibraryAddresses } from '../../typechain/factories/Metahub__factory';
 
@@ -40,11 +41,13 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
       // Deploy external libraries used by Metahub.
       const rentingsLib = await new Rentings__factory(deployer).deploy();
       const listingsLib = await new Listings__factory(deployer).deploy();
+      const assetsLib = await new Assets__factory(deployer).deploy();
       const warpersLib = await new Warpers__factory(deployer).deploy();
 
       const metahubLibs: MetahubLibraryAddresses = {
         ['contracts/renting/Rentings.sol:Rentings']: rentingsLib.address,
         ['contracts/listing/Listings.sol:Listings']: listingsLib.address,
+        ['contracts/asset/Assets.sol:Assets']: assetsLib.address,
         ['contracts/warper/Warpers.sol:Warpers']: warpersLib.address,
       };
 

@@ -119,12 +119,68 @@ library Assets {
         Registry storage self,
         bytes4 assetClass,
         address asset
-    ) internal {
+    ) external {
         if (!self.assetIndex.add(asset)) revert AssetIsAlreadyRegistered(asset);
 
         IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
         self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
         self.assets[asset].controller = IAssetController(assetClassConfig.controller);
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered listings.
+     */
+    function supportedAssets(
+        Registry storage self,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory) {
+        uint256 indexSize = self.assetIndex.length();
+        if (limit > indexSize - offset) {
+            limit = indexSize - offset;
+        }
+
+        address[] memory assets = new address[](limit);
+        for (uint256 i = 0; i < limit; i++) {
+            assets[i] = self.assetIndex.at(offset + i);
+        }
+        return assets;
+    }
+
+    /**
+     * @dev Transfers an asset to the vault using associated controller.
+     */
+    function transferAssetToVault(
+        Registry storage self,
+        Assets.Asset memory asset,
+        address from
+    ) external {
+        // Extract token address from asset struct and check whether the asset is supported.
+        address assetToken = asset.token();
+
+        // Transfer asset to the class asset specific vault.
+        address assetController = address(self.assets[assetToken].controller);
+        address assetVault = address(self.assets[assetToken].vault);
+        assetController.functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, from, assetVault)
+        );
+    }
+
+    /**
+     * @dev Transfers an asset from the vault using associated controller.
+     */
+    function returnAssetFromVault(Registry storage self, Assets.Asset memory asset) external {
+        address assetToken = asset.token();
+        address assetController = address(self.assets[assetToken].controller);
+        address assetVault = address(self.assets[assetToken].vault);
+
+        assetController.functionDelegateCall(
+            abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, assetVault)
+        );
+    }
+
+    function assetCount(Registry storage self) internal view returns (uint256) {
+        return self.assetIndex.length();
     }
 
     /**
@@ -148,37 +204,5 @@ library Assets {
      */
     function assetClassController(Registry storage self, bytes4 assetClass) internal view returns (address) {
         return self.classRegistry.assetClassConfig(assetClass).controller;
-    }
-
-    /**
-     * @dev Transfers an asset to the vault using associated controller.
-     */
-    function transferAssetToVault(
-        Registry storage self,
-        Assets.Asset memory asset,
-        address from
-    ) internal {
-        // Extract token address from asset struct and check whether the asset is supported.
-        address assetToken = asset.token();
-
-        // Transfer asset to the class asset specific vault.
-        address assetController = address(self.assets[assetToken].controller);
-        address assetVault = address(self.assets[assetToken].vault);
-        assetController.functionDelegateCall(
-            abi.encodeWithSelector(IAssetController.transferAssetToVault.selector, asset, from, assetVault)
-        );
-    }
-
-    /**
-     * @dev Transfers an asset from the vault using associated controller.
-     */
-    function returnAssetFromVault(Registry storage self, Assets.Asset memory asset) internal {
-        address assetToken = asset.token();
-        address assetController = address(self.assets[assetToken].controller);
-        address assetVault = address(self.assets[assetToken].vault);
-
-        assetController.functionDelegateCall(
-            abi.encodeWithSelector(IAssetController.returnAssetFromVault.selector, asset, assetVault)
-        );
     }
 }
