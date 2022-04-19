@@ -20,10 +20,10 @@ library Assets {
     bytes4 public constant ERC721 = bytes4(keccak256("ERC721"));
     bytes4 public constant ERC1155 = bytes4(keccak256("ERC1155"));
 
-    bytes32 public constant ASSET_ID_TYPEHASH = keccak256("AssetId(bytes4 assetClass,bytes data)");
+    bytes32 public constant ASSET_ID_TYPEHASH = keccak256("AssetId(bytes4 class,bytes data)");
 
     bytes32 public constant ASSET_TYPEHASH =
-        keccak256("Asset(AssetType assetType,uint256 value)AssetId(bytes4 assetClass,bytes data)");
+        keccak256("Asset(AssetId id,uint256 value)AssetId(bytes4 class,bytes data");
 
     /**
      * @dev Thrown when the asset class is not registered or deprecated.
