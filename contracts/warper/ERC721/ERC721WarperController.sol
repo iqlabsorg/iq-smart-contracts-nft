@@ -72,7 +72,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         // Handle availability period mechanics.
         if (supportedMechanics[0]) {
             (uint32 start, uint32 end) = IAvailabilityPeriodMechanics(warper).__availabilityPeriodRange();
-            if (block.timestamp < start || block.timestamp > end) {
+            if (block.timestamp < start || (block.timestamp + rentingParams.rentalPeriod) > end) {
                 revert IAvailabilityPeriodMechanics.WarperIsNotAvailableForRenting(block.timestamp, start, end);
             }
         }
