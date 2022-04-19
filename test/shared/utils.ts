@@ -1,6 +1,7 @@
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
 import {
+  ERC721Mock,
   IACL,
   IUniverseRegistry,
   IWarperManager,
@@ -32,6 +33,10 @@ export const ListingStrategy = {
 };
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
+
+export function randomInteger(max: number) {
+  return Math.floor(Math.random() * max);
+}
 
 export async function mineBlock(timestamp = 0): Promise<unknown> {
   return await ethers.provider.send('evm_mine', timestamp > 0 ? [timestamp] : []);
@@ -106,6 +111,15 @@ export async function registerWarper(
   const receipt = await wait(manager.registerWarper(...params));
   const events = await manager.queryFilter(manager.filters.WarperRegistered(), receipt.blockHash);
   return events[0].args.warper;
+}
+
+export async function deployRandomERC721Token(): Promise<{ address: string; symbol: string; name: string }> {
+  const n = randomInteger(1000);
+  const name = `ERC721 token #${n}`;
+  const symbol = `NFT${n}`;
+  const { address } = await hre.run('deploy:mock:ERC721', { name, symbol });
+
+  return { address, symbol, name };
 }
 
 /**

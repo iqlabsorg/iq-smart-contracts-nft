@@ -123,7 +123,6 @@ library Warpers {
 
         // Ensure warper compatibility with the current generation of asset controller.
         warper.controller.checkCompatibleWarper(warperAddress);
-        //todo: check warper count against limits to prevent uncapped enumeration.
 
         // Create warper main registration record.
         self.warpers[warperAddress] = warper;
