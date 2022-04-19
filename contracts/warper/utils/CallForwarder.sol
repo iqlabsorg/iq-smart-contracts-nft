@@ -2,7 +2,9 @@
 pragma solidity 0.8.13;
 
 abstract contract CallForwarder {
-    // TODO: docs
+    /**
+     * @dev Thrown when a call is forwarded to a zero address.
+     */
     error CallForwardToZeroAddress();
 
     /**

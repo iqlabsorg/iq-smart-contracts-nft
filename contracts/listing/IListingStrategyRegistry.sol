@@ -87,7 +87,7 @@ interface IListingStrategyRegistry {
     function isRegisteredListingStrategy(bytes4 strategyId) external view returns (bool);
 
     /**
-     * @dev Throws if listing strategy is not registered.
+     * @dev Reverts if listing strategy is not registered.
      * @param strategyId Listing strategy ID.
      */
     function checkRegisteredListingStrategy(bytes4 strategyId) external view;

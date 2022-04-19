@@ -36,7 +36,7 @@ contract FixedPriceListingController is ListingController {
     }
 
     /**
-     * @dev Throws if strategy is not compatible.
+     * @dev Reverts if strategy is not compatible.
      * @param checkedStrategyId Strategy ID.
      */
     function _checkStrategy(bytes4 checkedStrategyId) internal pure {

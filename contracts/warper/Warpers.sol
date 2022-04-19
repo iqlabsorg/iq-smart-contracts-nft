@@ -62,7 +62,7 @@ library Warpers {
     }
 
     /**
-     * @dev Throws if the warper original does not match the `asset`;
+     * @dev Reverts if the warper original does not match the `asset`;
      */
     function checkCompatibleAsset(Warper storage self, Assets.Asset memory asset) internal view {
         address original = asset.token();
@@ -88,7 +88,7 @@ library Warpers {
     }
 
     /**
-     * @dev Throws if the warper is paused.
+     * @dev Reverts if the warper is paused.
      */
     function checkNotPaused(Warper storage self) internal view {
         if (self.paused) revert WarperIsPaused();
@@ -180,14 +180,14 @@ library Warpers {
     }
 
     /**
-     * @dev Throws if warper is not registered.
+     * @dev Reverts if warper is not registered.
      */
     function checkRegisteredWarper(Registry storage self, address warper) internal view {
         if (!self.isRegisteredWarper(warper)) revert WarperIsNotRegistered(warper);
     }
 
     /**
-     * @dev Throws if asset is not supported.
+     * @dev Reverts if asset is not supported.
      * @param asset Asset address.
      */
     function checkSupportedAsset(Registry storage self, address asset) internal view {

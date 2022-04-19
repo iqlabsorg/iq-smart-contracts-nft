@@ -116,7 +116,7 @@ contract ERC721AssetController is AssetController, DelegateContext {
     }
 
     /**
-     * @dev Throws if the asset params are not valid.
+     * @dev Reverts if the asset params are not valid.
      * @param asset Asset structure.
      */
     function _validateAsset(Assets.Asset memory asset) internal pure {

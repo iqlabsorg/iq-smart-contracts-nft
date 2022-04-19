@@ -114,7 +114,7 @@ contract AssetClassRegistry is
     }
 
     /**
-     * @dev Throws if provided address is not a valid asset controller address.
+     * @dev Reverts if provided address is not a valid asset controller address.
      * @param assetClass Asset class ID.
      * @param controller Asset controller address.
      */
@@ -125,7 +125,7 @@ contract AssetClassRegistry is
     }
 
     /**
-     * @dev Throws if provided address is not a valid asset vault address.
+     * @dev Reverts if provided address is not a valid asset vault address.
      * @param assetClass Asset class ID.
      * @param vault Asset vault address.
      */

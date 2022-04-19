@@ -114,7 +114,7 @@ interface IUniverseRegistry {
         );
 
     /**
-     * @dev Throws if the universe owner is not the provided account address.
+     * @dev Reverts if the universe owner is not the provided account address.
      * @param universeId Universe ID.
      * @param account The address of the expected owner.
      */

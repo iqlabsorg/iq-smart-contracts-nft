@@ -45,7 +45,7 @@ interface IWarperController is IAssetController {
     function isCompatibleWarper(address warper) external view returns (bool);
 
     /**
-     * @dev Throws if provided warper is not compatible with the controller.
+     * @dev Reverts if provided warper is not compatible with the controller.
      */
     function checkCompatibleWarper(address warper) external view;
 

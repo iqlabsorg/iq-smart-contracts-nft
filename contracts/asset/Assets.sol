@@ -191,7 +191,7 @@ library Assets {
     }
 
     /**
-     * @dev Throws if asset class is not supported.
+     * @dev Reverts if asset class is not supported.
      * @param assetClass Asset class ID.
      */
     function checkSupportedAssetClass(Registry storage self, bytes4 assetClass) internal view {

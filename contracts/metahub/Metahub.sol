@@ -686,7 +686,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
-     * @dev Throws if the warpers universe owner is not the provided account address.
+     * @dev Reverts if the warpers universe owner is not the provided account address.
      * @param warper Warpers address.
      * @param account The address that's expected to be the warpers universe owner.
      */

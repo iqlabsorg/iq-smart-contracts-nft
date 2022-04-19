@@ -107,7 +107,7 @@ library Listings {
     }
 
     /**
-     * @dev Throws if the listing is paused.
+     * @dev Reverts if the listing is paused.
      */
     function checkNotPaused(Listing storage self) internal view {
         if (self.paused) revert ListingIsPaused();
@@ -121,7 +121,7 @@ library Listings {
     }
 
     /**
-     * @dev Throws if the lock period is not valid.
+     * @dev Reverts if the lock period is not valid.
      */
     function checkValidLockPeriod(Listing storage self, uint32 lockPeriod) internal view {
         if (!self.isValidLockPeriod(lockPeriod)) revert InvalidLockPeriod(lockPeriod);
@@ -224,7 +224,7 @@ library Listings {
     }
 
     /**
-     * @dev Throws if listing strategy is not supported.
+     * @dev Reverts if listing strategy is not supported.
      * @param strategyId Listing strategy ID.
      */
     function checkSupportedListingStrategy(Registry storage self, bytes4 strategyId) internal view {
@@ -241,7 +241,7 @@ library Listings {
     }
 
     /**
-     * @dev Throws if listing is not registered or has been already delisted.
+     * @dev Reverts if listing is not registered or has been already delisted.
      * @param listingId Listing ID.
      */
     function checkListed(Registry storage self, uint256 listingId) internal view {

@@ -107,7 +107,7 @@ contract ListingStrategyRegistry is
     }
 
     /**
-     * @dev Throws if provided address is not a valid listing controller.
+     * @dev Reverts if provided address is not a valid listing controller.
      * @param strategyId Listing strategy ID.
      * @param controller Listing controller address.
      */

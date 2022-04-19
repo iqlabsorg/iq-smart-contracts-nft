@@ -5,8 +5,14 @@ import "@openzeppelin/contracts/utils/StorageSlot.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract InitializationContext {
-    // TODO: docs
+    /**
+     * @dev Thrown upon attempt to initialize a contract again.
+     */
     error ContractIsAlreadyInitialized();
+
+    /**
+     * @dev Thrown when a function is invoked outside of initialization transaction.
+     */
     error ContractIsNotInitializing();
 
     /**

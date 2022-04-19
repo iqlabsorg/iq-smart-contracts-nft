@@ -20,7 +20,7 @@ library Protocol {
     }
 
     /**
-     * @dev Throws if the `token` does not match the base one.
+     * @dev Reverts if the `token` does not match the base one.
      */
     function checkBaseToken(Config storage self, address token) internal view {
         if (token != address(self.baseToken)) revert BaseTokenMismatch();

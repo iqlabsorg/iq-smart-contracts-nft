@@ -101,7 +101,7 @@ interface IAssetClassRegistry {
     function isRegisteredAssetClass(bytes4 assetClass) external view returns (bool);
 
     /**
-     * @dev Throws if asset class is not registered.
+     * @dev Reverts if asset class is not registered.
      * @param assetClass Asset class ID.
      */
     function checkRegisteredAssetClass(bytes4 assetClass) external view;
