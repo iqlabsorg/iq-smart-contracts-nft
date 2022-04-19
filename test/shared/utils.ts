@@ -5,7 +5,6 @@ import { expect } from 'chai';
 import { formatBytes32String } from 'ethers/lib/utils';
 import { wait } from '../../tasks';
 import {
-  AssetClassRegistry,
   ERC721Mock,
   FixedPriceListingController,
   IACL,
