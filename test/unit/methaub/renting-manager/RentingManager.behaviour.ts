@@ -20,8 +20,7 @@ import {
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
-import { Assets } from '../../../../typechain/Metahub';
-import { Rentings } from '../../../../typechain/IRentingManager';
+import { Assets, Rentings } from '../../../../typechain/contracts/metahub/Metahub';
 import { AddressZero } from '../../../shared/types';
 import {
   AssetListerHelper,

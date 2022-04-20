@@ -226,7 +226,7 @@ export function shouldBehaveWarperPresetFactory(): void {
       context('When preset not registered', () => {
         it('reverts', async () => {
           await expect(warperPresetFactory.presetEnabled(presetId1)).to.be.revertedWith(
-            `WarperPresetNotRegistered("${presetId1}")`,
+            `WarperPresetNotRegistered(\\"${presetId1}\\")`,
           );
         });
       });
@@ -261,7 +261,7 @@ export function shouldBehaveWarperPresetFactory(): void {
       context('Preset is not registered', () => {
         it('reverts', async () => {
           await expect(warperPresetFactory.preset(presetId1)).to.be.revertedWith(
-            `WarperPresetNotRegistered("${presetId1}")`,
+            `WarperPresetNotRegistered(\\"${presetId1}\\")`,
           );
         });
       });

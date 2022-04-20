@@ -30,6 +30,9 @@ dotenv.config();
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
+  mocha: {
+    bail: true,
+  },
   solidity: {
     version: '0.8.13',
     settings: {

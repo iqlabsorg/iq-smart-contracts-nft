@@ -17,7 +17,7 @@ import {
   registerWarper,
 } from '../../../shared/utils';
 import { warperPresetId } from '../Metahub';
-import { Warpers } from '../../../../typechain/IWarperManager';
+import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 
 /**
  * The metahub contract behaves like IWarperManager

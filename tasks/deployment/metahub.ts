@@ -9,7 +9,7 @@ import {
   Warpers__factory,
   Assets__factory,
 } from '../../typechain';
-import { MetahubLibraryAddresses } from '../../typechain/factories/Metahub__factory';
+import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
 
 task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)

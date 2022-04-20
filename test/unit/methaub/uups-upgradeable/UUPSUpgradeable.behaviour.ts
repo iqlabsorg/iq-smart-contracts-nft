@@ -10,7 +10,7 @@ import {
   UUPSUpgradeable,
   Warpers__factory,
 } from '../../../../typechain';
-import { MetahubLibraryAddresses } from '../../../../typechain/factories/Metahub__factory';
+import { MetahubLibraryAddresses } from '../../../../typechain/factories/contracts/metahub/Metahub__factory';
 import { AccessControlledHelper } from '../../../shared/utils';
 
 // TODO make this generic so it can be re-used for multiple contracts

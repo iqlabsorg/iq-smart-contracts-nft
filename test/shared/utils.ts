@@ -18,7 +18,7 @@ import {
   IWarperPreset__factory,
   WarperPresetFactory,
 } from '../../typechain';
-import { Assets } from '../../typechain/Metahub';
+import { Assets } from '../../typechain/contracts/metahub/Metahub';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 

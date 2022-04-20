@@ -166,7 +166,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
 
         it('returns `false` for the wrong owner', async () => {
           await expect(universeRegistry.checkUniverseOwner(universeId, stranger.address)).to.be.revertedWith(
-            `AccountIsNotUniverseOwner("${stranger.address}")`,
+            `AccountIsNotUniverseOwner(\\"${stranger.address}\\")`,
           );
         });
       });
