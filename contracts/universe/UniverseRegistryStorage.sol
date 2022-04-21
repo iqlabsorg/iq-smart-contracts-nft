@@ -25,6 +25,11 @@ abstract contract UniverseRegistryStorage {
     IUniverseToken internal _universeToken;
 
     /**
+     * @dev Universe token base URI.
+     */
+    string internal _baseURI;
+
+    /**
      * @dev Mapping from token ID to the Universe structure.
      */
     mapping(uint256 => Universe) internal _universes;

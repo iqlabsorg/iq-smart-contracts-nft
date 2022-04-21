@@ -22,7 +22,7 @@ interface IUniverseRegistry {
      * @param universeId Universe ID.
      * @param name Universe name.
      */
-    event UniverseChanged(uint256 indexed universeId, string name);
+    event UniverseCreated(uint256 indexed universeId, string name);
 
     /**
      * @dev Emitted when a universe name is changed.
@@ -37,6 +37,12 @@ interface IUniverseRegistry {
      * @param rentalFeePercent The newly rental fee.
      */
     event UniverseRentalFeeChanged(uint256 indexed universeId, uint16 rentalFeePercent);
+
+    /**
+     * @dev Updates the universe token base URI.
+     * @param baseURI New base URI. Must include a trailing slash ("/").
+     */
+    function setUniverseTokenBaseURI(string calldata baseURI) external;
 
     /**
      * @dev The universe properties & initial configuration params.
@@ -68,7 +74,7 @@ interface IUniverseRegistry {
      * @param universeId The unique identifier for the universe.
      * @param rentalFeePercent The universe rental fee percent.
      */
-    function setUniverseRentalFee(uint256 universeId, uint16 rentalFeePercent) external;
+    function setUniverseRentalFeePercent(uint256 universeId, uint16 rentalFeePercent) external;
 
     /**
      * @dev Returns Universe owner address.
@@ -78,11 +84,11 @@ interface IUniverseRegistry {
     function universeOwner(uint256 universeId) external view returns (address);
 
     /**
-     * @dev Returns Universe fee percent.
+     * @dev Returns Universe rental fee percent.
      * @param universeId Universe ID.
      * @return universe fee percent.
      */
-    function universeFeePercent(uint256 universeId) external view returns (uint16);
+    function universeRentalFeePercent(uint256 universeId) external view returns (uint16);
 
     /**
      * @dev Returns name.
@@ -97,21 +103,17 @@ interface IUniverseRegistry {
     function universeToken() external view returns (address);
 
     /**
+     * @dev Returns the Universe token base URI.
+     */
+    function universeTokenBaseURI() external view returns (string memory);
+
+    /**
      * @dev Aggregate and return Universe data.
      * @param universeId Universe-specific ID.
-     * @return name The name of the Universe contract.
-     * @return symbol The symbol of the Universe contract.
-     * @return universeName The name of the universe.
+     * @return name The name of the universe.
+     * @param rentalFeePercent The base percentage of the rental fee which the universe charges for using its warpers.
      */
-    function universe(uint256 universeId)
-        external
-        view
-        returns (
-            string memory name,
-            string memory symbol,
-            string memory universeName,
-            uint16 rentalFeePercent
-        );
+    function universe(uint256 universeId) external view returns (string memory name, uint16 rentalFeePercent);
 
     /**
      * @dev Reverts if the universe owner is not the provided account address.

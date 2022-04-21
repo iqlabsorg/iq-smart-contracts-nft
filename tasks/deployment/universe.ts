@@ -1,6 +1,5 @@
 import { task, types } from 'hardhat/config';
-import { wait } from '..';
-import { IUniverseRegistry__factory, UniverseRegistry, UniverseRegistry__factory } from '../../typechain';
+import { UniverseRegistry__factory } from '../../typechain';
 
 task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -12,15 +11,10 @@ task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
     await hre.deployments.delete('UniverseRegistry_Implementation');
 
     // Deploy Universe token.
-    const universeRegistry = (await hre.upgrades.deployProxy(new UniverseRegistry__factory(deployer), [], {
+    return await hre.upgrades.deployProxy(new UniverseRegistry__factory(deployer), [acl], {
       kind: 'uups',
-      initializer: false,
       unsafeAllow: ['delegatecall'],
-    })) as UniverseRegistry;
-
-    await wait(universeRegistry.initialize(acl));
-
-    return IUniverseRegistry__factory.connect(universeRegistry.address, deployer);
+    });
   });
 
 export {};

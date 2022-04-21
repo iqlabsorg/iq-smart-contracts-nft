@@ -10,4 +10,9 @@ interface IUniverseToken is IERC721Metadata {
      * @return Minted token ID.
      */
     function mint(address to) external returns (uint256);
+
+    /**
+     * @dev Returns current token ID.
+     */
+    function currentId() external view returns (uint256);
 }

@@ -78,7 +78,7 @@ export async function createUniverse(
   ...params: Parameters<IUniverseRegistry['createUniverse']>
 ): Promise<BigNumber> {
   const receipt = await wait(universeRegistry.createUniverse(...params));
-  const events = await universeRegistry.queryFilter(universeRegistry.filters.UniverseChanged(), receipt.blockHash);
+  const events = await universeRegistry.queryFilter(universeRegistry.filters.UniverseCreated(), receipt.blockHash);
   return events[0].args.universeId;
 }
 

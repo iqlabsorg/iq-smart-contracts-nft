@@ -332,7 +332,7 @@ library Rentings {
 
         // Calculate universe base fee.
         Warpers.Warper storage warper = warperRegistry.warpers[rentingParams.warper];
-        uint16 universeRentalFeePercent = universeRegistry.universeFeePercent(warper.universeId);
+        uint16 universeRentalFeePercent = universeRegistry.universeRentalFeePercent(warper.universeId);
         fees.universeBaseFee = (fees.listerBaseFee * universeRentalFeePercent) / 10_000;
 
         // Calculate protocol fee.

@@ -53,7 +53,14 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
 
         _aclContract = IACL(acl);
 
-        _universeToken = new UniverseToken(address(this));
+        _universeToken = new UniverseToken(this);
+    }
+
+    /**
+     * @inheritdoc IUniverseRegistry
+     */
+    function setUniverseTokenBaseURI(string calldata baseURI) external onlySupervisor {
+        _baseURI = baseURI;
     }
 
     /**
@@ -67,7 +74,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
         uint256 universeId = _universeToken.mint(_msgSender());
         _universes[universeId] = Universe({name: params.name, rentalFeePercent: params.rentalFeePercent});
 
-        emit UniverseChanged(universeId, params.name);
+        emit UniverseCreated(universeId, params.name);
 
         return universeId;
     }
@@ -89,7 +96,7 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function setUniverseRentalFee(uint256 universeId, uint16 rentalFeePercent)
+    function setUniverseRentalFeePercent(uint256 universeId, uint16 rentalFeePercent)
         external
         onlyRegisteredUniverse(universeId)
         onlyUniverseOwner(universeId)
@@ -106,16 +113,9 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
         external
         view
         onlyRegisteredUniverse(universeId)
-        returns (
-            string memory name,
-            string memory symbol,
-            string memory uniName,
-            uint16 rentalFeePercent
-        )
+        returns (string memory name, uint16 rentalFeePercent)
     {
-        name = _universeToken.name();
-        symbol = _universeToken.symbol();
-        uniName = _universes[universeId].name;
+        name = _universes[universeId].name;
         rentalFeePercent = _universes[universeId].rentalFeePercent;
     }
 
@@ -129,7 +129,14 @@ contract UniverseRegistry is IUniverseRegistry, UUPSUpgradeable, AccessControlle
     /**
      * @inheritdoc IUniverseRegistry
      */
-    function universeFeePercent(uint256 universeId)
+    function universeTokenBaseURI() external view returns (string memory) {
+        return _baseURI;
+    }
+
+    /**
+     * @inheritdoc IUniverseRegistry
+     */
+    function universeRentalFeePercent(uint256 universeId)
         external
         view
         onlyRegisteredUniverse(universeId)

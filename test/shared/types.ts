@@ -32,6 +32,7 @@ import {
   IWarperPresetFactory,
   Metahub,
   Multicall,
+  UniverseRegistry,
   UUPSUpgradeable,
   WarperPresetMock,
 } from '../../typechain';
