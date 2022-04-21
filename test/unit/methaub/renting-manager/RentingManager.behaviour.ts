@@ -251,7 +251,88 @@ export function shouldBehaveLikeRentingManager(): void {
     });
 
     describe('estimateRent', () => {
-      // TODO
+      describe('Invalid renting params', () => {
+        context('Invalid base token', () => {
+          it('reverts');
+        });
+
+        context('Item not listed', () => {
+          it('reverts');
+        });
+
+        context('listing is paused', () => {
+          it('reverts');
+        });
+
+        describe('Invalid rental period', () => {
+          context('lock period exceeds max rental lock period', () => {
+            it('reverts');
+          });
+
+          context('lock period equals 0', () => {
+            it('reverts');
+          });
+        });
+
+        context('warper not registered', () => {
+          it('reverts');
+        });
+
+        context('Original assets do not match (checkCompatibleAsset)', () => {
+          it('reverts');
+        });
+
+        context('Warper is paused', () => {
+          it('reverts');
+        });
+      });
+
+      describe('Valid rental params', () => {
+        beforeEach(async () => {
+          warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+          await metahub.unpauseWarper(warperAddress);
+          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+        });
+
+        context('All premiums are present', () => {
+          it('returns the expected result', async () => {
+            // Currently set fees
+            const universeRentalFeePercent = universeRegistrationParams.rentalFeePercent;
+            const costPerSecond = baseRate;
+            const protocolRentalFeePercent = await metahub.protocolRentalFeePercent();
+
+            // Estimation
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 360, // 5 mins
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+            const estimate = await rentingManager.estimateRent(rentalParams);
+
+            // calculate the expenses manually
+            const listerBaseFee = BigNumber.from(costPerSecond).mul(rentalParams.rentalPeriod);
+            const universeBaseFee = listerBaseFee.mul(universeRentalFeePercent).div(10_000);
+            const protocolFee = listerBaseFee.mul(protocolRentalFeePercent).div(10_000);
+            const listerPremium = BigNumber.from(0);
+            const universePremium = BigNumber.from(0);
+            const total = listerBaseFee.add(universeBaseFee).add(protocolFee).add(listerPremium).add(universePremium);
+
+            // Assert
+            expect(universeBaseFee.toNumber()).to.be.lessThan(listerBaseFee.toNumber());
+            expect(protocolFee.toNumber()).to.be.lessThan(listerBaseFee.toNumber());
+            expect(estimate).to.equalStruct({
+              listerBaseFee: listerBaseFee,
+              universeBaseFee: universeBaseFee,
+              protocolFee: protocolFee,
+              listerPremium: listerPremium,
+              universePremium: universePremium,
+              total: total,
+            });
+          });
+        });
+      });
     });
 
     describe('rent', () => {
