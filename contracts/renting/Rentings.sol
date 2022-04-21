@@ -345,6 +345,8 @@ library Rentings {
             fees.universeBaseFee,
             fees.listerBaseFee
         );
+        fees.listerPremium = listerPremium;
+        fees.universePremium = universePremium;
 
         // Calculate TOTAL rental fee.
         fees.total += fees.listerBaseFee + listerPremium;
