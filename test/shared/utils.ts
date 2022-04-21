@@ -228,7 +228,7 @@ export class AccessControlledHelper {
 }
 
 export class AssetListerHelper {
-  warperPresetId = formatBytes32String('ERC721Basic');
+  public static warperPresetId = formatBytes32String('ERC721Basic');
 
   constructor(
     readonly nftCreator: SignerWithAddress,
@@ -262,7 +262,7 @@ export class AssetListerHelper {
   async setupWarper(universeId: BigNumber, warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct) {
     const warperAddress = await deployWarperPreset(
       this.warperPresetFactory,
-      this.warperPresetId,
+      AssetListerHelper.warperPresetId,
       this.metahub.address,
       this.originalAsset.address,
     );

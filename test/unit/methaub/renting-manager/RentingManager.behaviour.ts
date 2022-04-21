@@ -1,12 +1,19 @@
+import { MockContract, MockContractFactory, smock } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { formatBytes32String, solidityKeccak256 } from 'ethers/lib/utils';
+import { defaultAbiCoder, formatBytes32String, solidityKeccak256 } from 'ethers/lib/utils';
 import hre from 'hardhat';
 import { beforeEach } from 'mocha';
 import {
   ERC20Mock,
+  ERC721AssetController,
+  ERC721AssetController__factory,
   ERC721Mock,
+  ERC721WarperController,
+  ERC721WarperControllerMock,
+  ERC721WarperControllerMock__factory,
+  ERC721WarperController__factory,
   FixedPriceListingController,
   IAssetClassRegistry,
   IAssetController,
@@ -23,6 +30,7 @@ import {
 import { Assets, Rentings } from '../../../../typechain/contracts/metahub/Metahub';
 import { AddressZero } from '../../../shared/types';
 import {
+  AssetClass,
   AssetListerHelper,
   AssetRentalStatus,
   latestBlockTimestamp,
@@ -288,13 +296,28 @@ export function shouldBehaveLikeRentingManager(): void {
       });
 
       describe('Valid rental params', () => {
+        let mockedWarperController: ERC721WarperControllerMock;
         beforeEach(async () => {
+          // Deploying a warper controller mock here so we can force-set the premiums
+          // NOTE: Not using `smock` because it has problems with returning tuples/structs
+          mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
+          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
+
+          // General setup
+          universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
           warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
           await metahub.unpauseWarper(warperAddress);
           listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
         });
 
         context('All premiums are present', () => {
+          const controllerUniversePremium = BigNumber.from(99);
+          const controllerListerPremium = BigNumber.from(42);
+
+          beforeEach(() => {
+            mockedWarperController.setPremiums(controllerUniversePremium, controllerListerPremium);
+          });
+
           it('returns the expected result', async () => {
             // Currently set fees
             const universeRentalFeePercent = universeRegistrationParams.rentalFeePercent;
@@ -315,8 +338,8 @@ export function shouldBehaveLikeRentingManager(): void {
             const listerBaseFee = BigNumber.from(costPerSecond).mul(rentalParams.rentalPeriod);
             const universeBaseFee = listerBaseFee.mul(universeRentalFeePercent).div(10_000);
             const protocolFee = listerBaseFee.mul(protocolRentalFeePercent).div(10_000);
-            const listerPremium = BigNumber.from(0);
-            const universePremium = BigNumber.from(0);
+            const listerPremium = controllerListerPremium;
+            const universePremium = controllerUniversePremium;
             const total = listerBaseFee.add(universeBaseFee).add(protocolFee).add(listerPremium).add(universePremium);
 
             // Assert

@@ -40,35 +40,35 @@ export function unitTestMetahub(): void {
     await originalAsset.mint(nftCreator.address, 2);
 
     // Deploy and register warper preset
-    const warperImpl = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
+    const warperImpl = await hre.run('deploy:erc721-preset-configurable');
 
-    const baseToken = (await hre.run('deploy:mock:ERC20', {
+    const baseToken = await hre.run('deploy:mock:ERC20', {
       name: 'Test ERC721',
       symbol: 'ONFT',
       decimals: 18,
       totalSupply: 100_000_000,
-    })) as ERC20Mock;
+    });
 
     // Deploy Asset Class Registry.
-    const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
+    const assetClassRegistry = await hre.run('deploy:asset-class-registry', {
       acl: acl.address,
-    })) as IAssetClassRegistry;
+    });
 
     // Deploy Listing Strategy Registry
-    const listingStrategyRegistry = (await hre.run('deploy:listing-strategy-registry', {
+    const listingStrategyRegistry = await hre.run('deploy:listing-strategy-registry', {
       acl: acl.address,
-    })) as IListingStrategyRegistry;
+    });
 
     // Deploy Warper preset factory
-    const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
+    const warperPresetFactory = await hre.run('deploy:warper-preset-factory', {
       acl: acl.address,
-    })) as IWarperPresetFactory;
+    });
 
     await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
     // Deploy Universe token
     const universeRegistry = (await hre.run('deploy:universe-registry', { acl: acl.address })) as IUniverseRegistry;
 
-    const metahub = (await hre.run('deploy:metahub', {
+    const metahub = await hre.run('deploy:metahub', {
       acl: acl.address,
       universeRegistry: universeRegistry.address,
       warperPresetFactory: warperPresetFactory.address,
@@ -76,17 +76,15 @@ export function unitTestMetahub(): void {
       assetClassRegistry: assetClassRegistry.address,
       baseToken: baseToken.address,
       rentalFeePercent: 100,
-    })) as IMetahub;
+    });
 
     const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as IERC721WarperController;
-    const erc721Vault = (await hre.run('deploy:erc721-asset-vault', {
+    const erc721Vault = await hre.run('deploy:erc721-asset-vault', {
       operator: metahub.address,
       acl: acl.address,
-    })) as IERC721AssetVault;
+    });
 
-    const fixedPriceListingController = (await hre.run(
-      'deploy:fixed-price-listing-controller',
-    )) as FixedPriceListingController;
+    const fixedPriceListingController = await hre.run('deploy:fixed-price-listing-controller');
 
     return {
       assetClassRegistry,
@@ -121,10 +119,10 @@ export function unitTestMetahub(): void {
 
       // Interfaces/Subclasses under test
       this.contracts.metahub = metahub;
-      this.contracts.listingManager = IListingManager__factory.connect(metahub.address, metahub.signer);
-      this.contracts.rentingManager = IRentingManager__factory.connect(metahub.address, metahub.signer);
-      this.contracts.warperManager = IWarperManager__factory.connect(metahub.address, metahub.signer);
-      this.contracts.uupsUpgradeable = UUPSUpgradeable__factory.connect(metahub.address, metahub.signer);
+      this.contracts.listingManager = metahub;
+      this.contracts.rentingManager = metahub;
+      this.contracts.warperManager = metahub;
+      this.contracts.uupsUpgradeable = metahub;
 
       // Common dependencies
       this.contracts.listingStrategyRegistry = listingStrategyRegistry;

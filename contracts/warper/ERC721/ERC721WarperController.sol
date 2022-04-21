@@ -104,7 +104,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         Rentings.Params calldata rentingParams,
         uint256 universeFee,
         uint256 listerFee
-    ) external view returns (uint256 universePremium, uint256 listerPremium) {
+    ) external view virtual returns (uint256 universePremium, uint256 listerPremium) {
         _validateAsset(asset);
         if (IWarper(rentingParams.warper).supportsInterface(type(IRentalFeePremiumMechanics).interfaceId)) {
             (, uint256 tokenId) = _decodeAssetId(asset.id);
