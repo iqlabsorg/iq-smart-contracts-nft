@@ -15,7 +15,7 @@ export function shouldBehaveLikeSetApprovalForAl(): void {
       operator = this.signers.named['operator'];
     });
 
-    context('when calling `isApprovedForAll`', () => {
+    context('When calling `isApprovedForAll`', () => {
       it('reverts', async () => {
         await expect(
           erc721warper.connect(assetOwner).isApprovedForAll(assetOwner.address, operator.address),
@@ -23,7 +23,7 @@ export function shouldBehaveLikeSetApprovalForAl(): void {
       });
     });
 
-    context('when calling `setApprovalForAll`', () => {
+    context('When calling `setApprovalForAll`', () => {
       it('reverts', async () => {
         await expect(erc721warper.connect(assetOwner).setApprovalForAll(operator.address, true)).to.be.revertedWith(
           'MethodNotAllowed()',

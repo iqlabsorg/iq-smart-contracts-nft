@@ -65,7 +65,7 @@ export function shouldBehaveLikeERC721AssetVault(): void {
           .functions['safeTransferFrom(address,address,uint256)'](assetOwner.address, vault.address, mintedTokenId);
       });
 
-      context('asset return not allowed', () => {
+      context('When not in recovery mode', () => {
         it('reverts', async () => {
           await expect(vault.returnToOwner(asset.address, mintedTokenId)).to.be.revertedWith(
             'AssetReturnIsNotAllowed()',
@@ -73,12 +73,12 @@ export function shouldBehaveLikeERC721AssetVault(): void {
         });
       });
 
-      context('asset return allowed', () => {
+      context('When in recovery mode', () => {
         beforeEach(async () => {
           await vault.connect(admin).switchToRecoveryMode();
         });
 
-        context('invalid asset id', () => {
+        context('When invalid asset id', () => {
           const invalidTokenId = 2;
 
           it('reverts', async () => {
@@ -86,7 +86,7 @@ export function shouldBehaveLikeERC721AssetVault(): void {
           });
         });
 
-        context('valid asset id', () => {
+        context('When valid asset id', () => {
           it('successfully transfers the token', async () => {
             await expect(() => vault.returnToOwner(asset.address, mintedTokenId)).to.changeTokenBalance(
               asset,

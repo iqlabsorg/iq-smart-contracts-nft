@@ -72,7 +72,7 @@ export function shouldBehaveLikeUniverseRegistry(): void {
         await expect(universeRegistry.universe(universeId)).to.eventually.equalStruct(universeParams);
       });
 
-      context('Empty universe name', () => {
+      context('When empty universe name passed', () => {
         it('reverts', async () => {
           await expect(universeRegistry.createUniverse({ ...universeParams, name: '' })).to.be.revertedWith(
             'EmptyUniverseName()',

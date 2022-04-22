@@ -16,7 +16,7 @@ export function shouldBehaveLikeApprove(): void {
       [stranger] = this.signers.unnamed;
     });
 
-    context('when calling `approve`', () => {
+    context('When calling `approve`', () => {
       it('reverts', async () => {
         await expect(erc721warper.connect(assetOwner).approve(stranger.address, tokenId)).to.be.revertedWith(
           'MethodNotAllowed()',
@@ -24,7 +24,7 @@ export function shouldBehaveLikeApprove(): void {
       });
     });
 
-    context('when calling `getApproved`', () => {
+    context('When calling `getApproved`', () => {
       it('reverts', async () => {
         await expect(erc721warper.connect(assetOwner).getApproved(tokenId)).to.be.revertedWith('MethodNotAllowed()');
       });

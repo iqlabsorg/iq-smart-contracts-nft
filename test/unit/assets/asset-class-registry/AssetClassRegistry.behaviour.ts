@@ -57,7 +57,7 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
       });
 
       describe('get assetClassConfig', () => {
-        context('config exists', () => {
+        context('When config exists', () => {
           beforeEach(async () => {
             await assetClassRegistry.setAssetClassController(AssetClass.ERC721, erc721controller.address);
           });
@@ -70,7 +70,7 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
           });
         });
 
-        context('config does not exist', () => {
+        context('When config does not exist', () => {
           it('returns empty fields', async () => {
             await expect(assetClassRegistry.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
               controller: AddressZero,

@@ -26,8 +26,8 @@ export function shouldBehaveACL(): void {
       await expect(acl.checkRole(adminRole, deployer.address)).to.not.be.reverted;
     });
 
-    context('revokeRole', () => {
-      context('2 admins set', () => {
+    describe('revokeRole', () => {
+      context('When 2 admins set', () => {
         it('can remove one', async () => {
           await acl.connect(admin).revokeRole(RolesLibrary.ADMIN_ROLE, admin.address);
 
@@ -35,7 +35,7 @@ export function shouldBehaveACL(): void {
         });
       });
 
-      context('1 admins set', () => {
+      context('When 1 admin set', () => {
         beforeEach(async () => {
           await acl.renounceRole(RolesLibrary.ADMIN_ROLE, deployer.address);
         });
@@ -47,7 +47,7 @@ export function shouldBehaveACL(): void {
         });
       });
 
-      context('1 supervisor set', () => {
+      context('When 1 supervisor set', () => {
         beforeEach(async () => {
           await acl.renounceRole(RolesLibrary.SUPERVISOR_ROLE, deployer.address);
         });

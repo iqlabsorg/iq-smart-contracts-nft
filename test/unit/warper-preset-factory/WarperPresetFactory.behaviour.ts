@@ -30,7 +30,7 @@ export function shouldBehaveWarperPresetFactory(): void {
     });
 
     describe('addPreset', () => {
-      context('Implementation does not support IWarperPreset interface', () => {
+      context('When implementation does not support IWarperPreset interface', () => {
         it('reverts', async () => {
           const randomExternalAddress = '0x120B46FF3b629b9695f5b28F1eeb84d61b462678';
           await expect(warperPresetFactory.addPreset(presetId1, randomExternalAddress)).to.be.revertedWith(
@@ -39,7 +39,7 @@ export function shouldBehaveWarperPresetFactory(): void {
         });
       });
 
-      context('Implementation has already been added', () => {
+      context('When implementation has already been added', () => {
         beforeEach(async () => {
           await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
         });
@@ -57,7 +57,7 @@ export function shouldBehaveWarperPresetFactory(): void {
     });
 
     describe('removePreset', () => {
-      context('Warper has been registered', () => {
+      context('When warper has been registered', () => {
         beforeEach(async function () {
           await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
         });
@@ -69,7 +69,7 @@ export function shouldBehaveWarperPresetFactory(): void {
         });
       });
 
-      context('Warper has not been registered', () => {
+      context('When warper has not been registered', () => {
         it('does not emit an event', async () => {
           const tx = await warperPresetFactory.removePreset(presetId1);
 
@@ -79,7 +79,7 @@ export function shouldBehaveWarperPresetFactory(): void {
     });
 
     describe('enablePreset', () => {
-      context('Preset is registered', () => {
+      context('When preset is registered', () => {
         beforeEach(async () => {
           await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
         });
@@ -96,7 +96,7 @@ export function shouldBehaveWarperPresetFactory(): void {
           });
         });
 
-        context('when preset enabled', () => {
+        context('When preset enabled', () => {
           it('reverts', async () => {
             await expect(warperPresetFactory.enablePreset(presetId1)).to.be.revertedWith(
               `EnabledWarperPreset("${presetId1}")`,
@@ -105,7 +105,7 @@ export function shouldBehaveWarperPresetFactory(): void {
         });
       });
 
-      context('Preset is not registered', () => {
+      context('When preset is not registered', () => {
         it('reverts', async () => {
           await expect(warperPresetFactory.enablePreset(presetId1)).to.be.revertedWith(
             `WarperPresetNotRegistered("${presetId1}")`,
@@ -115,7 +115,7 @@ export function shouldBehaveWarperPresetFactory(): void {
     });
 
     describe('disablePreset', () => {
-      context('Preset is registered', () => {
+      context('When preset is registered', () => {
         beforeEach(async () => {
           await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
         });
@@ -128,7 +128,7 @@ export function shouldBehaveWarperPresetFactory(): void {
           });
         });
 
-        context('when preset disabled', () => {
+        context('When preset disabled', () => {
           beforeEach(async () => {
             await warperPresetFactory.disablePreset(presetId1);
           });
@@ -141,7 +141,7 @@ export function shouldBehaveWarperPresetFactory(): void {
         });
       });
 
-      context('Preset is not registered', () => {
+      context('When preset is not registered', () => {
         it('reverts', async () => {
           await expect(warperPresetFactory.disablePreset(presetId1)).to.be.revertedWith(
             `WarperPresetNotRegistered("${presetId1}")`,
@@ -233,7 +233,7 @@ export function shouldBehaveWarperPresetFactory(): void {
     });
 
     describe('presets', () => {
-      context('presets registered', () => {
+      context('When presets registered', () => {
         beforeEach(async () => {
           await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
           await warperPresetFactory.addPreset(presetId2, warperImpl2.address);
@@ -258,7 +258,7 @@ export function shouldBehaveWarperPresetFactory(): void {
     });
 
     describe('preset', () => {
-      context('Preset is not registered', () => {
+      context('When preset is not registered', () => {
         it('reverts', async () => {
           await expect(warperPresetFactory.preset(presetId1)).to.be.revertedWith(
             `WarperPresetNotRegistered(\\"${presetId1}\\")`,
@@ -266,7 +266,7 @@ export function shouldBehaveWarperPresetFactory(): void {
         });
       });
 
-      context('Preset is registered', () => {
+      context('When preset is registered', () => {
         beforeEach(async () => {
           await warperPresetFactory.addPreset(presetId1, warperImpl1.address);
         });

@@ -20,7 +20,7 @@ export function shouldBehaveLikeGetApproved(): void {
       await erc721warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
-    context('when token is not minted', () => {
+    context('When token is not minted', () => {
       it('reverts', async () => {
         await expect(erc721warper.connect(assetOwner).getApproved(nonExistentTokenId)).to.be.revertedWith(
           `MethodNotAllowed()`,
@@ -28,7 +28,7 @@ export function shouldBehaveLikeGetApproved(): void {
       });
     });
 
-    context('when token has been minted', () => {
+    context('When token has been minted', () => {
       it('reverts', async () => {
         await expect(erc721warper.connect(assetOwner).getApproved(mintedTokenId)).to.be.revertedWith(
           `MethodNotAllowed()`,

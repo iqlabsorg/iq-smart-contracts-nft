@@ -77,7 +77,7 @@ export function shouldBehaveLikeListingManager(): void {
         await originalAsset.connect(nftCreator).setApprovalForAll(metahub.address, true);
       });
 
-      context('Asset class is supported', () => {
+      context('When Asset class is registered', () => {
         beforeEach(async () => {
           await assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
             controller: assetController.address,
@@ -85,7 +85,7 @@ export function shouldBehaveLikeListingManager(): void {
           });
         });
 
-        context('Warper is registered', () => {
+        context('When warper is registered', () => {
           let universeId: BigNumber;
           let warperAddress: string;
 
@@ -100,7 +100,7 @@ export function shouldBehaveLikeListingManager(): void {
             await metahub.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
           });
 
-          context('Listing strategy is supported', () => {
+          context('When listing strategy is registered', () => {
             beforeEach(async () => {
               await listingStrategyRegistry.registerListingStrategy(ListingStrategy.FIXED_PRICE, {
                 controller: fixedPriceListingController.address,
@@ -139,23 +139,23 @@ export function shouldBehaveLikeListingManager(): void {
     });
 
     describe('delistAsset', () => {
-      // todo
+      it('todo');
     });
 
     describe('withdrawAsset', () => {
-      // todo
+      it('todo');
     });
 
     describe('pauseListing', () => {
-      // todo
+      it('todo');
     });
 
     describe('unpauseListing', () => {
-      // todo
+      it('todo');
     });
 
     describe('listingInfo', () => {
-      // todo
+      it('todo');
     });
   });
 }

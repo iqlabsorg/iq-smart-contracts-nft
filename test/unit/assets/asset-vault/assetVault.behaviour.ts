@@ -79,7 +79,7 @@ export function shouldBehaveLikeAssetVault(): void {
     });
 
     describe('assetClass', () => {
-      context('not in recovery mode', () => {
+      context('When not in recovery mode', () => {
         it('returns false', async () => {
           await expect(assetVault.isRecovery()).to.eventually.equal(false);
         });

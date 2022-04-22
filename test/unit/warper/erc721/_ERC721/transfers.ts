@@ -64,7 +64,7 @@ export function shouldBehaveTransfer(): void {
     };
 
     const transferWasSuccessful = function () {
-      context('when rented', () => {
+      context('When rented', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
           metahub.assetRentalStatus.returns(AssetRentalStatus.RENTED);
@@ -75,7 +75,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when available for renting', () => {
+      context('When available for renting', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
           metahub.assetRentalStatus.returns(AssetRentalStatus.AVAILABLE);
@@ -86,7 +86,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when not minted', () => {
+      context('When not minted', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
           metahub.assetRentalStatus.returns(AssetRentalStatus.NONE);
@@ -119,7 +119,7 @@ export function shouldBehaveTransfer(): void {
     };
 
     const shouldTransferTokensByUsers = function () {
-      describe('when called by the owner', () => {
+      describe('When called by the owner', () => {
         it('reverts', async () => {
           await expect(
             transferTxBuilder(assetOwner, assetOwner.address, transferArgs.toWhom, transferArgs.tokenId),
@@ -127,7 +127,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      describe('when called by the metahub', () => {
+      describe('When called by the metahub', () => {
         beforeEach(async function () {
           transferTx = await transferTxBuilder(
             metahub.wallet,
@@ -140,7 +140,7 @@ export function shouldBehaveTransfer(): void {
         transferWasSuccessful();
       });
 
-      context('when sent to the same owner by metahub', () => {
+      context('When sent to the same owner by metahub', () => {
         beforeEach(async function () {
           transferTx = await transferTxBuilder(
             metahub.wallet,
@@ -159,7 +159,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when sent to the owner by owner', () => {
+      context('When sent to the owner by owner', () => {
         it('reverts', async function () {
           transferArgs.toWhom = assetOwner.address; // Asset owner sending to himself
 
@@ -169,7 +169,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when the address of the previous owner is incorrect', () => {
+      context('When the address of the previous owner is incorrect', () => {
         it('reverts', async () => {
           await expect(
             transferTxBuilder(assetOwner, stranger.address, stranger.address, transferArgs.tokenId),
@@ -177,7 +177,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when the given token ID does not exist', () => {
+      context('When the given token ID does not exist', () => {
         it('reverts', async () => {
           await expect(
             transferTxBuilder(metahub.wallet, assetOwner.address, stranger.address, nonExistentTokenId),
@@ -185,7 +185,7 @@ export function shouldBehaveTransfer(): void {
         });
       });
 
-      context('when the address to transfer the token to is the zero address', () => {
+      context('When the address to transfer the token to is the zero address', () => {
         it('reverts', async () => {
           await expect(
             transferTxBuilder(metahub.wallet, assetOwner.address, AddressZero, transferArgs.tokenId),
@@ -231,7 +231,7 @@ export function shouldBehaveTransfer(): void {
       });
     };
 
-    context('when the address of the previous owner is incorrect', () => {
+    context('When the address of the previous owner is incorrect', () => {
       it('reverts', async () => {
         await expect(
           warper.connect(assetOwner).transferFrom(stranger.address, stranger.address, mintedTokenId),
@@ -239,7 +239,7 @@ export function shouldBehaveTransfer(): void {
       });
     });
 
-    context('when the sender is not authorized for the token id', () => {
+    context('When the sender is not authorized for the token id', () => {
       it('reverts', async () => {
         await expect(
           warper.connect(stranger).transferFrom(stranger.address, stranger.address, mintedTokenId),
@@ -247,7 +247,7 @@ export function shouldBehaveTransfer(): void {
       });
     });
 
-    context('when the given token ID does not exist', () => {
+    context('When the given token ID does not exist', () => {
       it('reverts', async () => {
         await expect(
           warper.connect(metahub.wallet).transferFrom(assetOwner.address, stranger.address, nonExistentTokenId),
@@ -255,7 +255,7 @@ export function shouldBehaveTransfer(): void {
       });
     });
 
-    context('when the address to transfer the token to is the zero address', () => {
+    context('When the address to transfer the token to is the zero address', () => {
       it('reverts', async () => {
         await expect(
           warper.connect(metahub.wallet).transferFrom(assetOwner.address, AddressZero, mintedTokenId),

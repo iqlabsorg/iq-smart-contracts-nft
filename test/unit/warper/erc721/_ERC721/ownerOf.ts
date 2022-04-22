@@ -23,7 +23,7 @@ export function shouldBehaveLikeOwnerOf(): void {
       await erc721warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });
 
-    context('when the token has never been rented', () => {
+    context('When the token has never been rented', () => {
       beforeEach(() => {
         metahub.assetRentalStatus.returns(AssetRentalStatus.NONE);
       });
@@ -35,7 +35,7 @@ export function shouldBehaveLikeOwnerOf(): void {
       });
     });
 
-    context('when the token has been minted but currently has not been rented', () => {
+    context('When the token has been minted but currently has not been rented', () => {
       beforeEach(() => {
         metahub.assetRentalStatus.returns(AssetRentalStatus.AVAILABLE);
       });
@@ -45,7 +45,7 @@ export function shouldBehaveLikeOwnerOf(): void {
       });
     });
 
-    context('when the token is currently rented', () => {
+    context('When the token is currently rented', () => {
       beforeEach(() => {
         metahub.assetRentalStatus.returns(AssetRentalStatus.RENTED);
       });
