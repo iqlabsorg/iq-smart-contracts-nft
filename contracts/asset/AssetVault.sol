@@ -67,10 +67,7 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
     constructor(address metahubContract, address aclContract) {
         _recovery = false;
 
-        // todo validate interface
         _metahub = metahubContract;
-
-        // todo validate interface
         _aclContract = IACL(aclContract);
     }
 
