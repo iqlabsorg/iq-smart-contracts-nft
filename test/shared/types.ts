@@ -4,7 +4,6 @@ import type { Fixture } from 'ethereum-waffle';
 import { constants } from 'ethers';
 import {
   AssetClassRegistry,
-  AssetsMock,
   ConfigurableAvailabilityPeriodExtension,
   ConfigurableRentalPeriodExtension,
   ERC20Mock,
@@ -97,7 +96,6 @@ export interface Contracts {
 export interface Mocks {
   metahub: FakeContract<Metahub>;
   assetClassRegistry: FakeContract<AssetClassRegistry>;
-  assetsLib: AssetsMock;
   interfacePrinter: InterfacePrinter;
   assets: {
     erc721: ERC721Mock;

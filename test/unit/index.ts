@@ -4,12 +4,7 @@ import { unitTestWarperPresetFactory } from './warper-preset-factory/WarperPrese
 import { unitTestWarpers } from './warper/warper';
 import { unitTestUniverseToken } from './universe/universe-token/UniverseToken';
 import { unitTestUniverseRegistry } from './universe/universe-registry/UniverseRegistry';
-import {
-  unitTestAssetClassRegistry,
-  unitTestAssetController,
-  unitTestAssetsLibrary,
-  unitTestAssetVault,
-} from './assets';
+import { unitTestAssetClassRegistry, unitTestAssetController, unitTestAssetVault } from './assets';
 import { unitTestACL } from './acl/acl';
 
 baseContext('Unit Tests', function () {
@@ -18,7 +13,6 @@ baseContext('Unit Tests', function () {
   unitTestWarpers();
   unitTestUniverseToken();
   unitTestUniverseRegistry();
-  unitTestAssetsLibrary();
   unitTestAssetVault();
   unitTestAssetController();
   unitTestAssetClassRegistry();

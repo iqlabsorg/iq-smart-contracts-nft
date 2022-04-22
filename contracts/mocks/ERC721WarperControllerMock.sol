@@ -15,10 +15,10 @@ contract ERC721WarperControllerMock is ERC721WarperController {
     }
 
     function calculatePremiums(
-        Assets.Asset calldata asset,
-        Rentings.Params calldata rentingParams,
-        uint256 universeFee,
-        uint256 listerFee
+        Assets.Asset calldata,
+        Rentings.Params calldata,
+        uint256,
+        uint256
     ) external view override returns (uint256, uint256) {
         return (_universePremium, _listerPremium);
     }
