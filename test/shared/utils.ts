@@ -273,7 +273,13 @@ export class AssetListerHelper {
     return warperAddress;
   }
 
-  async listAsset(originalAsset: ERC721Mock, maxLockPeriod: number, baseRate: number, tokenId: BigNumber) {
+  async listAsset(
+    originalAsset: ERC721Mock,
+    maxLockPeriod: number,
+    baseRate: number,
+    tokenId: BigNumber,
+    immediatePayout: boolean,
+  ) {
     await originalAsset.connect(this.nftCreator).setApprovalForAll(this.metahub.address, true);
 
     const asset = makeERC721Asset(originalAsset.address, tokenId);
@@ -282,7 +288,7 @@ export class AssetListerHelper {
     const listingId = await this.listingManager
       .connect(this.nftCreator)
       .callStatic.listAsset(asset, listingParams, maxLockPeriod, false);
-    await this.listingManager.connect(this.nftCreator).listAsset(asset, listingParams, maxLockPeriod, false);
+    await this.listingManager.connect(this.nftCreator).listAsset(asset, listingParams, maxLockPeriod, immediatePayout);
 
     return listingId;
   }

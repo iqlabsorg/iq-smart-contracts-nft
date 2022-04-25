@@ -10,6 +10,7 @@ import {
   ERC721Mock__factory,
   ERC721WarperControllerMock,
   ERC721WarperControllerMock__factory,
+  ERC721Warper__factory,
   FixedPriceListingController,
   IAssetClassRegistry,
   IAssetController,
@@ -135,8 +136,14 @@ export function shouldBehaveLikeRentingManager(): void {
         beforeEach(async () => {
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           await metahub.unpauseWarper(warperAddress);
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
-          listingId2 = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, BigNumber.from(2));
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId2 = await assetListerHelper.listAsset(
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            BigNumber.from(2),
+            false,
+          );
 
           const warperController = IWarperController__factory.connect(
             await metahub.warperController(warperAddress),
@@ -213,7 +220,7 @@ export function shouldBehaveLikeRentingManager(): void {
       context('When asset listed', () => {
         beforeEach(async () => {
           await metahub.unpauseWarper(warperAddress);
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
         });
 
         context('When asset rented', () => {
@@ -261,7 +268,7 @@ export function shouldBehaveLikeRentingManager(): void {
           beforeEach(async () => {
             universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
             await metahub.unpauseWarper(warperAddress);
             anotherToken = (await hre.run('deploy:mock:ERC20', {
               name: 'Random ERC20',
@@ -312,7 +319,7 @@ export function shouldBehaveLikeRentingManager(): void {
           beforeEach(async () => {
             universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
             await metahub.unpauseWarper(warperAddress);
             await listingManager.connect(nftCreator).pauseListing(listingId);
           });
@@ -337,7 +344,7 @@ export function shouldBehaveLikeRentingManager(): void {
             universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
             await metahub.unpauseWarper(warperAddress);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
           });
 
           context('When lock period exceeds max rental lock period', () => {
@@ -378,7 +385,7 @@ export function shouldBehaveLikeRentingManager(): void {
             universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
             await metahub.unpauseWarper(warperAddress);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
             await metahub.deregisterWarper(warperAddress);
           });
 
@@ -404,7 +411,7 @@ export function shouldBehaveLikeRentingManager(): void {
             universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
             await metahub.unpauseWarper(warperAddress);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
 
             // Create another listing for a different warper
             const tokenData = await deployRandomERC721Token();
@@ -414,7 +421,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
             // NOTE: a new warper address is being created here
             await assetListerHelper.setupWarper(newToken, universeId, warperRegistrationParams);
-            listingId2 = await assetListerHelper.listAsset(newToken, maxLockPeriod, baseRate, BigNumber.from(1));
+            listingId2 = await assetListerHelper.listAsset(newToken, maxLockPeriod, baseRate, BigNumber.from(1), false);
           });
 
           it('reverts', async () => {
@@ -438,7 +445,7 @@ export function shouldBehaveLikeRentingManager(): void {
             universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
             await metahub.unpauseWarper(warperAddress);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
             await metahub.pauseWarper(warperAddress);
           });
 
@@ -470,15 +477,15 @@ export function shouldBehaveLikeRentingManager(): void {
           universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           await metahub.unpauseWarper(warperAddress);
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
         });
 
         context('When all premiums are present', () => {
           const controllerUniversePremium = BigNumber.from(99);
           const controllerListerPremium = BigNumber.from(42);
 
-          beforeEach(() => {
-            mockedWarperController.setPremiums(controllerUniversePremium, controllerListerPremium);
+          beforeEach(async () => {
+            await mockedWarperController.setPremiums(controllerUniversePremium, controllerListerPremium);
           });
 
           it('returns the expected result', async () => {
@@ -534,7 +541,7 @@ export function shouldBehaveLikeRentingManager(): void {
           await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
         });
 
         it('reverts', async () => {
@@ -599,7 +606,7 @@ export function shouldBehaveLikeRentingManager(): void {
         context('When item is listed', () => {
           beforeEach(async () => {
             warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
           });
 
           context('When listing is paused', () => {
@@ -657,64 +664,215 @@ export function shouldBehaveLikeRentingManager(): void {
         });
       });
 
-      context('When item is listed', () => {
+      context('immediate payout is turned on', () => {
         beforeEach(async () => {
+          const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
+          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
+
+          mockedWarperController.setPremiums(100, 300);
+
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, true);
+          await metahub.unpauseWarper(warperAddress);
         });
 
-        context('When valid renting params', () => {
-          context('When warper is not paused', () => {
-            beforeEach(async () => {
-              await metahub.unpauseWarper(warperAddress);
+        context('asset is rented', () => {
+          let rentalParams: Rentings.ParamsStruct;
+          let rentCost: Rentings.RentalFeesStructOutput;
+          beforeEach(async () => {
+            rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
+          });
+          it('transfers the rental price to the lister', async () => {
+            await expect(() =>
+              rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
+            ).to.changeTokenBalance(paymentToken, nftCreator, rentCost.listerBaseFee.add(rentCost.listerPremium));
+          });
+
+          it('transfers the according amount of tokens to the manager', async () => {
+            await expect(() =>
+              rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
+            ).to.changeTokenBalance(
+              paymentToken,
+              rentingManager,
+              rentCost.protocolFee.add(rentCost.universeBaseFee).add(rentCost.universePremium),
+            );
+          });
+
+          it('increases universe balance', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            await expect(metahub.universeBalance(universeId, paymentToken.address)).to.eventually.equal(
+              rentCost.universeBaseFee.add(rentCost.universePremium),
+            );
+          });
+
+          it('increases protocol balance', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            await expect(metahub.protocolBalance(paymentToken.address)).to.eventually.equal(rentCost.protocolFee);
+          });
+
+          it('emits event on rent', async () => {
+            const rentalId = await rentingManager.connect(stranger).callStatic.rent(rentalParams, rentCost.total);
+            const tx = await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            // Assert
+            const receipt = await tx.wait();
+            const events = await rentingManager.queryFilter(rentingManager.filters.AssetRented(), receipt.blockNumber);
+            const assetRented = events[0].args;
+            const blockTimestamp = await latestBlockTimestamp();
+            const asset = makeERC721Asset(warperAddress, 1);
+
+            await expect(tx).to.emit(rentingManager, 'AssetRented');
+            expect(assetRented).to.equalStruct({
+              rentalId: rentalId,
+              renter: stranger.address,
+              listingId: rentalParams.listingId,
+              warpedAsset: asset,
+              startTime: blockTimestamp,
+              endTime: blockTimestamp + Number(rentalParams.rentalPeriod),
             });
+          });
 
-            // Metahub `_handleRentalPayment()`
-            // TODO case 1: immediate payout
-            // TODO case 2: accumulative payout
-            // TODO all: increase universe balance
-            // TODO all: protocol fee
-            // TODO all: transfers balance to SC
+          it('changes the owner of the Warped token', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
+              await expect(
+                ERC721Mock__factory.connect(warperAddress, metahub.signer).ownerOf(tokenId),
+              ).to.eventually.equal(stranger.address);
+          });
+        });
+      });
 
-            it('successfully rents an asset', async () => {
-              const rentalParams = {
-                listingId: listingId,
-                paymentToken: paymentToken.address,
-                rentalPeriod: 1000,
-                renter: stranger.address,
-                warper: warperAddress,
-              };
+      context('accumulative payout is turned on', () => {
+        beforeEach(async () => {
+          const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
+          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
 
-              // Execute tx
-              const rentalId = await rentingManager.connect(stranger).callStatic.rent(rentalParams, maxPaymentAmount);
-              const tx = await rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount);
+          mockedWarperController.setPremiums(100, 300);
 
-              // Assert
-              await expect(tx).to.emit(rentingManager, 'AssetRented');
+          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          await metahub.unpauseWarper(warperAddress);
+        });
 
-              const receipt = await tx.wait();
-              const events = await rentingManager.queryFilter(
-                rentingManager.filters.AssetRented(),
-                receipt.blockNumber,
-              );
-              const assetRented = events[0].args;
-              const blockTimestamp = await latestBlockTimestamp();
-              const asset = makeERC721Asset(warperAddress, 1);
-              expect(assetRented).to.equalStruct({
-                rentalId: rentalId,
-                renter: stranger.address,
-                listingId: rentalParams.listingId,
-                warpedAsset: asset,
-                startTime: blockTimestamp,
-                endTime: blockTimestamp + rentalParams.rentalPeriod,
-              });
+        context('asset is rented', () => {
+          let rentalParams: Rentings.ParamsStruct;
+          let rentCost: Rentings.RentalFeesStructOutput;
+          beforeEach(async () => {
+            rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
+          });
+
+          it('increases the rental price to the lister', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            await expect(metahub.connect(nftCreator).balance(paymentToken.address)).to.eventually.equal(
+              rentCost.listerBaseFee.add(rentCost.listerPremium),
+            );
+          });
+
+          it('transfers the according amount of tokens to the manager', async () => {
+            await expect(() =>
+              rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
+            ).to.changeTokenBalance(
+              paymentToken,
+              rentingManager,
+              rentCost.protocolFee
+                .add(rentCost.universeBaseFee)
+                .add(rentCost.universePremium)
+                .add(rentCost.listerBaseFee)
+                .add(rentCost.listerPremium),
+            );
+          });
+
+          it('increases universe balance', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            await expect(metahub.universeBalance(universeId, paymentToken.address)).to.eventually.equal(
+              rentCost.universeBaseFee.add(rentCost.universePremium),
+            );
+          });
+
+          it('increases protocol balance', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            await expect(metahub.protocolBalance(paymentToken.address)).to.eventually.equal(rentCost.protocolFee);
+          });
+
+          it('emits event on rent', async () => {
+            const rentalId = await rentingManager.connect(stranger).callStatic.rent(rentalParams, rentCost.total);
+            const tx = await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+
+            // Assert
+            const receipt = await tx.wait();
+            const events = await rentingManager.queryFilter(rentingManager.filters.AssetRented(), receipt.blockNumber);
+            const assetRented = events[0].args;
+            const blockTimestamp = await latestBlockTimestamp();
+            const asset = makeERC721Asset(warperAddress, 1);
+
+            await expect(tx).to.emit(rentingManager, 'AssetRented');
+            expect(assetRented).to.equalStruct({
+              rentalId: rentalId,
+              renter: stranger.address,
+              listingId: rentalParams.listingId,
+              warpedAsset: asset,
+              startTime: blockTimestamp,
+              endTime: blockTimestamp + Number(rentalParams.rentalPeriod),
             });
+          });
+
+          it('changes the owner of the Warped token', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
+              await expect(
+                ERC721Mock__factory.connect(warperAddress, metahub.signer).ownerOf(tokenId),
+              ).to.eventually.equal(stranger.address);
           });
         });
       });
 
       context('When item already rented', () => {
-        it('reverts');
+        let rentalParams: Rentings.ParamsStruct;
+        let rentCost: Rentings.RentalFeesStructOutput;
+        beforeEach(async () => {
+          const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
+          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
+          mockedWarperController.setPremiums(100, 300);
+
+          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          await metahub.unpauseWarper(warperAddress);
+
+          rentalParams = {
+            listingId: listingId,
+            paymentToken: paymentToken.address,
+            rentalPeriod: 1000,
+            renter: stranger.address,
+            warper: warperAddress,
+          };
+          rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
+          await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+        });
+
+        it('reverts', async () => {
+          await expect(rentingManager.connect(stranger).rent(rentalParams, rentCost.total)).to.be.revertedWith(
+            'AlreadyRented()',
+          );
+        });
       });
     });
 
@@ -728,10 +886,16 @@ export function shouldBehaveLikeRentingManager(): void {
 
         warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
         // Listing for item 1
-        listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+        listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
 
         // Listing for item 2
-        listingId2 = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, BigNumber.from(2));
+        listingId2 = await assetListerHelper.listAsset(
+          originalAsset,
+          maxLockPeriod,
+          baseRate,
+          BigNumber.from(2),
+          false,
+        );
         await metahub.unpauseWarper(warperAddress);
       });
 
@@ -859,6 +1023,7 @@ export function shouldBehaveLikeRentingManager(): void {
               maxLockPeriod,
               baseRate,
               BigNumber.from(newTokenId),
+              false,
             );
 
             const rentingParams = {
@@ -933,10 +1098,16 @@ export function shouldBehaveLikeRentingManager(): void {
         warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
 
         // Listing for item 1
-        listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+        listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
 
         // Listing for item 2
-        listingId2 = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, BigNumber.from(2));
+        listingId2 = await assetListerHelper.listAsset(
+          originalAsset,
+          maxLockPeriod,
+          baseRate,
+          BigNumber.from(2),
+          false,
+        );
         await metahub.unpauseWarper(warperAddress);
       });
 
