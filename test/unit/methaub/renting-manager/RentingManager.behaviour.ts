@@ -7,6 +7,7 @@ import { beforeEach } from 'mocha';
 import {
   ERC20Mock,
   ERC721Mock,
+  ERC721Mock__factory,
   ERC721WarperControllerMock,
   ERC721WarperControllerMock__factory,
   FixedPriceListingController,
@@ -28,6 +29,7 @@ import {
   AssetClass,
   AssetListerHelper,
   AssetRentalStatus,
+  deployRandomERC721Token,
   latestBlockTimestamp,
   makeERC721Asset,
   waitBlockchainTime,
@@ -112,7 +114,6 @@ export function shouldBehaveLikeRentingManager(): void {
 
       assetListerHelper = new AssetListerHelper(
         nftCreator,
-        originalAsset,
         assetClassRegistry,
         assetController.address,
         erc721assetVault.address,
@@ -132,10 +133,10 @@ export function shouldBehaveLikeRentingManager(): void {
         let collectionId: string;
         let listingId2: BigNumber;
         beforeEach(async () => {
-          warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           await metahub.unpauseWarper(warperAddress);
-          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
-          listingId2 = await assetListerHelper.listAsset(maxLockPeriod, baseRate, BigNumber.from(2));
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+          listingId2 = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, BigNumber.from(2));
 
           const warperController = IWarperController__factory.connect(
             await metahub.warperController(warperAddress),
@@ -199,7 +200,7 @@ export function shouldBehaveLikeRentingManager(): void {
     describe('assetRentalStatus', () => {
       let assetStruct: Assets.AssetStruct;
       beforeEach(async () => {
-        warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+        warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
         assetStruct = makeERC721Asset(warperAddress, tokenId);
       });
 
@@ -212,7 +213,7 @@ export function shouldBehaveLikeRentingManager(): void {
       context('When asset listed', () => {
         beforeEach(async () => {
           await metahub.unpauseWarper(warperAddress);
-          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
         });
 
         context('When asset rented', () => {
@@ -256,37 +257,204 @@ export function shouldBehaveLikeRentingManager(): void {
     describe('estimateRent', () => {
       describe('Invalid renting params', () => {
         context('When invalid base token', () => {
-          it('reverts');
+          let anotherToken: ERC20Mock;
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            await metahub.unpauseWarper(warperAddress);
+            anotherToken = (await hre.run('deploy:mock:ERC20', {
+              name: 'Random ERC20',
+              symbol: 'TST',
+              decimals: 18,
+              totalSupply: 1,
+            })) as ERC20Mock;
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: anotherToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              'BaseTokenMismatch()',
+            );
+          });
         });
 
         context('When item not listed', () => {
-          it('reverts');
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            await metahub.unpauseWarper(warperAddress);
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: BigNumber.from(42),
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              'NotListed(42)',
+            );
+          });
         });
 
         context('When listing is paused', () => {
-          it('reverts');
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            await metahub.unpauseWarper(warperAddress);
+            await listingManager.connect(nftCreator).pauseListing(listingId);
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              'ListingIsPaused()',
+            );
+          });
         });
 
         describe('Invalid rental period', () => {
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            await metahub.unpauseWarper(warperAddress);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+          });
+
           context('When lock period exceeds max rental lock period', () => {
-            it('reverts');
+            it('reverts', async () => {
+              const rentalParams = {
+                listingId: listingId,
+                paymentToken: paymentToken.address,
+                rentalPeriod: maxLockPeriod * 2,
+                renter: stranger.address,
+                warper: warperAddress,
+              };
+
+              await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+                `InvalidLockPeriod(${maxLockPeriod * 2})`,
+              );
+            });
           });
 
           context('When lock period equals 0', () => {
-            it('reverts');
+            it('reverts', async () => {
+              const rentalParams = {
+                listingId: listingId,
+                paymentToken: paymentToken.address,
+                rentalPeriod: 0,
+                renter: stranger.address,
+                warper: warperAddress,
+              };
+
+              await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+                'InvalidLockPeriod(0)',
+              );
+            });
           });
         });
 
         context('When warper not registered', () => {
-          it('reverts');
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            await metahub.unpauseWarper(warperAddress);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            await metahub.deregisterWarper(warperAddress);
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              `WarperIsNotRegistered(\\"${warperAddress}\\")`,
+            );
+          });
         });
 
         context('When original assets do not match (checkCompatibleAsset)', () => {
-          it('reverts');
+          let listingId2: BigNumber;
+          let newToken: ERC721Mock;
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            await metahub.unpauseWarper(warperAddress);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+
+            // Create another listing for a different warper
+            const tokenData = await deployRandomERC721Token();
+
+            newToken = ERC721Mock__factory.connect(tokenData.address, metahub.signer);
+            await newToken.mint(nftCreator.address, 1);
+
+            // NOTE: a new warper address is being created here
+            await assetListerHelper.setupWarper(newToken, universeId, warperRegistrationParams);
+            listingId2 = await assetListerHelper.listAsset(newToken, maxLockPeriod, baseRate, BigNumber.from(1));
+          });
+
+          it('reverts', async () => {
+            // listingId2.warper address != warperAddress passed below
+            const rentalParams = {
+              listingId: listingId2,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              `IncompatibleAsset(\\"${newToken.address}\\")`,
+            );
+          });
         });
 
         context('When warper is paused', () => {
-          it('reverts');
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            await metahub.unpauseWarper(warperAddress);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
+            await metahub.pauseWarper(warperAddress);
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              `WarperIsPaused()`,
+            );
+          });
         });
       });
 
@@ -300,9 +468,9 @@ export function shouldBehaveLikeRentingManager(): void {
 
           // General setup
           universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
-          warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           await metahub.unpauseWarper(warperAddress);
-          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
         });
 
         context('When all premiums are present', () => {
@@ -365,8 +533,8 @@ export function shouldBehaveLikeRentingManager(): void {
           await paymentToken.mint(stranger.address, maxPaymentAmount);
           await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
-          warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
-          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
         });
 
         it('reverts', async () => {
@@ -430,8 +598,8 @@ export function shouldBehaveLikeRentingManager(): void {
 
         context('When item is listed', () => {
           beforeEach(async () => {
-            warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
-            listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
           });
 
           context('When listing is paused', () => {
@@ -491,8 +659,8 @@ export function shouldBehaveLikeRentingManager(): void {
 
       context('When item is listed', () => {
         beforeEach(async () => {
-          warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
-          listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
         });
 
         context('When valid renting params', () => {
@@ -558,12 +726,12 @@ export function shouldBehaveLikeRentingManager(): void {
         await paymentToken.mint(stranger.address, maxPaymentAmount);
         await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
-        warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+        warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
         // Listing for item 1
-        listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+        listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
 
         // Listing for item 2
-        listingId2 = await assetListerHelper.listAsset(maxLockPeriod, baseRate, BigNumber.from(2));
+        listingId2 = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, BigNumber.from(2));
         await metahub.unpauseWarper(warperAddress);
       });
 
@@ -681,13 +849,13 @@ export function shouldBehaveLikeRentingManager(): void {
         await paymentToken.mint(stranger.address, maxPaymentAmount);
         await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
 
-        warperAddress = await assetListerHelper.setupWarper(universeId, warperRegistrationParams);
+        warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
 
         // Listing for item 1
-        listingId = await assetListerHelper.listAsset(maxLockPeriod, baseRate, tokenId);
+        listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId);
 
         // Listing for item 2
-        listingId2 = await assetListerHelper.listAsset(maxLockPeriod, baseRate, BigNumber.from(2));
+        listingId2 = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, BigNumber.from(2));
         await metahub.unpauseWarper(warperAddress);
       });
 
