@@ -839,7 +839,88 @@ export function shouldBehaveLikeRentingManager(): void {
     });
 
     describe('userRentalAgreements', () => {
-      // TODO
+      beforeEach(async () => {
+        universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+        warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+        await metahub.unpauseWarper(warperAddress);
+      });
+
+      context('A user has more rental agreements than requested (6 rentals)', function () {
+        this.timeout(720_000);
+        let rentalAgreements: Array<BigNumber>;
+
+        beforeEach(async () => {
+          rentalAgreements = [];
+          for (let index = 0; index < 6; index++) {
+            const newTokenId = index + 100;
+            await originalAsset.mint(nftCreator.address, newTokenId);
+            const listingId = await assetListerHelper.listAsset(
+              originalAsset,
+              maxLockPeriod,
+              baseRate,
+              BigNumber.from(newTokenId),
+            );
+
+            const rentingParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 100,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await paymentToken.mint(stranger.address, maxPaymentAmount);
+            await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
+            const rentalAgreement = await rentingManager
+              .connect(stranger)
+              .callStatic.rent(rentingParams, maxPaymentAmount);
+            await rentingManager.connect(stranger).rent(rentingParams, maxPaymentAmount);
+            rentalAgreements.push(rentalAgreement);
+          }
+        });
+
+        async function assertAgreementsAreEqual(limit: number, offset: number) {
+          const retrievedRentalAgreements = await rentingManager.userRentalAgreements(stranger.address, offset, limit);
+
+          for (let index = 0; index < retrievedRentalAgreements[0].length; index++) {
+            const rentalId = retrievedRentalAgreements[0][index];
+            const rentalData = retrievedRentalAgreements[1][index];
+            await expect(rentingManager.rentalAgreementInfo(rentalId)).to.eventually.equalStruct(rentalData);
+          }
+          expect(retrievedRentalAgreements[0].length).to.equal(limit);
+          expect(retrievedRentalAgreements[1].length).to.equal(limit);
+
+          expect(retrievedRentalAgreements[0]).to.deep.equal(
+            rentalAgreements.slice(offset, offset + limit).map(e => BigNumber.from(e)),
+          );
+        }
+
+        it('returns only the requested ones (first 3)', async () => {
+          await assertAgreementsAreEqual(3, 0);
+        });
+
+        it('returns only the requested ones (last 3)', async () => {
+          await assertAgreementsAreEqual(3, 3);
+        });
+
+        context('A user has less rental agreements than requested', () => {
+          it('returns only the requested amount', async () => {
+            const retrievedRentalAgreements = await rentingManager.userRentalAgreements(stranger.address, 0, 10);
+
+            expect(retrievedRentalAgreements[0].length).to.equal(6);
+            expect(retrievedRentalAgreements[1].length).to.equal(6);
+          });
+        });
+      });
+
+      context('A user has no rental agreements', () => {
+        it('returns an empty array', async () => {
+          const retrievedRentalAgreements = await rentingManager.userRentalAgreements(stranger.address, 0, 10);
+
+          expect(retrievedRentalAgreements[0].length).to.equal(0);
+          expect(retrievedRentalAgreements[1].length).to.equal(0);
+        });
+      });
     });
 
     describe('userRentalCount', () => {

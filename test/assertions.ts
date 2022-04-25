@@ -81,9 +81,10 @@ Assertion.addMethod('containsAllStructs', function (expectedStruct: Array<Record
 });
 
 Assertion.addMethod('equalStruct', function (expectedStruct: Record<string, any>, message?: string) {
+  const cleanedUpExpectedStruct = transmuteObject(expectedStruct);
   const cleanedUpStruct = transmuteObject(this._obj);
 
-  return new Assertion(cleanedUpStruct).to.deep.equal(expectedStruct, message);
+  return new Assertion(cleanedUpStruct).to.deep.equal(cleanedUpExpectedStruct, message);
 });
 
 function transmuteSingleObject(key: string, object: any): any {
