@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { formatBytes32String } from 'ethers/lib/utils';
 import {
+  ERC20Mock,
   ERC721Mock,
   FixedPriceListingController,
   IAssetClassRegistry,
@@ -15,13 +15,14 @@ import {
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
+import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
+import { AddressZero } from '../../../shared/types';
 import {
-  AssetClass,
-  createUniverse,
-  deployWarperPreset,
-  ListingStrategy,
+  AssetListerHelper,
+  deployRandomERC721Token,
   makeERC721Asset,
   makeFixedPriceStrategy,
+  solidityId,
 } from '../../../shared/utils';
 
 const universeRegistrationParams = {
@@ -35,7 +36,10 @@ const warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct = 
   paused: true,
 };
 
-export const warperPresetId = formatBytes32String('ERC721Basic');
+const maxLockPeriod = 86400;
+const baseRate = 100;
+const tokenId = BigNumber.from(1);
+const maxPaymentAmount = 100_000_000;
 
 /**
  * The metahub contract behaves like IWarperManager
@@ -52,10 +56,16 @@ export function shouldBehaveLikeListingManager(): void {
     let warperPresetFactory: IWarperPresetFactory;
     let listingStrategyRegistry: IListingStrategyRegistry;
     let fixedPriceListingController: FixedPriceListingController;
+    let paymentToken: ERC20Mock;
+
+    let universeId: BigNumber;
+    let warperAddress: string;
 
     let nftCreator: SignerWithAddress;
+    let stranger: SignerWithAddress;
+    let assetListerHelper: AssetListerHelper;
 
-    beforeEach(function () {
+    beforeEach(async function () {
       ({
         listingManager,
         metahub,
@@ -68,82 +78,230 @@ export function shouldBehaveLikeListingManager(): void {
         listingStrategyRegistry,
       } = this.contracts);
       originalAsset = this.mocks.assets.erc721;
+      paymentToken = this.mocks.assets.erc20;
 
       nftCreator = this.signers.named.nftCreator;
+      [stranger] = this.signers.unnamed;
+
+      assetListerHelper = new AssetListerHelper(
+        nftCreator,
+        assetClassRegistry,
+        assetController.address,
+        erc721assetVault.address,
+        listingManager,
+        metahub,
+        universeRegistry,
+        warperPresetFactory,
+        listingStrategyRegistry,
+        fixedPriceListingController,
+      );
+
+      await assetListerHelper.setupRegistries();
+      universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+      warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+      await originalAsset.connect(nftCreator).setApprovalForAll(metahub.address, true);
     });
 
     describe('listAsset', () => {
-      beforeEach(async () => {
-        await originalAsset.connect(nftCreator).setApprovalForAll(metahub.address, true);
-      });
+      context('When warper is registered', () => {
+        let asset: Assets.AssetStruct;
+        let params: Listings.ParamsStruct;
+        let maxLockPeriod: number;
 
-      context('When Asset class is registered', () => {
-        beforeEach(async () => {
-          await assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
-            controller: assetController.address,
-            vault: erc721assetVault.address,
+        beforeEach(() => {
+          // Test setup
+          asset = makeERC721Asset(originalAsset.address, 1);
+          params = makeFixedPriceStrategy(100);
+          maxLockPeriod = 86400;
+        });
+
+        it('returns the expected event', async () => {
+          // Execute tx
+          const tx = await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
+          const receipt = await tx.wait();
+
+          // Assert
+          const events = await listingManager.queryFilter(listingManager.filters.AssetListed(), receipt.blockNumber);
+          const assetListed = events[0].args;
+          await expect(tx).to.emit(listingManager, 'AssetListed');
+          expect(assetListed).to.equalStruct({
+            asset: asset,
+            lister: nftCreator.address,
+            listingId: BigNumber.from(1),
+            maxLockPeriod: maxLockPeriod,
+            params: params,
           });
         });
 
-        context('When warper is registered', () => {
-          let universeId: BigNumber;
-          let warperAddress: string;
+        it('transfers asset to vault', async () => {
+          // Execute tx
+          await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
 
-          beforeEach(async () => {
-            universeId = await createUniverse(universeRegistry, universeRegistrationParams);
-            warperAddress = await deployWarperPreset(
-              warperPresetFactory,
-              warperPresetId,
-              metahub.address,
-              originalAsset.address,
-            );
-            await metahub.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
+          // Assert
+          await expect(originalAsset.ownerOf(1)).to.eventually.equal(erc721assetVault.address);
+        });
+
+        context('When listing strategy not supported', () => {
+          it('reverts', async () => {
+            const fakeStrategy = solidityId('FAKE_STRATEGY');
+            const alteredParams = { ...params, strategy: fakeStrategy };
+
+            await expect(
+              listingManager.connect(nftCreator).listAsset(asset, alteredParams, maxLockPeriod, false),
+            ).to.be.revertedWith(`UnsupportedListingStrategy("${fakeStrategy}")`);
           });
+        });
 
-          context('When listing strategy is registered', () => {
-            beforeEach(async () => {
-              await listingStrategyRegistry.registerListingStrategy(ListingStrategy.FIXED_PRICE, {
-                controller: fixedPriceListingController.address,
-              });
-            });
-
-            it('lists the item successfully', async () => {
-              // Test setup
-              const asset = makeERC721Asset(originalAsset.address, 1);
-              const params = makeFixedPriceStrategy(100);
-              const maxLockPeriod = 86400;
-
-              // Execute tx
-              const tx = await listingManager.connect(nftCreator).listAsset(asset, params, maxLockPeriod, false);
-              const receipt = await tx.wait();
-
-              // Assert
-              const events = await listingManager.queryFilter(
-                listingManager.filters.AssetListed(),
-                receipt.blockNumber,
-              );
-              const assetListed = events[0].args;
-              await expect(tx).to.emit(listingManager, 'AssetListed');
-              expect(assetListed).to.equalStruct({
-                asset: asset,
-                lister: nftCreator.address,
-                listingId: BigNumber.from(1),
-                maxLockPeriod: maxLockPeriod,
-                params: params,
-              });
-              await expect(originalAsset.ownerOf(1)).to.eventually.equal(erc721assetVault.address);
-            });
+        context('When warper asset not supported', () => {
+          it('reverts', async () => {
+            const tokenData = await deployRandomERC721Token();
+            const unknownAsset = makeERC721Asset(tokenData.address, 1);
+            await expect(
+              listingManager.connect(nftCreator).listAsset(unknownAsset, params, maxLockPeriod, false),
+            ).to.be.revertedWith(`UnsupportedAsset("${tokenData.address}")`);
           });
         });
       });
     });
 
     describe('delistAsset', () => {
-      it('todo');
+      context('When asset not listed', () => {
+        it('reverts', async () => {
+          const listingId = 3;
+          await expect(listingManager.connect(nftCreator).delistAsset(listingId)).to.be.revertedWith(
+            `NotListed(${listingId})`,
+          );
+        });
+      });
+
+      context('When asset listed', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        context('When called by non-lister', () => {
+          it('reverts', async () => {
+            await expect(listingManager.connect(stranger).delistAsset(listingId)).to.be.revertedWith(
+              `CallerIsNotAssetLister()`,
+            );
+          });
+        });
+
+        it('emits an event', async () => {
+          await expect(listingManager.connect(nftCreator).delistAsset(listingId))
+            .to.emit(metahub, 'AssetDelisted')
+            .withArgs(listingId, nftCreator.address, 0);
+        });
+
+        it('updates the listing', async () => {
+          await listingManager.connect(nftCreator).delistAsset(listingId);
+
+          const asset = makeERC721Asset(originalAsset.address, tokenId);
+          const listingParams = makeFixedPriceStrategy(baseRate);
+
+          await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
+            asset: asset,
+            params: listingParams,
+            lister: nftCreator.address,
+            maxLockPeriod: maxLockPeriod,
+            lockedTill: 0,
+            immediatePayout: false,
+            delisted: true,
+            paused: false,
+          });
+        });
+      });
     });
 
     describe('withdrawAsset', () => {
-      it('todo');
+      context('caller not lister', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        it('reverts', async () => {
+          await expect(listingManager.connect(stranger).withdrawAsset(listingId)).to.be.revertedWith(
+            'CallerIsNotAssetLister()',
+          );
+        });
+      });
+
+      context('Asset is locked', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+
+          const rentingParams1 = {
+            listingId: listingId,
+            paymentToken: paymentToken.address,
+            rentalPeriod: 300,
+            renter: stranger.address,
+            warper: warperAddress,
+          };
+          await metahub.unpauseWarper(warperAddress);
+          await paymentToken.mint(stranger.address, maxPaymentAmount);
+          await paymentToken.connect(stranger).approve(metahub.address, maxPaymentAmount);
+          await metahub.connect(stranger).rent(rentingParams1, maxPaymentAmount);
+        });
+
+        it('reverts', async () => {
+          await expect(listingManager.connect(nftCreator).withdrawAsset(listingId)).to.be.revertedWith(
+            'AssetIsLocked()',
+          );
+        });
+      });
+
+      context('Successfully withdraw asset', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        it('deletes the listing record', async () => {
+          const asset = {
+            id: { class: '0x00000000', data: '0x' },
+            value: BigNumber.from(0),
+          };
+          const listingParams = { strategy: '0x00000000', data: '0x' };
+
+          await listingManager.connect(nftCreator).withdrawAsset(listingId);
+
+          await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
+            asset: asset,
+            params: listingParams,
+            lister: AddressZero,
+            maxLockPeriod: 0,
+            lockedTill: 0,
+            immediatePayout: false,
+            delisted: false,
+            paused: false,
+          });
+        });
+
+        it('transfers the asset back to the lister', async () => {
+          await listingManager.connect(nftCreator).withdrawAsset(listingId);
+
+          await expect(originalAsset.ownerOf(1)).to.eventually.equal(nftCreator.address);
+        });
+
+        it('emits and event', async () => {
+          const tx = await listingManager.connect(nftCreator).withdrawAsset(listingId);
+          const receipt = await tx.wait();
+
+          const events = await listingManager.queryFilter(listingManager.filters.AssetWithdrawn(), receipt.blockNumber);
+          const assetListed = events[0].args;
+          await expect(tx).to.emit(listingManager, 'AssetWithdrawn');
+          const asset = makeERC721Asset(originalAsset.address, tokenId);
+
+          expect(assetListed).to.equalStruct({
+            asset: asset,
+            lister: nftCreator.address,
+            listingId: BigNumber.from(1),
+          });
+        });
+      });
     });
 
     describe('pauseListing', () => {
@@ -151,6 +309,18 @@ export function shouldBehaveLikeListingManager(): void {
     });
 
     describe('unpauseListing', () => {
+      it('todo');
+    });
+
+    describe('listingCount', () => {
+      it('todo');
+    });
+
+    describe('listings', () => {
+      it('todo');
+    });
+
+    describe('userListings', () => {
       it('todo');
     });
 

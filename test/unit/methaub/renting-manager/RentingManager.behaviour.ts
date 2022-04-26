@@ -33,6 +33,7 @@ import {
   deployRandomERC721Token,
   latestBlockTimestamp,
   makeERC721Asset,
+  makeFixedPriceStrategy,
   waitBlockchainTime,
 } from '../../../shared/utils';
 
@@ -463,6 +464,30 @@ export function shouldBehaveLikeRentingManager(): void {
             );
           });
         });
+
+        context('When listing is delisted', () => {
+          beforeEach(async () => {
+            universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
+            warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+            await metahub.unpauseWarper(warperAddress);
+            listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+            await listingManager.connect(nftCreator).delistAsset(listingId);
+          });
+
+          it('reverts', async () => {
+            const rentalParams = {
+              listingId: listingId,
+              paymentToken: paymentToken.address,
+              rentalPeriod: 1000,
+              renter: stranger.address,
+              warper: warperAddress,
+            };
+
+            await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
+              `NotListed(${rentalParams.listingId})`,
+            );
+          });
+        });
       });
 
       describe('Valid rental params', () => {
@@ -743,10 +768,28 @@ export function shouldBehaveLikeRentingManager(): void {
           });
 
           it('changes the owner of the Warped token', async () => {
-            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
-              await expect(
-                ERC721Mock__factory.connect(warperAddress, metahub.signer).ownerOf(tokenId),
-              ).to.eventually.equal(stranger.address);
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+            await expect(
+              ERC721Mock__factory.connect(warperAddress, metahub.signer).ownerOf(tokenId),
+            ).to.eventually.equal(stranger.address);
+          });
+
+          it('Updates the `lockedTill` parameter', async () => {
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+            const timestamp = await latestBlockTimestamp();
+            const asset = makeERC721Asset(originalAsset.address, tokenId);
+            const listingParams = makeFixedPriceStrategy(baseRate);
+
+            await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
+              asset: asset,
+              params: listingParams,
+              lister: nftCreator.address,
+              maxLockPeriod: maxLockPeriod,
+              lockedTill: BigNumber.from(timestamp).add(rentalParams.rentalPeriod).toNumber(),
+              immediatePayout: true,
+              delisted: false,
+              paused: false,
+            });
           });
         });
       });
