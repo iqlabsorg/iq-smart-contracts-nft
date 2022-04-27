@@ -1,5 +1,6 @@
 {
   "name": "@iqprotocol/solidity-contracts-nft",
+  "version": "0.1.0",
   "keywords": [
     "IQ Protocol",
     "evm",
