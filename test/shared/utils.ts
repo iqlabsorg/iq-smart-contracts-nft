@@ -231,7 +231,6 @@ export class AssetListerHelper {
   public static warperPresetId = formatBytes32String('ERC721Basic');
 
   constructor(
-    readonly nftCreator: SignerWithAddress,
     readonly assetClassRegistry: IAssetClassRegistry,
     readonly assetController: string,
     readonly erc721assetVault: string,
@@ -274,21 +273,22 @@ export class AssetListerHelper {
   }
 
   async listAsset(
+    lister: SignerWithAddress,
     originalAsset: ERC721Mock,
     maxLockPeriod: number,
     baseRate: number,
     tokenId: BigNumber,
     immediatePayout: boolean,
   ) {
-    await originalAsset.connect(this.nftCreator).setApprovalForAll(this.metahub.address, true);
+    await originalAsset.connect(lister).setApprovalForAll(this.metahub.address, true);
 
     const asset = makeERC721Asset(originalAsset.address, tokenId);
     const listingParams = makeFixedPriceStrategy(baseRate);
 
     const listingId = await this.listingManager
-      .connect(this.nftCreator)
+      .connect(lister)
       .callStatic.listAsset(asset, listingParams, maxLockPeriod, false);
-    await this.listingManager.connect(this.nftCreator).listAsset(asset, listingParams, maxLockPeriod, immediatePayout);
+    await this.listingManager.connect(lister).listAsset(asset, listingParams, maxLockPeriod, immediatePayout);
 
     return listingId;
   }

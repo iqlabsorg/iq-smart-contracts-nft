@@ -84,7 +84,6 @@ export function shouldBehaveLikeListingManager(): void {
       [stranger] = this.signers.unnamed;
 
       assetListerHelper = new AssetListerHelper(
-        nftCreator,
         assetClassRegistry,
         assetController.address,
         erc721assetVault.address,
@@ -177,7 +176,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When asset listed', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         context('When called by non-lister', () => {
@@ -218,7 +224,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('caller not lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         it('reverts', async () => {
@@ -231,7 +244,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('Asset is locked', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
 
           const rentingParams1 = {
             listingId: listingId,
@@ -256,7 +276,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('Successfully withdraw asset', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         it('deletes the listing record', async () => {
@@ -317,7 +344,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When caller is not the lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         it('reverts', async () => {
@@ -330,7 +364,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When asset already paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
           await listingManager.connect(nftCreator).pauseListing(listingId);
         });
 
@@ -344,7 +385,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When successfully paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         it('emits an event', async () => {
@@ -386,7 +434,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When caller is not the lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         it('reverts', async () => {
@@ -399,7 +454,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When asset not paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
         });
 
         it('reverts', async () => {
@@ -412,7 +474,14 @@ export function shouldBehaveLikeListingManager(): void {
       context('When successfully unpaused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
           await listingManager.connect(nftCreator).pauseListing(listingId);
         });
 
@@ -443,19 +512,243 @@ export function shouldBehaveLikeListingManager(): void {
     });
 
     describe('listingCount', () => {
-      it('todo');
+      context('When no listings', () => {
+        it('returns 0', async () => {
+          await expect(listingManager.listingCount()).to.eventually.equal(0);
+        });
+      });
+
+      context('When two listings', () => {
+        beforeEach(async () => {
+          await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            BigNumber.from(2),
+            false,
+          );
+        });
+
+        it('returns 2', async () => {
+          await expect(listingManager.listingCount()).to.eventually.equal(2);
+        });
+      });
     });
 
     describe('listings', () => {
-      it('todo');
+      context('When no listings', () => {
+        it('returns 0', async () => {
+          const offset = 0;
+          const limit = 10;
+          await expect(listingManager.listings(offset, limit)).to.eventually.deep.equal([[], []]);
+        });
+      });
+
+      context('When 5 total listings', () => {
+        let listings: Array<BigNumber> = [];
+        beforeEach(async () => {
+          listings = [];
+          const listingCount = 5;
+          for (let index = 0; index < listingCount; index++) {
+            const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
+            await originalAsset.mint(nftCreator.address, tokenId);
+            listings.push(
+              await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false),
+            );
+          }
+        });
+
+        /**
+         * Fetch all the listings in the specified range and compare the results with the returned data of `listingInfo`.
+         * Also makes sure that the expected listing IDs are returned by comparing to the stored listing ids.
+         */
+        async function listingsAreEqual(limit: number, offset: number) {
+          const retrievedListings = await listingManager.listings(offset, limit);
+
+          for (let index = 0; index < retrievedListings[0].length; index++) {
+            const listingId = retrievedListings[0][index];
+            const listingData = retrievedListings[1][index];
+            await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct(listingData);
+          }
+          expect(retrievedListings[0].length).to.equal(limit);
+          expect(retrievedListings[1].length).to.equal(limit);
+
+          expect(retrievedListings[0]).to.deep.equal(
+            listings.slice(offset, offset + limit).map(e => BigNumber.from(e)),
+          );
+        }
+
+        it('can request first 2 listings', async () => {
+          await listingsAreEqual(0, 2);
+        });
+
+        it('can request next 2 listings', async () => {
+          await listingsAreEqual(2, 2);
+        });
+
+        it('can request all listings', async () => {
+          await listingsAreEqual(0, 5);
+        });
+
+        context('There are less listings than requested', () => {
+          it('returns only the requested amount', async () => {
+            const retrievedRentalAgreements = await listingManager.listings(0, 10);
+
+            expect(retrievedRentalAgreements[0].length).to.equal(5);
+            expect(retrievedRentalAgreements[1].length).to.equal(5);
+          });
+        });
+      });
     });
 
     describe('userListings', () => {
-      it('todo');
+      context('When no listings', () => {
+        it('returns 0', async () => {
+          const offset = 0;
+          const limit = 10;
+          await expect(listingManager.userListings(stranger.address, offset, limit)).to.eventually.deep.equal([[], []]);
+        });
+      });
+
+      context('When user has 5 listings, but in total there are 10', () => {
+        let listings: Array<BigNumber> = [];
+        beforeEach(async () => {
+          listings = [];
+          const listingCount = 5;
+          for (let index = 0; index < listingCount; index++) {
+            const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
+            const tokenId2 = BigNumber.from(600 + index); // offset to not clash with the pre-minted token ids
+            await originalAsset.mint(nftCreator.address, tokenId);
+            await originalAsset.mint(stranger.address, tokenId2);
+            await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
+            listings.push(
+              await assetListerHelper.listAsset(stranger, originalAsset, maxLockPeriod, baseRate, tokenId2, false),
+            );
+          }
+        });
+
+        /**
+         * Fetch all the listings in the specified range and compare the results with the returned data of `listingInfo`.
+         * Also makes sure that the expected listing IDs are returned by comparing to the stored listing ids.
+         */
+        async function listingsAreEqual(limit: number, offset: number) {
+          const retrievedListings = await listingManager.userListings(stranger.address, offset, limit);
+
+          for (let index = 0; index < retrievedListings[0].length; index++) {
+            const listingId = retrievedListings[0][index];
+            const listingData = retrievedListings[1][index];
+            await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct(listingData);
+          }
+          expect(retrievedListings[0].length).to.equal(limit);
+          expect(retrievedListings[1].length).to.equal(limit);
+
+          expect(retrievedListings[0]).to.deep.equal(
+            listings.slice(offset, offset + limit).map(e => BigNumber.from(e)),
+          );
+        }
+
+        it('can request first 2 listings', async () => {
+          await listingsAreEqual(0, 2);
+        });
+
+        it('can request next 2 listings', async () => {
+          await listingsAreEqual(2, 2);
+        });
+
+        it('can request all listings', async () => {
+          await listingsAreEqual(0, 5);
+        });
+
+        context('A user has less listings than requested', () => {
+          it('returns only the requested amount', async () => {
+            const retrievedRentalAgreements = await listingManager.userListings(stranger.address, 0, 10);
+
+            expect(retrievedRentalAgreements[0].length).to.equal(5);
+            expect(retrievedRentalAgreements[1].length).to.equal(5);
+          });
+        });
+      });
     });
 
     describe('listingInfo', () => {
-      it('todo');
+      context('Listing entry exists', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
+        });
+
+        it('returns the information', async () => {
+          const asset = makeERC721Asset(originalAsset.address, tokenId);
+          const listingParams = makeFixedPriceStrategy(baseRate);
+
+          await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
+            asset: asset,
+            params: listingParams,
+            lister: nftCreator.address,
+            maxLockPeriod: maxLockPeriod,
+            lockedTill: 0,
+            immediatePayout: false,
+            delisted: false,
+            paused: false,
+          });
+        });
+      });
+
+      context('Listing does not exist', () => {
+        it('returns an empty listing', async () => {
+          const asset = {
+            id: { class: '0x00000000', data: '0x' },
+            value: BigNumber.from(0),
+          };
+          const listingParams = { strategy: '0x00000000', data: '0x' };
+
+          await expect(listingManager.listingInfo(1)).to.eventually.equalStruct({
+            asset: asset,
+            params: listingParams,
+            lister: AddressZero,
+            maxLockPeriod: 0,
+            lockedTill: 0,
+            immediatePayout: false,
+            delisted: false,
+            paused: false,
+          });
+        });
+      });
+    });
+
+    describe('userListingCount', () => {
+      context('When no listings exist', () => {
+        it('returns 0', async () => {
+          await expect(listingManager.userListingCount(stranger.address)).to.eventually.equal(0);
+        });
+      });
+
+      context('When 10 listings exist, but 5 owned by queried user', () => {
+        beforeEach(async () => {
+          const listingCount = 5;
+          for (let index = 0; index < listingCount; index++) {
+            const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
+            const tokenId2 = BigNumber.from(600 + index); // offset to not clash with the pre-minted token ids
+            await originalAsset.mint(nftCreator.address, tokenId);
+            await originalAsset.mint(stranger.address, tokenId2);
+            await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
+            await assetListerHelper.listAsset(stranger, originalAsset, maxLockPeriod, baseRate, tokenId2, false);
+          }
+        });
+
+        it('returns 5', async () => {
+          await expect(listingManager.userListingCount(stranger.address)).to.eventually.equal(5);
+        });
+      });
     });
   });
 }
