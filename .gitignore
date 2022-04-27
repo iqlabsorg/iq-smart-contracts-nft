@@ -6,6 +6,7 @@ node_modules
 coverage
 coverage.json
 typechain
+docs
 
 # Hardhat files
 cache

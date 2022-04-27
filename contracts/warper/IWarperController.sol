@@ -29,13 +29,13 @@ interface IWarperController is IAssetController {
      * @param warper Warper contract to used for warping.
      * @param to The account which will receive the warped asset.
      * @return collectionId Warped collection ID.
-     * @return warperAsset
+     * @return warpedAsset Warper asset structure.
      */
     function warp(
         Assets.Asset calldata asset,
         address warper,
         address to
-    ) external returns (bytes32 collectionId, Assets.Asset memory warperAsset);
+    ) external returns (bytes32 collectionId, Assets.Asset memory warpedAsset);
 
     /**
      * @dev Validates that the warper interface is supported by the current WarperController.
