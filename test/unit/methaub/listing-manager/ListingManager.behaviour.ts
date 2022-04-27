@@ -305,11 +305,141 @@ export function shouldBehaveLikeListingManager(): void {
     });
 
     describe('pauseListing', () => {
-      it('todo');
+      context('When listing is does not exist', () => {
+        it('reverts', async () => {
+          const listingId = 3;
+          await expect(listingManager.connect(nftCreator).pauseListing(listingId)).to.be.revertedWith(
+            `NotListed(${listingId})`,
+          );
+        });
+      });
+
+      context('When caller is not the lister', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        it('reverts', async () => {
+          await expect(listingManager.connect(stranger).pauseListing(listingId)).to.be.revertedWith(
+            'CallerIsNotAssetLister()',
+          );
+        });
+      });
+
+      context('When asset already paused', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          await listingManager.connect(nftCreator).pauseListing(listingId);
+        });
+
+        it('reverts', async () => {
+          await expect(listingManager.connect(nftCreator).pauseListing(listingId)).to.be.revertedWith(
+            'ListingIsPaused()',
+          );
+        });
+      });
+
+      context('When successfully paused', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        it('emits an event', async () => {
+          const tx = await listingManager.connect(nftCreator).pauseListing(listingId);
+
+          await expect(tx).to.emit(listingManager, 'ListingPaused').withArgs(listingId);
+        });
+
+        it('pauses the listing', async () => {
+          await listingManager.connect(nftCreator).pauseListing(listingId);
+
+          const asset = makeERC721Asset(originalAsset.address, tokenId);
+          const listingParams = makeFixedPriceStrategy(baseRate);
+
+          await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
+            asset: asset,
+            params: listingParams,
+            lister: nftCreator.address,
+            maxLockPeriod: maxLockPeriod,
+            lockedTill: 0,
+            immediatePayout: false,
+            delisted: false,
+            paused: true,
+          });
+        });
+      });
     });
 
     describe('unpauseListing', () => {
-      it('todo');
+      context('When listing is does not exist', () => {
+        it('reverts', async () => {
+          const listingId = 3;
+          await expect(listingManager.connect(nftCreator).unpauseListing(listingId)).to.be.revertedWith(
+            `NotListed(${listingId})`,
+          );
+        });
+      });
+
+      context('When caller is not the lister', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        it('reverts', async () => {
+          await expect(listingManager.connect(stranger).unpauseListing(listingId)).to.be.revertedWith(
+            'CallerIsNotAssetLister()',
+          );
+        });
+      });
+
+      context('When asset not paused', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+        });
+
+        it('reverts', async () => {
+          await expect(listingManager.connect(nftCreator).unpauseListing(listingId)).to.be.revertedWith(
+            'ListingIsNotPaused()',
+          );
+        });
+      });
+
+      context('When successfully unpaused', () => {
+        let listingId: BigNumber;
+        beforeEach(async () => {
+          listingId = await assetListerHelper.listAsset(originalAsset, maxLockPeriod, baseRate, tokenId, false);
+          await listingManager.connect(nftCreator).pauseListing(listingId);
+        });
+
+        it('emits an event', async () => {
+          const tx = await listingManager.connect(nftCreator).unpauseListing(listingId);
+
+          await expect(tx).to.emit(listingManager, 'ListingUnpaused').withArgs(listingId);
+        });
+
+        it('unpauses the listing', async () => {
+          await listingManager.connect(nftCreator).unpauseListing(listingId);
+
+          const asset = makeERC721Asset(originalAsset.address, tokenId);
+          const listingParams = makeFixedPriceStrategy(baseRate);
+
+          await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
+            asset: asset,
+            params: listingParams,
+            lister: nftCreator.address,
+            maxLockPeriod: maxLockPeriod,
+            lockedTill: 0,
+            immediatePayout: false,
+            delisted: false,
+            paused: false,
+          });
+        });
+      });
     });
 
     describe('listingCount', () => {
