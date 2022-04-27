@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Roles",
+  "sourceName": "contracts/acl/Roles.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "ADMIN",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SUPERVISOR",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60b7610038600b82828239805160001a607314602b57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe7300000000000000000000000000000000000000003014608060405260043610603d5760003560e01c80632a0acc6a1460425780637b3ba71714605b575b600080fd5b6049600081565b60405190815260200160405180910390f35b60497f060c8eced3c6b422fe5573c862b67b9f6e25a3fc7d9543b14f7aee77b138e70d8156fea2646970667358221220685abe638a177db558b956e57c81e980a4b468eded599a3aea9e8534a1d51bbc64736f6c634300080d0033",
+  "deployedBytecode": "0x7300000000000000000000000000000000000000003014608060405260043610603d5760003560e01c80632a0acc6a1460425780637b3ba71714605b575b600080fd5b6049600081565b60405190815260200160405180910390f35b60497f060c8eced3c6b422fe5573c862b67b9f6e25a3fc7d9543b14f7aee77b138e70d8156fea2646970667358221220685abe638a177db558b956e57c81e980a4b468eded599a3aea9e8534a1d51bbc64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

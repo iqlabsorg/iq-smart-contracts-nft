@@ -1,0 +1,257 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ConfigurableAvailabilityPeriodExtension",
+  "sourceName": "contracts/warper/mechanics/availability-period/ConfigurableAvailabilityPeriodExtension.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "CallForwardToZeroAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CallerIsNotMetahub",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CallerIsNotWarperAdmin",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ContractIsAlreadyInitialized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ContractIsNotInitializing",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAvailabilityPeriodEnd",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAvailabilityPeriodStart",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "original",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "requiredInterfaceId",
+          "type": "bytes4"
+        }
+      ],
+      "name": "InvalidOriginalTokenInterface",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "currentTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "name": "WarperIsNotAvailableForRenting",
+      "type": "error"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "fallback"
+    },
+    {
+      "inputs": [],
+      "name": "__assetClass",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodEnd",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodRange",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodStart",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__metahub",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__original",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "name": "__setAvailabilityPeriodEnd",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        }
+      ],
+      "name": "__setAvailabilityPeriodStart",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4[]",
+          "name": "interfaceIds",
+          "type": "bytes4[]"
+        }
+      ],
+      "name": "__supportedInterfaces",
+      "outputs": [
+        {
+          "internalType": "bool[]",
+          "name": "",
+          "type": "bool[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "data",
+          "type": "bytes[]"
+        }
+      ],
+      "name": "multicall",
+      "outputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "results",
+          "type": "bytes[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "interfaceId",
+          "type": "bytes4"
+        }
+      ],
+      "name": "supportsInterface",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

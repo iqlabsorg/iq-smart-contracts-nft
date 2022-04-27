@@ -1,0 +1,112 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IConfigurableAvailabilityPeriodExtension",
+  "sourceName": "contracts/warper/mechanics/availability-period/IConfigurableAvailabilityPeriodExtension.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "InvalidAvailabilityPeriodEnd",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAvailabilityPeriodStart",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "currentTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "name": "WarperIsNotAvailableForRenting",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodEnd",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodRange",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodStart",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "name": "__setAvailabilityPeriodEnd",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        }
+      ],
+      "name": "__setAvailabilityPeriodStart",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

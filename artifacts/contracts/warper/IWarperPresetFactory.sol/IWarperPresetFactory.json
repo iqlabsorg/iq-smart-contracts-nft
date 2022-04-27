@@ -1,0 +1,308 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IWarperPresetFactory",
+  "sourceName": "contracts/warper/IWarperPresetFactory.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "DisabledWarperPreset",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "DuplicateWarperPresetId",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyPresetData",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "EnabledWarperPreset",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidWarperPresetInterface",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "WarperPresetNotRegistered",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "WarperPresetAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "warper",
+          "type": "address"
+        }
+      ],
+      "name": "WarperPresetDeployed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "WarperPresetDisabled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "WarperPresetEnabled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "WarperPresetRemoved",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "addPreset",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "initData",
+          "type": "bytes"
+        }
+      ],
+      "name": "deployPreset",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "disablePreset",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "enablePreset",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "preset",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "id",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "implementation",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "enabled",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct IWarperPresetFactory.WarperPreset",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "presetEnabled",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "presets",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "id",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "implementation",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "enabled",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct IWarperPresetFactory.WarperPreset[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "presetId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "removePreset",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

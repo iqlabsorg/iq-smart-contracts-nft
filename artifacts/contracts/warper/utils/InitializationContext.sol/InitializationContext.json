@@ -1,0 +1,21 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "InitializationContext",
+  "sourceName": "contracts/warper/utils/InitializationContext.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "ContractIsAlreadyInitialized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ContractIsNotInitializing",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

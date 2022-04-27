@@ -9,9 +9,11 @@ typechain
 
 # Hardhat files
 cache
-artifacts
 deployments/hardhat
 deployments/localhost
+# Exported artifacts
+artifacts/build-info
+*.dbg.json
 
 # openzeppelin deployment plugin artefacts
 .openzeppelin/unknown-31337.json

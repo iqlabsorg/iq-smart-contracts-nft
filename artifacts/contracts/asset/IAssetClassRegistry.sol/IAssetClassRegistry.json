@@ -1,0 +1,251 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IAssetClassRegistry",
+  "sourceName": "contracts/asset/IAssetClassRegistry.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        }
+      ],
+      "name": "AssetClassIsAlreadyRegistered",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "provided",
+          "type": "bytes4"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "required",
+          "type": "bytes4"
+        }
+      ],
+      "name": "AssetClassMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAssetControllerInterface",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAssetVaultInterface",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        }
+      ],
+      "name": "UnregisteredAssetClass",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newController",
+          "type": "address"
+        }
+      ],
+      "name": "AssetClassControllerChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "controller",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        }
+      ],
+      "name": "AssetClassRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newVault",
+          "type": "address"
+        }
+      ],
+      "name": "AssetClassVaultChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        }
+      ],
+      "name": "assetClassConfig",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "vault",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "controller",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct IAssetClassRegistry.ClassConfig",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        }
+      ],
+      "name": "checkRegisteredAssetClass",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        }
+      ],
+      "name": "isRegisteredAssetClass",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "vault",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "controller",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct IAssetClassRegistry.ClassConfig",
+          "name": "config",
+          "type": "tuple"
+        }
+      ],
+      "name": "registerAssetClass",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        },
+        {
+          "internalType": "address",
+          "name": "controller",
+          "type": "address"
+        }
+      ],
+      "name": "setAssetClassController",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes4",
+          "name": "assetClass",
+          "type": "bytes4"
+        },
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        }
+      ],
+      "name": "setAssetClassVault",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,31 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "WarperContext",
+  "sourceName": "contracts/warper/utils/WarperContext.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "CallerIsNotMetahub",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CallerIsNotWarperAdmin",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ContractIsAlreadyInitialized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ContractIsNotInitializing",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

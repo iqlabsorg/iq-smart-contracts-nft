@@ -1,0 +1,76 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IAvailabilityPeriodMechanics",
+  "sourceName": "contracts/warper/mechanics/availability-period/IAvailabilityPeriodMechanics.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "currentTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "name": "WarperIsNotAvailableForRenting",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodEnd",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodRange",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodStart",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "availabilityPeriodEnd",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__availabilityPeriodStart",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

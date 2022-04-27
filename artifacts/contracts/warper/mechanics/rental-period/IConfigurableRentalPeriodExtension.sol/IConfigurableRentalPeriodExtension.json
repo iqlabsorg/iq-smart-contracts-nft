@@ -1,0 +1,112 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IConfigurableRentalPeriodExtension",
+  "sourceName": "contracts/warper/mechanics/rental-period/IConfigurableRentalPeriodExtension.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "InvalidMaxRentalPeriod",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMinRentalPeriod",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "requestedRentalPeriod",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "minRentalPeriod",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "maxRentalPeriod",
+          "type": "uint32"
+        }
+      ],
+      "name": "WarperRentalPeriodIsOutOfRange",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "__maxRentalPeriod",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__minRentalPeriod",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "__rentalPeriodRange",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "minRentalPeriod",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "maxRentalPeriod",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "maxRentalPeriod",
+          "type": "uint32"
+        }
+      ],
+      "name": "__setMaxRentalPeriod",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "minRentalPeriod",
+          "type": "uint32"
+        }
+      ],
+      "name": "__setMinRentalPeriod",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
