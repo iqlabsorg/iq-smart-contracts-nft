@@ -1,15 +1,17 @@
 {
-  "name": "@iqprotocol/solidity-contracts-v2",
+  "name": "@iqprotocol/solidity-contracts-nft",
   "keywords": [
     "IQ Protocol",
     "evm",
     "smart-contracts",
     "hardhat",
-    "solidity"
+    "solidity",
+    "multiverse",
+    "nft"
   ],
   "repository": "github:iqlabsorg/iq-smart-contracts-nft",
   "license": "MIT",
-  "author": "IQ Labs (https://iqlabs.org/)",
+  "author": "IQ Labs (https://iq.space)",
   "scripts": {
     "compile": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile",
     "compile:clean": "hardhat clean",
