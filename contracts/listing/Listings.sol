@@ -272,6 +272,8 @@ library Listings {
         uint256 limit
     ) internal view returns (uint256[] memory, Listing[] memory) {
         uint256 indexSize = listingIndex.length();
+        if (offset >= indexSize) return (new uint256[](0), new Listing[](0));
+
         if (limit > indexSize - offset) {
             limit = indexSize - offset;
         }

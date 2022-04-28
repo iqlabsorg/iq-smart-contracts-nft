@@ -226,6 +226,8 @@ library Warpers {
         uint256 limit
     ) internal view returns (address[] memory, Warper[] memory) {
         uint256 indexSize = warperIndex.length();
+        if (offset >= indexSize) return (new address[](0), new Warper[](0));
+
         if (limit > indexSize - offset) {
             limit = indexSize - offset;
         }

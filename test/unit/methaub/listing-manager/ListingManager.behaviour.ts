@@ -594,10 +594,10 @@ export function shouldBehaveLikeListingManager(): void {
 
         context('There are less listings than requested', () => {
           it('returns only the requested amount', async () => {
-            const retrievedRentalAgreements = await listingManager.listings(0, 10);
+            const retrievedListings = await listingManager.listings(0, 10);
 
-            expect(retrievedRentalAgreements[0].length).to.equal(5);
-            expect(retrievedRentalAgreements[1].length).to.equal(5);
+            expect(retrievedListings[0].length).to.equal(5);
+            expect(retrievedListings[1].length).to.equal(5);
           });
         });
       });
@@ -663,10 +663,18 @@ export function shouldBehaveLikeListingManager(): void {
 
         context('A user has less listings than requested', () => {
           it('returns only the requested amount', async () => {
-            const retrievedRentalAgreements = await listingManager.userListings(stranger.address, 0, 10);
+            const retrievedListings = await listingManager.userListings(stranger.address, 0, 10);
 
-            expect(retrievedRentalAgreements[0].length).to.equal(5);
-            expect(retrievedRentalAgreements[1].length).to.equal(5);
+            expect(retrievedListings[0].length).to.equal(5);
+            expect(retrievedListings[1].length).to.equal(5);
+          });
+        });
+
+        context('Offset larger than total amount', () => {
+          it('returns empty arrays', async () => {
+            const retrievedListings = await listingManager.userListings(stranger.address, 5, 10);
+
+            expect(retrievedListings).to.deep.equal([[], []]);
           });
         });
       });

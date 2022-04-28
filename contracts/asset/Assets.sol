@@ -136,6 +136,8 @@ library Assets {
         uint256 limit
     ) external view returns (address[] memory) {
         uint256 indexSize = self.assetIndex.length();
+        if (offset >= indexSize) return new address[](0);
+
         if (limit > indexSize - offset) {
             limit = indexSize - offset;
         }

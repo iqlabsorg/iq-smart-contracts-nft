@@ -1240,6 +1240,14 @@ export function shouldBehaveLikeRentingManager(): void {
             expect(retrievedRentalAgreements[1].length).to.equal(6);
           });
         });
+
+        context('Offset larger than total amount', () => {
+          it('returns empty arrays', async () => {
+            const retrievedRentalAgreements = await rentingManager.userRentalAgreements(stranger.address, 6, 10);
+
+            expect(retrievedRentalAgreements).to.deep.equal([[], []]);
+          });
+        });
       });
 
       context('A user has no rental agreements', () => {

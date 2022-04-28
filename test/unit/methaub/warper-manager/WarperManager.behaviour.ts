@@ -191,6 +191,14 @@ export function shouldBehaveLikeWarperManager(): void {
             expect(result[1]).containsAllStructs(Object.values(universeWarpers).slice(offset, offset + limit));
           }
         });
+
+        context('Offset larger than total amount', () => {
+          it('returns empty arrays', async () => {
+            const result = await warperManager.universeWarpers(universeId, 7, 10);
+
+            expect(result).to.deep.equal([[], []]);
+          });
+        });
       });
     });
 
@@ -235,6 +243,14 @@ export function shouldBehaveLikeWarperManager(): void {
             expect(result[1]).containsAllStructs(Object.values(assetWarpers).slice(offset, offset + limit));
           }
         });
+
+        context('Offset larger than total amount', () => {
+          it('returns empty arrays', async () => {
+            const result = await warperManager.assetWarpers(originalAsset.address, 5, 10);
+
+            expect(result).to.deep.equal([[], []]);
+          });
+        });
       });
     });
 
@@ -274,6 +290,7 @@ export function shouldBehaveLikeWarperManager(): void {
             supportedAssets.push(original.address);
           }
         });
+
         it('returns a paginated list of supported asset addresses', async () => {
           const limit = 2;
           for (let offset = 0; offset < supportedAssets.length; offset += limit) {
@@ -281,6 +298,14 @@ export function shouldBehaveLikeWarperManager(): void {
               supportedAssets.slice(offset, offset + limit),
             );
           }
+        });
+
+        context('Offset larger than total amount', () => {
+          it('returns empty arrays', async () => {
+            const result = await warperManager.supportedAssets(3, 10);
+
+            expect(result).to.deep.equal([]);
+          });
         });
       });
     });
