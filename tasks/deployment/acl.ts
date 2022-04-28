@@ -8,12 +8,10 @@ task('deploy:acl', 'Deploy the `ACL` contract').setAction(async (_args, hre) => 
   await hre.deployments.delete('ACL_Proxy');
   await hre.deployments.delete('ACL_Implementation');
 
-  const deployment = (await hre.upgrades.deployProxy(new ACL__factory(deployer), [], {
+  return (await hre.upgrades.deployProxy(new ACL__factory(deployer), [], {
     kind: 'uups',
     initializer: 'initialize()',
   })) as IACL;
-
-  return deployment;
 });
 
 export {};

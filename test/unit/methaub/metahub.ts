@@ -1,25 +1,13 @@
 import { formatBytes32String } from 'ethers/lib/utils';
 import hre, { ethers } from 'hardhat';
 import {
-  ERC20Mock,
   ERC721Mock,
-  ERC721PresetConfigurable,
-  FixedPriceListingController,
   IACL,
-  IAssetClassRegistry,
   IAssetController__factory,
-  IERC721AssetVault,
   IERC721WarperController,
-  IListingManager__factory,
-  IListingStrategyRegistry,
-  IMetahub,
-  IRentingManager__factory,
   IUniverseRegistry,
-  IWarperManager__factory,
-  IWarperPresetFactory,
-  UUPSUpgradeable__factory,
 } from '../../../typechain';
-import { shouldBehaveLikeMetahub } from './Metahub.behaviour';
+import { shouldBehaveLikeMetahub } from './metahub.behaviour';
 
 export const warperPresetId = formatBytes32String('ERC721Basic');
 

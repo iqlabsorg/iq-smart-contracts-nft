@@ -16,7 +16,7 @@ import {
   deployWarperPreset,
   registerWarper,
 } from '../../../shared/utils';
-import { warperPresetId } from '../Metahub';
+import { warperPresetId } from '../metahub';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 
 /**

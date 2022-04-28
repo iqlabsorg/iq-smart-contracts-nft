@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { IACL, IWarperPresetFactory, WarperPresetMock } from '../../../typechain';
-import { shouldBehaveWarperPresetFactory } from './WarperPresetFactory.behaviour';
+import { shouldBehaveWarperPresetFactory } from './warper-preset-factory.behaviour';
 
 export function unitTestWarperPresetFactory(): void {
   let acl: IACL;

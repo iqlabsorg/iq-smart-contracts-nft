@@ -12,7 +12,7 @@ export function shouldBehaveLikeApprove(): void {
     beforeEach(function () {
       erc721warper = this.contracts.erc721Warper;
 
-      assetOwner = this.signers.named['assetOwner'];
+      assetOwner = this.signers.named.assetOwner;
       [stranger] = this.signers.unnamed;
     });
 

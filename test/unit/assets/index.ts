@@ -1,3 +1,3 @@
-export { unitTestAssetVault } from './asset-vault/assetVault';
-export { unitTestAssetController } from './asset-controller/assetController';
-export { unitTestAssetClassRegistry } from './asset-class-registry/assetClassRegistry';
+export { unitTestAssetVault } from './asset-vault/asset-vault';
+export { unitTestAssetController } from './asset-controller/asset-controller';
+export { unitTestAssetClassRegistry } from './asset-class-registry/asset-class-registry';

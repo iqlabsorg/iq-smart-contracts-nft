@@ -1,9 +1,9 @@
 import { baseContext } from '../shared/contexts';
-import { unitTestMetahub } from './methaub/Metahub';
-import { unitTestWarperPresetFactory } from './warper-preset-factory/WarperPresetFactory';
+import { unitTestMetahub } from './methaub/metahub';
+import { unitTestWarperPresetFactory } from './warper-preset-factory/warper-preset-factory';
 import { unitTestWarpers } from './warper/warper';
-import { unitTestUniverseToken } from './universe/universe-token/UniverseToken';
-import { unitTestUniverseRegistry } from './universe/universe-registry/UniverseRegistry';
+import { unitTestUniverseToken } from './universe/universe-token/universe-token';
+import { unitTestUniverseRegistry } from './universe/universe-registry/universe-registry';
 import { unitTestAssetClassRegistry, unitTestAssetController, unitTestAssetVault } from './assets';
 import { unitTestACL } from './acl/acl';
 

@@ -11,8 +11,8 @@ export function shouldBehaveLikeSetApprovalForAl(): void {
     beforeEach(function () {
       erc721warper = this.contracts.erc721Warper;
 
-      assetOwner = this.signers.named['assetOwner'];
-      operator = this.signers.named['operator'];
+      assetOwner = this.signers.named.assetOwner;
+      operator = this.signers.named.operator;
     });
 
     context('When calling `isApprovedForAll`', () => {

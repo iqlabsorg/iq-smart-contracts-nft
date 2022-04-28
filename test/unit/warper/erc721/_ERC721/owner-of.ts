@@ -15,7 +15,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
-      assetOwner = this.signers.named['assetOwner'];
+      assetOwner = this.signers.named.assetOwner;
       erc721WarperController = this.contracts.erc721WarperController;
       erc721warper = this.contracts.erc721Warper;
       metahub.warperController.returns(erc721WarperController.address);

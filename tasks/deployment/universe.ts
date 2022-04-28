@@ -11,7 +11,7 @@ task('deploy:universe-registry', 'Deploy the `UniverseToken` contracts.')
     await hre.deployments.delete('UniverseRegistry_Implementation');
 
     // Deploy Universe token.
-    return await hre.upgrades.deployProxy(new UniverseRegistry__factory(deployer), [acl], {
+    return hre.upgrades.deployProxy(new UniverseRegistry__factory(deployer), [acl], {
       kind: 'uups',
       unsafeAllow: ['delegatecall'],
     });

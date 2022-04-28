@@ -814,13 +814,13 @@ export function shouldBehaveLikeRentingManager(): void {
             rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
           });
           it('transfers the rental price to the lister', async () => {
-            await expect(() =>
+            await expect(async () =>
               rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
             ).to.changeTokenBalance(paymentToken, nftCreator, rentCost.listerBaseFee.add(rentCost.listerPremium));
           });
 
           it('transfers the according amount of tokens to the manager', async () => {
-            await expect(() =>
+            await expect(async () =>
               rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
             ).to.changeTokenBalance(
               paymentToken,
@@ -935,7 +935,7 @@ export function shouldBehaveLikeRentingManager(): void {
           });
 
           it('transfers the according amount of tokens to the manager', async () => {
-            await expect(() =>
+            await expect(async () =>
               rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
             ).to.changeTokenBalance(
               paymentToken,

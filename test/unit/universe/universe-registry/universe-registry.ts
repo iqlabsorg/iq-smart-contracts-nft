@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { IACL, IUniverseRegistry, IUniverseToken__factory } from '../../../../typechain';
-import { shouldBehaveLikeUniverseRegistry } from './UniverseRegistry.behaviour';
+import { shouldBehaveLikeUniverseRegistry } from './universe-registry.behaviour';
 
 export function unitTestUniverseRegistry(): void {
   let acl: IACL;

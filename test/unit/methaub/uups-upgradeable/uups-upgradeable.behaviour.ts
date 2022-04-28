@@ -34,10 +34,10 @@ export function shouldBehaveLikeUUPSUpgradeable(): void {
       const warpersLib = await new Warpers__factory(deployer).deploy();
 
       const metahubLibs: MetahubLibraryAddresses = {
-        ['contracts/renting/Rentings.sol:Rentings']: rentingsLib.address,
-        ['contracts/listing/Listings.sol:Listings']: listingsLib.address,
-        ['contracts/asset/Assets.sol:Assets']: assetsLib.address,
-        ['contracts/warper/Warpers.sol:Warpers']: warpersLib.address,
+        'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
+        'contracts/listing/Listings.sol:Listings': listingsLib.address,
+        'contracts/asset/Assets.sol:Assets': assetsLib.address,
+        'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
       };
 
       metahubV2Factory = new MetahubV2Mock__factory(metahubLibs, deployer);

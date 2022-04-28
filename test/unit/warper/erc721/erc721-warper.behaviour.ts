@@ -1,9 +1,9 @@
 import { shouldBehaveLikeApprove } from './_ERC721/approve';
-import { shouldBehaveLikeSetApprovalForAl } from './_ERC721/setApprovalForAll';
+import { shouldBehaveLikeSetApprovalForAl } from './_ERC721/set-approval-for-all';
 import { shouldBehaveTransfer } from './_ERC721/transfers';
-import { shouldBehaveLikeBalanceOf } from './_ERC721/balanceOf';
-import { shouldBehaveLikeGetApproved } from './_ERC721/getApproved';
-import { shouldBehaveLikeOwnerOf } from './_ERC721/ownerOf';
+import { shouldBehaveLikeBalanceOf } from './_ERC721/balance-of';
+import { shouldBehaveLikeGetApproved } from './_ERC721/get-approved';
+import { shouldBehaveLikeOwnerOf } from './_ERC721/owner-of';
 
 /**
  * Core functionality tests of public ERC721 warper methods

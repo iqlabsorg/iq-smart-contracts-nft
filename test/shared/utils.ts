@@ -46,13 +46,11 @@ export function randomInteger(max: number) {
 }
 
 export async function mineBlock(timestamp = 0): Promise<unknown> {
-  return await ethers.provider.send('evm_mine', timestamp > 0 ? [timestamp] : []);
+  return ethers.provider.send('evm_mine', timestamp > 0 ? [timestamp] : []);
 }
 
 export async function latestBlockTimestamp(): Promise<number> {
-  return await (
-    await ethers.provider.getBlock('latest')
-  ).timestamp;
+  return (await ethers.provider.getBlock('latest')).timestamp;
 }
 
 export async function waitBlockchainTime(seconds: number): Promise<void> {
@@ -94,7 +92,7 @@ export async function deployWarperPreset(
   const initData = IWarperPreset__factory.createInterface().encodeFunctionData('__initialize', [
     defaultAbiCoder.encode(['address', 'address'], [originalAddress, metahubAddress]),
   ]);
-  return await deployWarperPresetWithInitData(factory, presetId, initData);
+  return deployWarperPresetWithInitData(factory, presetId, initData);
 }
 
 /**
@@ -253,8 +251,7 @@ export class AssetListerHelper {
   }
 
   async setupUniverse(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct) {
-    const universeId = await createUniverse(this.universeRegistry, universeRegistrationParams);
-    return universeId;
+    return createUniverse(this.universeRegistry, universeRegistrationParams);
   }
 
   async setupWarper(

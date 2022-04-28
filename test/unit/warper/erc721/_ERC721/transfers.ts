@@ -31,7 +31,7 @@ export function shouldBehaveTransfer(): void {
     const RECEIVER_MAGIC_VALUE = '0x150b7a02';
 
     beforeEach(async function () {
-      assetOwner = this.signers.named['assetOwner'];
+      assetOwner = this.signers.named.assetOwner;
       deployer = this.signers.named.deployer;
       metahub = this.mocks.metahub;
       erc721WarperController = this.contracts.erc721WarperController;
@@ -265,7 +265,7 @@ export function shouldBehaveTransfer(): void {
 
     describe('via transferFrom', () => {
       beforeEach(function () {
-        transferTxBuilder = (as, from, to, tokenId) => warper.connect(as).transferFrom(from, to, tokenId);
+        transferTxBuilder = async (as, from, to, tokenId) => warper.connect(as).transferFrom(from, to, tokenId);
 
         transferArgs = {
           toWhom: stranger.address,
@@ -281,7 +281,7 @@ export function shouldBehaveTransfer(): void {
       describe('with data', () => {
         const data = '0x42';
         beforeEach(function () {
-          transferTxBuilder = (as, from, to, tokenId) =>
+          transferTxBuilder = async (as, from, to, tokenId) =>
             warper.connect(as)['safeTransferFrom(address,address,uint256,bytes)'](from, to, tokenId, data);
 
           transferArgs = {
@@ -297,7 +297,7 @@ export function shouldBehaveTransfer(): void {
       describe('without data', () => {
         const data = '0x';
         beforeEach(function () {
-          transferTxBuilder = (as, from, to, tokenId) =>
+          transferTxBuilder = async (as, from, to, tokenId) =>
             warper.connect(as)['safeTransferFrom(address,address,uint256)'](from, to, tokenId);
 
           transferArgs = {

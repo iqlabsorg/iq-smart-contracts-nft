@@ -1,7 +1,7 @@
 import hre, { ethers } from 'hardhat';
 import { ERC721Mock, IACL, IAssetVault__factory, IERC721AssetVault } from '../../../../typechain';
-import { shouldBehaveLikeAssetVault } from './assetVault.behaviour';
-import { shouldBehaveLikeERC721AssetVault } from './ERC721AssetVault.behaviour';
+import { shouldBehaveLikeAssetVault } from './asset-vault.behaviour';
+import { shouldBehaveLikeERC721AssetVault } from './erc721-asset-vault.behaviour';
 
 export function unitTestAssetVault(): void {
   let acl: IACL;

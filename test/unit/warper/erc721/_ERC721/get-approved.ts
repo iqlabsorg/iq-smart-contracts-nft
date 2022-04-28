@@ -14,7 +14,7 @@ export function shouldBehaveLikeGetApproved(): void {
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
-      assetOwner = this.signers.named['assetOwner'];
+      assetOwner = this.signers.named.assetOwner;
       erc721warper = this.contracts.erc721Warper;
 
       await erc721warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');

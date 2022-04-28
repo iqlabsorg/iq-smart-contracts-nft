@@ -18,7 +18,7 @@ export function shouldBehaveLikeERC721AssetVault(): void {
     let assetOwner: SignerWithAddress;
 
     beforeEach(async function () {
-      operator = this.signers.named['operator'];
+      operator = this.signers.named.operator;
       deployer = this.signers.named.deployer;
 
       [assetOwner, admin] = this.signers.unnamed;
@@ -88,7 +88,7 @@ export function shouldBehaveLikeERC721AssetVault(): void {
 
         context('When valid asset id', () => {
           it('successfully transfers the token', async () => {
-            await expect(() => vault.returnToOwner(asset.address, mintedTokenId)).to.changeTokenBalance(
+            await expect(async () => vault.returnToOwner(asset.address, mintedTokenId)).to.changeTokenBalance(
               asset,
               assetOwner,
               1,

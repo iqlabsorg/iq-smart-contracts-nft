@@ -19,13 +19,13 @@ import {
   ERC721PresetConfigurable,
   ERC20Mock,
 } from '../../../typechain';
-import { shouldBehavesLikeMulticall } from '../shared/Multicall.behaviour';
-import { shouldBehaveLikeERC721Warper } from './erc721/ERC721Warper.behaviour';
-import { shouldBehaveLikeERC721PresetConfigurable } from './erc721/presets/ERC721Configurable.behaviour';
-import { shouldBehaveLikeAvailabilityPeriod } from './mechanics/availability-period/AvailabilityPeriod.behaviour';
-import { shouldBehaveLikeConfigurableAvailabilityPeriod } from './mechanics/availability-period/ConfigurableAvailabilityPeriod.behaviour';
-import { shouldBehaveLikeConfigurableRentalPeriod } from './mechanics/rental-period/ConfigurableRentalPeriod.behaviour';
-import { shouldBehaveLikeRentalPeriod } from './mechanics/rental-period/RentalPeriod.behaviour';
+import { shouldBehavesLikeMulticall } from '../shared/multicall.behaviour';
+import { shouldBehaveLikeERC721Warper } from './erc721/erc721-warper.behaviour';
+import { shouldBehaveLikeERC721PresetConfigurable } from './erc721/presets/erc721-configurable.behaviour';
+import { shouldBehaveLikeAvailabilityPeriod } from './mechanics/availability-period/availability-period.behaviour';
+import { shouldBehaveLikeConfigurableAvailabilityPeriod } from './mechanics/availability-period/configurable-availability-period.behaviour';
+import { shouldBehaveLikeConfigurableRentalPeriod } from './mechanics/rental-period/configurable-rental-period.behaviour';
+import { shouldBehaveLikeRentalPeriod } from './mechanics/rental-period/rental-period.behaviour';
 import { shouldBehaveLikeWarper } from './warper.behaviour';
 
 export async function unitFixtureERC721WarperConfigurable() {
@@ -102,7 +102,7 @@ export function unitTestWarpers(): void {
       this.contracts.multicall = Multicall__factory.connect(erc721Warper.address, erc721Warper.signer);
       this.warper = {
         forwarder: {
-          call: () => {
+          call: async () => {
             return ERC721Mock__factory.connect(erc721Warper.address, this.signers.unnamed[0]).symbol();
           },
           expected: await oNFT.symbol(),

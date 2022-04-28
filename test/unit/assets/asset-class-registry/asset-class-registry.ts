@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { IACL, IAssetClassRegistry } from '../../../../typechain';
-import { shouldBehaveLikeAssetClassRegistry } from './AssetClassRegistry.behaviour';
+import { shouldBehaveLikeAssetClassRegistry } from './asset-class-registry.behaviour';
 
 export function unitTestAssetClassRegistry(): void {
   let acl: IACL;

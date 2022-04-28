@@ -9,7 +9,7 @@ import {
   Metahub,
   Metahub__factory,
 } from '../../../../typechain';
-import { shouldBehaveLikeIAssetController } from './assetController.behaviour';
+import { shouldBehaveLikeIAssetController } from './asset-controller.behaviour';
 
 export async function unitFixtureERC721AssetsController() {
   // Deploy original asset mock.

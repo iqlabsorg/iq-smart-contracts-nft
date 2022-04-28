@@ -63,11 +63,11 @@ const config: HardhatUserConfig = {
     },
   },
   contractSizer: {
-    runOnCompile: !!process.env.REPORT_SIZE,
+    runOnCompile: Boolean(process.env.REPORT_SIZE),
     disambiguatePaths: false,
   },
   gasReporter: {
-    enabled: !!process.env.REPORT_GAS,
+    enabled: Boolean(process.env.REPORT_GAS),
     currency: 'USD',
   },
   typechain: {
