@@ -926,10 +926,10 @@ export function shouldBehaveLikeRentingManager(): void {
             rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
           });
 
-          it('increases the rental price to the lister', async () => {
+          it('increases the token balance of the lister', async () => {
             await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
 
-            await expect(metahub.connect(nftCreator).balance(paymentToken.address)).to.eventually.equal(
+            await expect(metahub.balance(nftCreator.address, paymentToken.address)).to.eventually.equal(
               rentCost.listerBaseFee.add(rentCost.listerPremium),
             );
           });

@@ -582,15 +582,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IPaymentManager
      */
-    function balance(address token) external view returns (uint256) {
-        return _accountRegistry.users[_msgSender()].balance(token);
+    function balance(address account, address token) external view returns (uint256) {
+        return _accountRegistry.users[account].balance(token);
     }
 
     /**
      * @inheritdoc IPaymentManager
      */
-    function balances() external view returns (Accounts.Balance[] memory) {
-        return _accountRegistry.users[_msgSender()].balances();
+    function balances(address account) external view returns (Accounts.Balance[] memory) {
+        return _accountRegistry.users[account].balances();
     }
 
     /**

@@ -72,14 +72,16 @@ interface IPaymentManager {
 
     /**
      * @dev Returns the amount of `token`, currently accumulated by the user.
+     * @param account The account to query the balance for.
      * @param token The token address.
      * @return Balance of `token`.
      */
-    function balance(address token) external view returns (uint256);
+    function balance(address account, address token) external view returns (uint256);
 
     /**
      * @dev Returns the list of user balances in various tokens.
+     * @param account The account to query the balance for.
      * @return List of balances.
      */
-    function balances() external view returns (Accounts.Balance[] memory);
+    function balances(address account) external view returns (Accounts.Balance[] memory);
 }
