@@ -5,7 +5,7 @@ import { shouldBehaveLikeERC721AssetVault } from './erc721-asset-vault.behaviour
 
 export function unitTestAssetVault(): void {
   let acl: IACL;
-  async function unitFixtureERC721AssetsVault() {
+  async function unitFixtureERC721AssetsVault(): Promise<{ vault: IERC721AssetVault; asset: ERC721Mock }> {
     // Resolve primary roles
     const operator = await ethers.getNamedSigner('operator');
 

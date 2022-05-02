@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { ERC721Mock, IWarperPreset, Metahub } from '../../../typechain';
 
 // TODO: refactor the test below so we can eliminate this context override
+// eslint-disable-next-line filenames-simple/typescript-module-declaration
 declare module 'mocha' {
   interface Context {
     warper: {

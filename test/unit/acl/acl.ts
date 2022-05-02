@@ -4,7 +4,7 @@ import { shouldBehaveACL } from './acl.behaviour';
 
 export function unitTestACL(): void {
   describe('ACL', function () {
-    async function unitFixtureACL() {
+    async function unitFixtureACL(): Promise<{ acl: IACL }> {
       const acl = (await hre.run('deploy:acl')) as IACL;
       return { acl };
     }

@@ -29,6 +29,14 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         listingStrategyRegistry,
         warperPresetFactory,
         universeRegistry,
+      }: {
+        acl: string;
+        baseToken: string;
+        rentalFeePercent: string;
+        assetClassRegistry: string;
+        listingStrategyRegistry: string;
+        warperPresetFactory: string;
+        universeRegistry: string;
       },
       hre,
     ) => {

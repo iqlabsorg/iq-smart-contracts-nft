@@ -1,11 +1,14 @@
 import hre from 'hardhat';
-import { IACL, IUniverseRegistry, IUniverseToken__factory } from '../../../../typechain';
+import { IACL, IUniverseRegistry, IUniverseToken, IUniverseToken__factory } from '../../../../typechain';
 import { shouldBehaveLikeUniverseToken } from './universe-token.behaviour';
 
 export function unitTestUniverseToken(): void {
   let acl: IACL;
 
-  async function unitFixtureUniverseToken() {
+  async function unitFixtureUniverseToken(): Promise<{
+    universeRegistry: IUniverseRegistry;
+    universeToken: IUniverseToken;
+  }> {
     // Deploy Universe Registry
     const universeRegistry = (await hre.run('deploy:universe-registry', {
       acl: acl.address,

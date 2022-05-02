@@ -14,6 +14,7 @@
     "./deploy"
   ],
   "files": [
-    "./hardhat.config.ts"
+    "./hardhat.config.ts",
+    "./.eslintrc.js",
   ]
 }

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import chai, { Assertion } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -5,6 +8,7 @@ import { BigNumber } from 'ethers';
 import { TASK_TEST_SETUP_TEST_ENVIRONMENT } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
 
+// eslint-disable-next-line filenames-simple/typescript-module-declaration
 declare global {
   //eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace Chai {
@@ -29,6 +33,13 @@ declare global {
        * @param structs An Array of structs.
        */
       containsAllStructs(structs: Array<Record<string, any>>): AsyncAssertion;
+
+      /**
+       * Check if the ACL reverted with the expected error message
+       * @param account The signer
+       * @param role The bytes32 string
+       */
+      revertedByACL(account: string, role: string): AsyncAssertion;
     }
     interface Assertion {
       /**
@@ -36,21 +47,21 @@ declare global {
        * @param account The signer
        * @param role The bytes32 string
        */
-      revertedByACL(account: string, role: string): AsyncAssertion;
+      revertedByACL(account: string, role: string): Assertion;
 
       /**
        * Compare two objects, but removes all of the "index" based fields.
        * @param expectedStruct Object with string keys.
-       * @param message The error mesasge.
+       * @param message The error message.
        */
-      equalStruct(expectedStruct: Record<string, any>, message?: string | undefined): AsyncAssertion;
+      equalStruct(expectedStruct: Record<string, any>, message?: string | undefined): Assertion;
 
       /**
        * Asserts that all of the structs are contained in the expected array.
        * Index and length are enforced!
        * @param structs An Array of structs.
        */
-      containsAllStructs(structs: Array<Record<string, any>>): AsyncAssertion;
+      containsAllStructs(structs: Array<Record<string, any>>): Assertion;
     }
   }
 }
@@ -69,7 +80,7 @@ Assertion.addMethod('revertedByACL', function (account: string, role: string) {
 });
 
 // Override default subtask to add chai plugins
-// eslint-disable-next-line require-await
+// eslint-disable-next-line @typescript-eslint/require-await
 subtask(TASK_TEST_SETUP_TEST_ENVIRONMENT, async (): Promise<void> => {
   chai.use(chaiAsPromised);
 });
@@ -87,7 +98,7 @@ Assertion.addMethod('equalStruct', function (expectedStruct: Record<string, any>
   return new Assertion(cleanedUpStruct).to.deep.equal(cleanedUpExpectedStruct, message);
 });
 
-function transmuteSingleObject(key: string, object: any): any {
+const transmuteSingleObject = (key: string, object: any): any => {
   // the key is not a number (only match "stringy" keys)
   if (!/^\d+$/.test(key)) {
     if (typeof object[key] === 'object') {
@@ -101,9 +112,9 @@ function transmuteSingleObject(key: string, object: any): any {
     return object[key];
   }
   return undefined;
-}
+};
 
-function transmuteObject(object: any): Record<string, any> {
+const transmuteObject = (object: any): Record<string, any> => {
   const cleanedUpStruct: Record<string, any> = {};
   for (const key of Object.keys(object)) {
     const cleanedUpItem = transmuteSingleObject(key, object);
@@ -113,4 +124,4 @@ function transmuteObject(object: any): Record<string, any> {
   }
 
   return cleanedUpStruct;
-}
+};

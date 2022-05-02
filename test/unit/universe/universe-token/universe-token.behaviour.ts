@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { InterfacePrinter, IUniverseRegistry, IUniverseToken } from '../../../../typechain';
-import { AddressZero } from '../../../shared/types';
+import { ADDRESS_ZERO } from '../../../shared/types';
 import hre from 'hardhat';
 
 const tokenId = 1;
@@ -62,7 +62,7 @@ export function shouldBehaveLikeUniverseToken(): void {
         it('emits Transfer event', async () => {
           await expect(universeToken.connect(universeRegistrySigner).mint(universeOwner.address))
             .to.emit(universeToken, 'Transfer')
-            .withArgs(AddressZero, universeOwner.address, tokenId);
+            .withArgs(ADDRESS_ZERO, universeOwner.address, tokenId);
         });
 
         it('mints the token to the provided account address', async () => {

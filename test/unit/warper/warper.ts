@@ -1,20 +1,13 @@
-import { smock } from '@defi-wonderland/smock';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { FakeContract, smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import hre from 'hardhat';
 import {
   AssetClassRegistry,
   AssetClassRegistry__factory,
-  ConfigurableAvailabilityPeriodExtension__factory,
-  ConfigurableRentalPeriodExtension__factory,
   ERC721Mock__factory,
-  IAvailabilityPeriodMechanics__factory,
-  IERC721Warper__factory,
-  IRentalPeriodMechanics__factory,
-  IWarperPreset__factory,
   Metahub,
   Metahub__factory,
-  Multicall__factory,
-  IERC721WarperController,
   ERC721Mock,
   ERC721PresetConfigurable,
   ERC20Mock,
@@ -28,7 +21,15 @@ import { shouldBehaveLikeConfigurableRentalPeriod } from './mechanics/rental-per
 import { shouldBehaveLikeRentalPeriod } from './mechanics/rental-period/rental-period.behaviour';
 import { shouldBehaveLikeWarper } from './warper.behaviour';
 
-export async function unitFixtureERC721WarperConfigurable() {
+export async function unitFixtureERC721WarperConfigurable(): Promise<{
+  erc721Warper: any;
+  metahub: FakeContract<Metahub>;
+  oNFT: any;
+  erc20Token: any;
+  uninitializedErc721Warper: any;
+  erc721WarperController: any;
+  assetClassRegistry: FakeContract<AssetClassRegistry>;
+}> {
   // Deploy original asset mock.
   const oNFT = (await hre.run('deploy:mock:ERC721', {
     name: 'Test ERC721',
@@ -36,7 +37,7 @@ export async function unitFixtureERC721WarperConfigurable() {
   })) as ERC721Mock;
 
   // Deploy ERC721 Warper controller.
-  const erc721WarperController = (await hre.run('deploy:erc721-warper-controller')) as IERC721WarperController;
+  const erc721WarperController = await hre.run('deploy:erc721-warper-controller');
 
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
@@ -46,7 +47,7 @@ export async function unitFixtureERC721WarperConfigurable() {
   const erc721Warper = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
   await erc721Warper.__initialize(defaultAbiCoder.encode(['address', 'address'], [oNFT.address, metahub.address]));
 
-  const uninitializedErc721Warper = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
+  const uninitializedErc721Warper = await hre.run('deploy:erc721-preset-configurable');
 
   // Deploy erc20 token
   const erc20Token = (await hre.run('deploy:mock:ERC20', {
@@ -82,30 +83,21 @@ export function unitTestWarpers(): void {
       this.mocks.assets.erc721 = oNFT;
 
       // Mechanics under test
-      this.contracts.availabilityPeriod = IAvailabilityPeriodMechanics__factory.connect(
-        erc721Warper.address,
-        erc721Warper.signer,
-      );
-      this.contracts.rentalPeriod = IRentalPeriodMechanics__factory.connect(erc721Warper.address, erc721Warper.signer);
-      this.contracts.configurableAvailabilityPeriodExtension = ConfigurableAvailabilityPeriodExtension__factory.connect(
-        erc721Warper.address,
-        erc721Warper.signer,
-      );
-      this.contracts.configurableRentalPeriodExtension = ConfigurableRentalPeriodExtension__factory.connect(
-        erc721Warper.address,
-        erc721Warper.signer,
-      );
+      this.contracts.availabilityPeriod = erc721Warper;
+      this.contracts.rentalPeriod = erc721Warper;
+      this.contracts.configurableAvailabilityPeriodExtension = erc721Warper;
+      this.contracts.configurableRentalPeriodExtension = erc721Warper;
 
       // Warper contracts
-      this.contracts.erc721Warper = IERC721Warper__factory.connect(erc721Warper.address, erc721Warper.signer);
-      this.contracts.warperPreset = IWarperPreset__factory.connect(erc721Warper.address, erc721Warper.signer);
-      this.contracts.multicall = Multicall__factory.connect(erc721Warper.address, erc721Warper.signer);
+      this.contracts.erc721Warper = erc721Warper;
+      this.contracts.warperPreset = erc721Warper;
+      this.contracts.multicall = erc721Warper;
       this.warper = {
         forwarder: {
           call: async () => {
-            return ERC721Mock__factory.connect(erc721Warper.address, this.signers.unnamed[0]).symbol();
+            return ERC721Mock__factory.connect(this.contracts.erc721Warper.address, this.signers.unnamed[0]).symbol();
           },
-          expected: await oNFT.symbol(),
+          expected: await this.mocks.assets.erc721.symbol(),
         },
       };
     });

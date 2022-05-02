@@ -1,7 +1,7 @@
 import { shouldBehaveLikeListingManager } from './listing-manager/listing-manager.behaviour';
 import { shouldBehaveLikeRentingManager } from './renting-manager/renting-manager.behaviour';
 import { shouldBehaveLikeUUPSUpgradeable } from './uups-upgradeable/uups-upgradeable.behaviour';
-import { shouldBehaveLikeWarperManager } from './warper-manager/waroer-manager.behaviour';
+import { shouldBehaveLikeWarperManager } from './warper-manager/warper-manager.behaviour';
 
 /**
  * Metahub tests

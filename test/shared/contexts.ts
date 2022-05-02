@@ -4,6 +4,7 @@ import { IACL, InterfacePrinter } from '../../typechain';
 import type { Contracts, Mocks, Signers } from './types';
 import { AccessControlledHelper } from './utils';
 
+// eslint-disable-next-line func-style
 export function baseContext(description: string, testSuite: () => void): void {
   describe(description, function () {
     before(async function () {

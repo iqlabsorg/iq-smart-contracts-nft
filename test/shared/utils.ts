@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import { formatBytes32String } from 'ethers/lib/utils';
 import { wait } from '../../tasks';
 import {
+  ERC721,
   ERC721Mock,
   FixedPriceListingController,
   IACL,
@@ -19,113 +20,97 @@ import {
   WarperPresetFactory,
 } from '../../typechain';
 import { Assets } from '../../typechain/contracts/metahub/Metahub';
+import { ASSET_CLASS, LISTING_STRATEGY } from './constants';
 
 const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
 
-export const MaxUint32 = 2 ** 32 - 1;
-
-export const RolesLibrary = {
-  ADMIN_ROLE: '0x0000000000000000000000000000000000000000000000000000000000000000',
-  SUPERVISOR_ROLE: '0x060c8eced3c6b422fe5573c862b67b9f6e25a3fc7d9543b14f7aee77b138e70d',
-};
-
-export const AssetClass = {
-  ERC20: solidityId('ERC20'),
-  ERC721: solidityId('ERC721'),
-  ERC1155: solidityId('ERC1155'),
-};
-
-export const ListingStrategy = {
-  FIXED_PRICE: solidityId('FIXED_PRICE'),
-};
-
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
-export function randomInteger(max: number) {
+export const randomInteger = (max: number): number => {
   return Math.floor(Math.random() * max);
-}
+};
 
-export async function mineBlock(timestamp = 0): Promise<unknown> {
+export const mineBlock = async (timestamp = 0): Promise<unknown> => {
   return ethers.provider.send('evm_mine', timestamp > 0 ? [timestamp] : []);
-}
+};
 
-export async function latestBlockTimestamp(): Promise<number> {
+export const latestBlockTimestamp = async (): Promise<number> => {
   return (await ethers.provider.getBlock('latest')).timestamp;
-}
+};
 
-export async function waitBlockchainTime(seconds: number): Promise<void> {
+export const waitBlockchainTime = async (seconds: number): Promise<void> => {
   const time = await latestBlockTimestamp();
   await mineBlock(time + seconds);
-}
+};
 
 /**
  * Calculates ID by taking 4 byte of the provided string hashed value.
  * @param string Arbitrary string.
  */
-export function solidityId(string: string): string {
+export const solidityId = (string: string): string => {
   return hexDataSlice(solidityKeccak256(['string'], [string]), 0, 4);
-}
+};
 
 /**
  * Performs universe creation call and returns universe ID.
  * @param universeRegistry
  * @param params
  */
-export async function createUniverse(
+export const createUniverse = async (
   universeRegistry: IUniverseRegistry,
   ...params: Parameters<IUniverseRegistry['createUniverse']>
-): Promise<BigNumber> {
+): Promise<BigNumber> => {
   const receipt = await wait(universeRegistry.createUniverse(...params));
   const events = await universeRegistry.queryFilter(universeRegistry.filters.UniverseCreated(), receipt.blockHash);
   return events[0].args.universeId;
-}
+};
 
 /**
  * Deploys a warper from preset via factory and returns warper address.
  */
-export async function deployWarperPreset(
+export const deployWarperPreset = async (
   factory: IWarperPresetFactory,
   presetId: BytesLike,
   metahubAddress: string,
   originalAddress: string,
-): Promise<string> {
+): Promise<string> => {
   const initData = IWarperPreset__factory.createInterface().encodeFunctionData('__initialize', [
     defaultAbiCoder.encode(['address', 'address'], [originalAddress, metahubAddress]),
   ]);
   return deployWarperPresetWithInitData(factory, presetId, initData);
-}
+};
 
 /**
  * Deploys a warper from preset via factory and returns warper address.
  * @param factory
  * @param params
  */
-export async function deployWarperPresetWithInitData(
+export const deployWarperPresetWithInitData = async (
   factory: IWarperPresetFactory,
   ...params: Parameters<WarperPresetFactory['deployPreset']>
-): Promise<string> {
+): Promise<string> => {
   const receipt = await wait(factory.deployPreset(...params));
   const events = await factory.queryFilter(factory.filters.WarperPresetDeployed(), receipt.blockHash);
   return events[0].args.warper;
-}
+};
 
-export async function registerWarper(
+export const registerWarper = async (
   manager: IWarperManager,
   ...params: Parameters<IWarperManager['registerWarper']>
-): Promise<string> {
+): Promise<string> => {
   const receipt = await wait(manager.registerWarper(...params));
   const events = await manager.queryFilter(manager.filters.WarperRegistered(), receipt.blockHash);
   return events[0].args.warper;
-}
+};
 
-export async function deployRandomERC721Token(): Promise<{ address: string; symbol: string; name: string }> {
+export const deployRandomERC721Token = async (): Promise<{ address: string; symbol: string; name: string }> => {
   const n = randomInteger(1000);
   const name = `ERC721 token #${n}`;
   const symbol = `NFT${n}`;
-  const { address } = await hre.run('deploy:mock:ERC721', { name, symbol });
+  const { address } = (await hre.run('deploy:mock:ERC721', { name, symbol })) as ERC721;
 
   return { address, symbol, name };
-}
+};
 
 /**
  * Creates ERC721 Asset structure.
@@ -133,20 +118,20 @@ export async function deployRandomERC721Token(): Promise<{ address: string; symb
  * @param tokenId
  * @param value
  */
-export function makeERC721Asset(token: string, tokenId: BigNumberish, value: BigNumberish = 1) {
-  return makeAsset(AssetClass.ERC721, defaultAbiCoder.encode(['address', 'uint256'], [token, tokenId]), value);
-}
+export const makeERC721Asset = (token: string, tokenId: BigNumberish, value: BigNumberish = 1): Assets.AssetStruct => {
+  return makeAsset(ASSET_CLASS.ERC721, defaultAbiCoder.encode(['address', 'uint256'], [token, tokenId]), value);
+};
 
 /**
  * Creates Fixed Price listing strategy params structure.
  * @param baseRate
  */
-export function makeFixedPriceStrategy(baseRate: BigNumberish) {
+export const makeFixedPriceStrategy = (baseRate: BigNumberish): { strategy: string; data: string } => {
   return {
-    strategy: ListingStrategy.FIXED_PRICE,
+    strategy: LISTING_STRATEGY.FIXED_PRICE,
     data: defaultAbiCoder.encode(['uint256'], [baseRate]),
   };
-}
+};
 
 /**
  * Creates Asset structure.
@@ -154,18 +139,18 @@ export function makeFixedPriceStrategy(baseRate: BigNumberish) {
  * @param data
  * @param value
  */
-export function makeAsset(assetClass: BytesLike, data: BytesLike, value: BigNumberish): Assets.AssetStruct {
+export const makeAsset = (assetClass: BytesLike, data: BytesLike, value: BigNumberish): Assets.AssetStruct => {
   return {
     id: { class: assetClass, data },
     value: BigNumber.from(value),
   };
-}
+};
 
 /**
  * Typescript mapping of the possible warper rental states.
  * Mimics the `WarperRentalStatus` enum.
  */
-export const AssetRentalStatus = {
+export const ASSET_RENTAL_STATUS = {
   NONE: 0,
   AVAILABLE: 1,
   RENTED: 2,
@@ -181,7 +166,7 @@ export class AccessControlledHelper {
   public static adminData: ActorSet;
   public static supervisorData: ActorSet;
 
-  static async registerAdmin(successfulSigner: Signer, stranger: Signer, acl: IACL) {
+  static async registerAdmin(successfulSigner: Signer, stranger: Signer, acl: IACL): Promise<void> {
     const adminBytes = await acl.adminRole();
     AccessControlledHelper.adminData = {
       successfulSigner,
@@ -190,7 +175,7 @@ export class AccessControlledHelper {
     };
   }
 
-  static async registerSupervisor(successfulSigner: Signer, stranger: Signer, acl: IACL) {
+  static async registerSupervisor(successfulSigner: Signer, stranger: Signer, acl: IACL): Promise<void> {
     const supervisorBytes = await acl.supervisorRole();
     AccessControlledHelper.supervisorData = {
       successfulSigner,
@@ -199,15 +184,15 @@ export class AccessControlledHelper {
     };
   }
 
-  static onlyAdminCan(tx: (signer: Signer) => Promise<void>) {
+  static onlyAdminCan(tx: (signer: Signer) => Promise<void>): void {
     return AccessControlledHelper.onlyRoleCan('admin', () => AccessControlledHelper.adminData, tx);
   }
 
-  static onlySupervisorCan(tx: (signer: Signer) => Promise<void>) {
+  static onlySupervisorCan(tx: (signer: Signer) => Promise<void>): void {
     return AccessControlledHelper.onlyRoleCan('supervisor', () => AccessControlledHelper.supervisorData, tx);
   }
 
-  private static onlyRoleCan(roleName: string, actorSet: () => ActorSet, tx: (signer: Signer) => Promise<void>) {
+  private static onlyRoleCan(roleName: string, actorSet: () => ActorSet, tx: (signer: Signer) => Promise<void>): void {
     context(`When called by ${roleName}`, () => {
       it('executes successfully', async () => {
         await tx(actorSet().successfulSigner);
@@ -216,7 +201,7 @@ export class AccessControlledHelper {
 
     context('When called by stranger', () => {
       it('reverts', async () => {
-        await expect(tx(actorSet().stranger)).to.be.revertedByACL(
+        await expect(tx(actorSet().stranger)).to.eventually.revertedByACL(
           await actorSet().stranger.getAddress(),
           actorSet().requiredRole,
         );
@@ -240,17 +225,17 @@ export class AssetListerHelper {
     readonly fixedPriceListingController: FixedPriceListingController,
   ) {}
 
-  async setupRegistries() {
-    await this.assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
+  async setupRegistries(): Promise<void> {
+    await this.assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
       controller: this.assetController,
       vault: this.erc721assetVault,
     });
-    await this.listingStrategyRegistry.registerListingStrategy(ListingStrategy.FIXED_PRICE, {
+    await this.listingStrategyRegistry.registerListingStrategy(LISTING_STRATEGY.FIXED_PRICE, {
       controller: this.fixedPriceListingController.address,
     });
   }
 
-  async setupUniverse(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct) {
+  async setupUniverse(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct): Promise<BigNumber> {
     return createUniverse(this.universeRegistry, universeRegistrationParams);
   }
 
@@ -258,7 +243,7 @@ export class AssetListerHelper {
     originalAsset: ERC721Mock,
     universeId: BigNumber,
     warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct,
-  ) {
+  ): Promise<string> {
     const warperAddress = await deployWarperPreset(
       this.warperPresetFactory,
       AssetListerHelper.warperPresetId,
@@ -276,7 +261,7 @@ export class AssetListerHelper {
     baseRate: number,
     tokenId: BigNumber,
     immediatePayout: boolean,
-  ) {
+  ): Promise<BigNumber> {
     await originalAsset.connect(lister).setApprovalForAll(this.metahub.address, true);
 
     const asset = makeERC721Asset(originalAsset.address, tokenId);

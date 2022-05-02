@@ -1,7 +1,7 @@
 import { Multicall } from '../../../typechain';
 import { expect } from 'chai';
 
-export function shouldBehavesLikeMulticall() {
+export function shouldBehavesLikeMulticall(): void {
   describe('Multicall', () => {
     let multicall: Multicall;
 

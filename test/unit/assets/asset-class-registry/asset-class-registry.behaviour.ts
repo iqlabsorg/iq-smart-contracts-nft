@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ERC721AssetController, ERC721AssetController__factory, IAssetClassRegistry } from '../../../../typechain';
-import { AddressZero } from '../../../shared/types';
-import { AssetClass } from '../../../shared/utils';
+import { ADDRESS_ZERO } from '../../../shared/types';
+import { ASSET_CLASS } from '../../../shared/constants';
 
 /**
  * The assetClassRegistry contract behaves like IAssetClassRegistry
@@ -23,9 +23,9 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
       context('When called by stranger', () => {
         it('reverts', async () => {
           await expect(
-            assetClassRegistry.connect(stranger).registerAssetClass(AssetClass.ERC721, {
-              vault: AddressZero,
-              controller: AddressZero,
+            assetClassRegistry.connect(stranger).registerAssetClass(ASSET_CLASS.ERC721, {
+              vault: ADDRESS_ZERO,
+              controller: ADDRESS_ZERO,
             }),
           ).to.be.reverted;
         });
@@ -33,11 +33,11 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
       context('When called by admin', () => {
         it('executes successfully', async () => {
           await expect(
-            assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
-              vault: AddressZero,
-              controller: AddressZero,
+            assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
+              vault: ADDRESS_ZERO,
+              controller: ADDRESS_ZERO,
             }),
-          );
+          ).to.not.be.reverted;
         });
       });
     });
@@ -50,31 +50,31 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
 
       describe('setAssetClassController', () => {
         it('allows to add asset class controller', async () => {
-          await expect(assetClassRegistry.setAssetClassController(AssetClass.ERC721, erc721controller.address))
+          await expect(assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, erc721controller.address))
             .to.emit(assetClassRegistry, 'AssetClassControllerChanged')
-            .withArgs(AssetClass.ERC721, erc721controller.address);
+            .withArgs(ASSET_CLASS.ERC721, erc721controller.address);
         });
       });
 
       describe('get assetClassConfig', () => {
         context('When config exists', () => {
           beforeEach(async () => {
-            await assetClassRegistry.setAssetClassController(AssetClass.ERC721, erc721controller.address);
+            await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, erc721controller.address);
           });
 
           it('returns the config structure', async () => {
-            await expect(assetClassRegistry.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
+            await expect(assetClassRegistry.assetClassConfig(ASSET_CLASS.ERC721)).to.eventually.equalStruct({
               controller: erc721controller.address,
-              vault: AddressZero,
+              vault: ADDRESS_ZERO,
             });
           });
         });
 
         context('When config does not exist', () => {
           it('returns empty fields', async () => {
-            await expect(assetClassRegistry.assetClassConfig(AssetClass.ERC721)).to.eventually.equalStruct({
-              controller: AddressZero,
-              vault: AddressZero,
+            await expect(assetClassRegistry.assetClassConfig(ASSET_CLASS.ERC721)).to.eventually.equalStruct({
+              controller: ADDRESS_ZERO,
+              vault: ADDRESS_ZERO,
             });
           });
         });

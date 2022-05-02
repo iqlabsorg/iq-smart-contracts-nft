@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { IACL } from '../../../typechain';
-import { RolesLibrary } from '../../shared/utils';
+import { ROLES_LIBRARY } from '../../shared/constants';
 
 /**
  * Warper preset factory tests
@@ -29,19 +29,19 @@ export function shouldBehaveACL(): void {
     describe('revokeRole', () => {
       context('When 2 admins set', () => {
         it('can remove one', async () => {
-          await acl.connect(admin).revokeRole(RolesLibrary.ADMIN_ROLE, admin.address);
+          await acl.connect(admin).revokeRole(ROLES_LIBRARY.ADMIN_ROLE, admin.address);
 
-          await expect(acl.getRoleMemberCount(RolesLibrary.ADMIN_ROLE)).to.eventually.equal(1);
+          await expect(acl.getRoleMemberCount(ROLES_LIBRARY.ADMIN_ROLE)).to.eventually.equal(1);
         });
       });
 
       context('When 1 admin set', () => {
         beforeEach(async () => {
-          await acl.renounceRole(RolesLibrary.ADMIN_ROLE, deployer.address);
+          await acl.renounceRole(ROLES_LIBRARY.ADMIN_ROLE, deployer.address);
         });
 
         it('reverts', async () => {
-          await expect(acl.connect(admin).revokeRole(RolesLibrary.ADMIN_ROLE, admin.address)).to.be.revertedWith(
+          await expect(acl.connect(admin).revokeRole(ROLES_LIBRARY.ADMIN_ROLE, admin.address)).to.be.revertedWith(
             'CannotRemoveLastAdmin',
           );
         });
@@ -49,13 +49,13 @@ export function shouldBehaveACL(): void {
 
       context('When 1 supervisor set', () => {
         beforeEach(async () => {
-          await acl.renounceRole(RolesLibrary.SUPERVISOR_ROLE, deployer.address);
+          await acl.renounceRole(ROLES_LIBRARY.SUPERVISOR_ROLE, deployer.address);
         });
 
         it('removes the supervisor', async () => {
-          await acl.connect(admin).revokeRole(RolesLibrary.SUPERVISOR_ROLE, supervisor.address);
+          await acl.connect(admin).revokeRole(ROLES_LIBRARY.SUPERVISOR_ROLE, supervisor.address);
 
-          await expect(acl.getRoleMemberCount(RolesLibrary.SUPERVISOR_ROLE)).to.eventually.equal(0);
+          await expect(acl.getRoleMemberCount(ROLES_LIBRARY.SUPERVISOR_ROLE)).to.eventually.equal(0);
         });
       });
     });
@@ -66,11 +66,11 @@ export function shouldBehaveACL(): void {
     });
 
     it('exposes `adminRole`', async () => {
-      await expect(acl.adminRole()).to.eventually.equal(RolesLibrary.ADMIN_ROLE);
+      await expect(acl.adminRole()).to.eventually.equal(ROLES_LIBRARY.ADMIN_ROLE);
     });
 
     it('exposes `supervisorRole`', async () => {
-      await expect(acl.supervisorRole()).to.eventually.equal(RolesLibrary.SUPERVISOR_ROLE);
+      await expect(acl.supervisorRole()).to.eventually.equal(ROLES_LIBRARY.SUPERVISOR_ROLE);
     });
   });
 }

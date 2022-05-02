@@ -9,21 +9,17 @@ import {
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
-import {
-  AssetClass,
-  createUniverse,
-  deployRandomERC721Token,
-  deployWarperPreset,
-  registerWarper,
-} from '../../../shared/utils';
+import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
 import { warperPresetId } from '../metahub';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
+import { ASSET_CLASS } from '../../../shared/constants';
 
 /**
  * The metahub contract behaves like IWarperManager
  */
 export function shouldBehaveLikeWarperManager(): void {
-  describe('IWarperManager', function () {
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+  describe('IWarperManager', function (): void {
     let assetClassRegistry: IAssetClassRegistry;
     let warperManager: IWarperManager;
     let metahub: IMetahub;
@@ -46,10 +42,10 @@ export function shouldBehaveLikeWarperManager(): void {
       originalAssetAddress?: string,
     ): Promise<Record<string, Warpers.WarperStruct>> => {
       const result: Record<string, Warpers.WarperStruct> = {};
-      const classConfig = await assetClassRegistry.assetClassConfig(AssetClass.ERC721);
+      const classConfig = await assetClassRegistry.assetClassConfig(ASSET_CLASS.ERC721);
       const original = originalAssetAddress ?? originalAsset.address;
 
-      for (const i in [...Array(count).keys()]) {
+      for (const i of [...Array(count).keys()]) {
         const name = `Warper ${i}`;
         const paused = false;
         const address = await deployWarperPreset(warperPresetFactory, warperPresetId, metahub.address, original);
@@ -77,7 +73,7 @@ export function shouldBehaveLikeWarperManager(): void {
       [stranger] = this.signers.unnamed;
 
       // Register ERC721 asset class.
-      await this.contracts.assetClassRegistry.registerAssetClass(AssetClass.ERC721, {
+      await this.contracts.assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
         controller: this.contracts.assetController.address,
         vault: this.contracts.erc721assetVault.address,
       });

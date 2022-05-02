@@ -14,6 +14,7 @@ module.exports = {
         singleQuote: false,
         bracketSpacing: false,
         explicitTypes: 'always',
+        parentheses: false,
       },
     },
   ],

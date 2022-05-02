@@ -16,7 +16,7 @@ import {
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
-import { AddressZero } from '../../../shared/types';
+import { ADDRESS_ZERO } from '../../../shared/types';
 import {
   AssetListerHelper,
   deployRandomERC721Token,
@@ -45,6 +45,7 @@ const maxPaymentAmount = 100_000_000;
  * The metahub contract behaves like IWarperManager
  */
 export function shouldBehaveLikeListingManager(): void {
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   describe('IListingManager', function () {
     let listingManager: IListingManager;
     let originalAsset: ERC721Mock;
@@ -298,7 +299,7 @@ export function shouldBehaveLikeListingManager(): void {
           await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
             asset: asset,
             params: listingParams,
-            lister: AddressZero,
+            lister: ADDRESS_ZERO,
             maxLockPeriod: 0,
             lockedTill: 0,
             immediatePayout: false,
@@ -564,7 +565,7 @@ export function shouldBehaveLikeListingManager(): void {
          * Fetch all the listings in the specified range and compare the results with the returned data of `listingInfo`.
          * Also makes sure that the expected listing IDs are returned by comparing to the stored listing ids.
          */
-        async function listingsAreEqual(limit: number, offset: number) {
+        async function listingsAreEqual(limit: number, offset: number): Promise<void> {
           const retrievedListings = await listingManager.listings(offset, limit);
 
           for (let index = 0; index < retrievedListings[0].length; index++) {
@@ -633,7 +634,7 @@ export function shouldBehaveLikeListingManager(): void {
          * Fetch all the listings in the specified range and compare the results with the returned data of `listingInfo`.
          * Also makes sure that the expected listing IDs are returned by comparing to the stored listing ids.
          */
-        async function listingsAreEqual(limit: number, offset: number) {
+        async function listingsAreEqual(limit: number, offset: number): Promise<void> {
           const retrievedListings = await listingManager.userListings(stranger.address, offset, limit);
 
           for (let index = 0; index < retrievedListings[0].length; index++) {
@@ -722,7 +723,7 @@ export function shouldBehaveLikeListingManager(): void {
           await expect(listingManager.listingInfo(1)).to.eventually.equalStruct({
             asset: asset,
             params: listingParams,
-            lister: AddressZero,
+            lister: ADDRESS_ZERO,
             maxLockPeriod: 0,
             lockedTill: 0,
             immediatePayout: false,

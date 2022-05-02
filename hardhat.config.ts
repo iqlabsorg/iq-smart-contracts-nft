@@ -12,7 +12,7 @@ import 'hardhat-contract-sizer';
 // Enable tasks
 // NOTE: https://github.com/dethcrypto/TypeChain/issues/371
 // eslint-disable-next-line
-import('./tasks').catch(e =>
+import('./tasks').catch((e: string) =>
   console.log(
     `
 Cannot load tasks. Need to generate typechain types.
@@ -58,7 +58,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     ropsten: {
-      url: process.env.ROPSTEN_URL || '',
+      url: process.env.ROPSTEN_URL ?? '',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },

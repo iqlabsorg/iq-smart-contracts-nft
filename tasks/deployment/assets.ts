@@ -11,7 +11,7 @@ import {
 
 task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
-  .setAction(async ({ acl }, hre) => {
+  .setAction(async ({ acl }: { acl: string }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     // Delete the previous deployment

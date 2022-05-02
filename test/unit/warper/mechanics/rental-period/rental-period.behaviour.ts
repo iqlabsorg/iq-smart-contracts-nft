@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { MaxUint32 } from '../../../../shared/utils';
+import { MAX_UINT_32 } from '../../../../shared/utils';
 
 /**
  * TODO
@@ -11,7 +11,7 @@ export function shouldBehaveLikeRentalPeriod(): void {
     });
 
     it('maxRentalPeriod', async function () {
-      await expect(this.contracts.rentalPeriod.__maxRentalPeriod()).to.eventually.equal(MaxUint32);
+      await expect(this.contracts.rentalPeriod.__maxRentalPeriod()).to.eventually.equal(MAX_UINT_32);
     });
   });
 }

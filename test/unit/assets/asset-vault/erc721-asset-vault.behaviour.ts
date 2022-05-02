@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ERC721Mock, IERC721AssetVault } from '../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { AssetClass } from '../../../shared/utils';
+import { ASSET_CLASS } from '../../../shared/constants';
 
 /**
  * Tests for ERC721 Asset Vault specific behaviour
@@ -54,7 +54,7 @@ export function shouldBehaveLikeERC721AssetVault(): void {
 
     describe('assetClass', () => {
       it('returns successfully', async () => {
-        await expect(vault.assetClass()).to.eventually.equal(AssetClass.ERC721);
+        await expect(vault.assetClass()).to.eventually.equal(ASSET_CLASS.ERC721);
       });
     });
 

@@ -11,7 +11,11 @@ import {
 } from '../../../../typechain';
 import { shouldBehaveLikeIAssetController } from './asset-controller.behaviour';
 
-export async function unitFixtureERC721AssetsController() {
+export async function unitFixtureERC721AssetsController(): Promise<{
+  originalNft: ERC721Mock;
+  erc721AssetController: IAssetController;
+  warper: ERC721PresetConfigurable;
+}> {
   // Deploy original asset mock.
   const oNFT = (await hre.run('deploy:mock:ERC721', {
     name: 'Test ERC721',

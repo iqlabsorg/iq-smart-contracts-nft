@@ -5,7 +5,7 @@ import { shouldBehaveLikeAssetClassRegistry } from './asset-class-registry.behav
 export function unitTestAssetClassRegistry(): void {
   let acl: IACL;
 
-  async function unitFixtureAssetClassRegistry() {
+  async function unitFixtureAssetClassRegistry(): Promise<{ assetClassRegistry: IAssetClassRegistry }> {
     const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
       acl: acl.address,
     })) as IAssetClassRegistry;

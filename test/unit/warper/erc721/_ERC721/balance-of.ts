@@ -2,7 +2,7 @@ import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { IERC721Warper, IERC721WarperController, Metahub } from '../../../../../typechain';
-import { AddressZero } from '../../../../shared/types';
+import { ADDRESS_ZERO } from '../../../../shared/types';
 
 export function shouldBehaveLikeBalanceOf(): void {
   describe('balanceOf', () => {
@@ -47,7 +47,7 @@ export function shouldBehaveLikeBalanceOf(): void {
 
     context('when querying the zero address', () => {
       it('throws', async () => {
-        await expect(erc721warper.balanceOf(AddressZero)).to.be.revertedWith('BalanceQueryForZeroAddress');
+        await expect(erc721warper.balanceOf(ADDRESS_ZERO)).to.be.revertedWith('BalanceQueryForZeroAddress');
       });
     });
   });

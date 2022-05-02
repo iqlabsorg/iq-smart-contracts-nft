@@ -2,7 +2,7 @@ import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { IERC721Warper, IERC721WarperController, Metahub } from '../../../../../typechain';
-import { AssetRentalStatus } from '../../../../shared/utils';
+import { ASSET_RENTAL_STATUS } from '../../../../shared/utils';
 
 export function shouldBehaveLikeOwnerOf(): void {
   describe('ownerOf', () => {
@@ -25,7 +25,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('When the token has never been rented', () => {
       beforeEach(() => {
-        metahub.assetRentalStatus.returns(AssetRentalStatus.NONE);
+        metahub.assetRentalStatus.returns(ASSET_RENTAL_STATUS.NONE);
       });
 
       it('reverts', async () => {
@@ -37,7 +37,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('When the token has been minted but currently has not been rented', () => {
       beforeEach(() => {
-        metahub.assetRentalStatus.returns(AssetRentalStatus.AVAILABLE);
+        metahub.assetRentalStatus.returns(ASSET_RENTAL_STATUS.AVAILABLE);
       });
 
       it('returns metahub address', async () => {
@@ -47,7 +47,7 @@ export function shouldBehaveLikeOwnerOf(): void {
 
     context('When the token is currently rented', () => {
       beforeEach(() => {
-        metahub.assetRentalStatus.returns(AssetRentalStatus.RENTED);
+        metahub.assetRentalStatus.returns(ASSET_RENTAL_STATUS.RENTED);
       });
 
       it('returns the current owner of the token', async () => {

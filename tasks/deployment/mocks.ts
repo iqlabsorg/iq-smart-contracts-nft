@@ -1,3 +1,4 @@
+import { BigNumberish } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
 import {
@@ -15,19 +16,29 @@ task('deploy:mock:ERC20', 'Deploy an ERC20 contract')
   .addParam('symbol', 'symbol of the mock token', 'TT', types.string)
   .addParam('decimals', 'decimal points', TOKEN_DECIMALS, types.int)
   .addParam('totalSupply', 'amount of tokens', TOTAL_TOKENS, types.int)
-  .setAction(async ({ name, symbol, decimals, totalSupply }, hre) => {
-    const deployer = await hre.ethers.getNamedSigner('deployer');
+  .setAction(
+    async (
+      {
+        name,
+        symbol,
+        decimals,
+        totalSupply,
+      }: { name: string; symbol: string; decimals: string; totalSupply: BigNumberish },
+      hre,
+    ) => {
+      const deployer = await hre.ethers.getNamedSigner('deployer');
 
-    await hre.deployments.delete('ERC20Mock');
+      await hre.deployments.delete('ERC20Mock');
 
-    const deployment = await hre.deployments.deploy('ERC20Mock', {
-      from: deployer.address,
-      args: [name, symbol, decimals, parseEther(totalSupply.toString())],
-      log: true,
-    });
+      const deployment = await hre.deployments.deploy('ERC20Mock', {
+        from: deployer.address,
+        args: [name, symbol, decimals, parseEther(totalSupply.toString())],
+        log: true,
+      });
 
-    return new ERC20Mock__factory(deployer).attach(deployment.address);
-  });
+      return new ERC20Mock__factory(deployer).attach(deployment.address);
+    },
+  );
 
 task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
   .addParam('name', 'name of the mock token', 'TEST', types.string)

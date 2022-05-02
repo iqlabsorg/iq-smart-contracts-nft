@@ -31,11 +31,11 @@ import {
   IWarperPresetFactory,
   Metahub,
   Multicall,
-  UniverseRegistry,
   UUPSUpgradeable,
   WarperPresetMock,
 } from '../../typechain';
 
+// eslint-disable-next-line filenames-simple/typescript-module-declaration
 declare module 'mocha' {
   interface Context {
     contracts: Contracts;
@@ -109,4 +109,4 @@ export interface Signers {
   unnamed: Array<SignerWithAddress>;
 }
 
-export const AddressZero = constants.AddressZero;
+export const ADDRESS_ZERO = constants.AddressZero;

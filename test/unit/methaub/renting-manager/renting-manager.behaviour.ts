@@ -10,7 +10,6 @@ import {
   ERC721Mock__factory,
   ERC721WarperControllerMock,
   ERC721WarperControllerMock__factory,
-  ERC721Warper__factory,
   FixedPriceListingController,
   IAssetClassRegistry,
   IAssetController,
@@ -25,11 +24,11 @@ import {
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Rentings } from '../../../../typechain/contracts/metahub/Metahub';
-import { AddressZero } from '../../../shared/types';
+import { ASSET_CLASS } from '../../../shared/constants';
+import { ADDRESS_ZERO } from '../../../shared/types';
 import {
-  AssetClass,
   AssetListerHelper,
-  AssetRentalStatus,
+  ASSET_RENTAL_STATUS,
   deployRandomERC721Token,
   latestBlockTimestamp,
   makeERC721Asset,
@@ -49,7 +48,7 @@ const emptyRentingAgreement: Rentings.AgreementStruct = {
   },
   collectionId: '0x0000000000000000000000000000000000000000000000000000000000000000',
   listingId: BigNumber.from(0),
-  renter: AddressZero,
+  renter: ADDRESS_ZERO,
   startTime: 0,
   endTime: 0,
 };
@@ -72,7 +71,8 @@ const maxPaymentAmount = 100_000_000;
  * The metahub contract behaves like IRentingManager
  */
 export function shouldBehaveLikeRentingManager(): void {
-  describe('IRentingManager', function () {
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+  describe('IRentingManager', function (): void {
     let rentingManager: IRentingManager;
     let listingManager: IListingManager;
     let originalAsset: ERC721Mock;
@@ -204,7 +204,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
       context('When warper not registered and listed', () => {
         it('returns 0', async () => {
-          const randomCollectionId = solidityKeccak256(['address'], [AddressZero]);
+          const randomCollectionId = solidityKeccak256(['address'], [ADDRESS_ZERO]);
           await expect(rentingManager.collectionRentedValue(randomCollectionId, stranger.address)).to.eventually.equal(
             0,
           );
@@ -221,7 +221,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
       context('When asset not listed', () => {
         it('returns RentalStatus.NONE', async () => {
-          await expect(rentingManager.assetRentalStatus(assetStruct.id)).to.eventually.equal(AssetRentalStatus.NONE);
+          await expect(rentingManager.assetRentalStatus(assetStruct.id)).to.eventually.equal(ASSET_RENTAL_STATUS.NONE);
         });
       });
 
@@ -256,7 +256,7 @@ export function shouldBehaveLikeRentingManager(): void {
           context('When rental is active', () => {
             it('returns RentalStatus.RENTED', async () => {
               await expect(rentingManager.assetRentalStatus(assetStruct.id)).to.eventually.equal(
-                AssetRentalStatus.RENTED,
+                ASSET_RENTAL_STATUS.RENTED,
               );
             });
           });
@@ -268,7 +268,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
             it('returns RentalStatus.AVAILABLE', async () => {
               await expect(rentingManager.assetRentalStatus(assetStruct.id)).to.eventually.equal(
-                AssetRentalStatus.AVAILABLE,
+                ASSET_RENTAL_STATUS.AVAILABLE,
               );
             });
           });
@@ -554,7 +554,7 @@ export function shouldBehaveLikeRentingManager(): void {
             };
 
             await expect(rentingManager.connect(stranger).estimateRent(rentalParams)).to.be.revertedWith(
-              `NotListed(${rentalParams.listingId})`,
+              `NotListed(${rentalParams.listingId.toString()})`,
             );
           });
         });
@@ -566,7 +566,7 @@ export function shouldBehaveLikeRentingManager(): void {
           // Deploying a warper controller mock here so we can force-set the premiums
           // NOTE: Not using `smock` because it has problems with returning tuples/structs
           mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
-          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
+          await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, mockedWarperController.address);
 
           // General setup
           universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
@@ -783,9 +783,9 @@ export function shouldBehaveLikeRentingManager(): void {
       context('immediate payout is turned on', () => {
         beforeEach(async () => {
           const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
-          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
+          await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, mockedWarperController.address);
 
-          mockedWarperController.setPremiums(100, 300);
+          await mockedWarperController.setPremiums(100, 300);
 
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           listingId = await assetListerHelper.listAsset(
@@ -895,9 +895,9 @@ export function shouldBehaveLikeRentingManager(): void {
       context('accumulative payout is turned on', () => {
         beforeEach(async () => {
           const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
-          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
+          await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, mockedWarperController.address);
 
-          mockedWarperController.setPremiums(100, 300);
+          await mockedWarperController.setPremiums(100, 300);
 
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           listingId = await assetListerHelper.listAsset(
@@ -985,10 +985,10 @@ export function shouldBehaveLikeRentingManager(): void {
           });
 
           it('changes the owner of the Warped token', async () => {
-            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total),
-              await expect(
-                ERC721Mock__factory.connect(warperAddress, metahub.signer).ownerOf(tokenId),
-              ).to.eventually.equal(stranger.address);
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+            await expect(
+              ERC721Mock__factory.connect(warperAddress, metahub.signer).ownerOf(tokenId),
+            ).to.eventually.equal(stranger.address);
           });
         });
       });
@@ -998,8 +998,8 @@ export function shouldBehaveLikeRentingManager(): void {
         let rentCost: Rentings.RentalFeesStructOutput;
         beforeEach(async () => {
           const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
-          await assetClassRegistry.setAssetClassController(AssetClass.ERC721, mockedWarperController.address);
-          mockedWarperController.setPremiums(100, 300);
+          await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, mockedWarperController.address);
+          await mockedWarperController.setPremiums(100, 300);
 
           warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
           listingId = await assetListerHelper.listAsset(
@@ -1208,7 +1208,7 @@ export function shouldBehaveLikeRentingManager(): void {
           }
         });
 
-        async function assertAgreementsAreEqual(limit: number, offset: number) {
+        async function assertAgreementsAreEqual(limit: number, offset: number): Promise<void> {
           const retrievedRentalAgreements = await rentingManager.userRentalAgreements(stranger.address, offset, limit);
 
           for (let index = 0; index < retrievedRentalAgreements[0].length; index++) {

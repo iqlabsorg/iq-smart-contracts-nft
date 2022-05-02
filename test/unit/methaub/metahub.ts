@@ -1,11 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { formatBytes32String } from 'ethers/lib/utils';
 import hre, { ethers } from 'hardhat';
 import {
+  AssetClassRegistry,
+  ERC20,
   ERC721Mock,
   IACL,
   IAssetController__factory,
   IERC721WarperController,
   IUniverseRegistry,
+  IWarper,
+  ListingStrategyRegistry,
+  Metahub,
+  WarperPresetFactory,
 } from '../../../typechain';
 import { shouldBehaveLikeMetahub } from './metahub.behaviour';
 
@@ -13,7 +20,18 @@ export const warperPresetId = formatBytes32String('ERC721Basic');
 
 export function unitTestMetahub(): void {
   let acl: IACL;
-  async function unitFixtureMetahub() {
+  async function unitFixtureMetahub(): Promise<{
+    assetClassRegistry: any;
+    universeRegistry: IUniverseRegistry;
+    fixedPriceListingController: any;
+    originalAsset: ERC721Mock;
+    erc721Controller: IERC721WarperController;
+    erc721Vault: any;
+    listingStrategyRegistry: any;
+    warperPresetFactory: any;
+    metahub: any;
+    baseToken: any;
+  }> {
     // Resolve primary roles
     const nftCreator = await ethers.getNamedSigner('nftCreator');
 
@@ -28,35 +46,35 @@ export function unitTestMetahub(): void {
     await originalAsset.mint(nftCreator.address, 2);
 
     // Deploy and register warper preset
-    const warperImpl = await hre.run('deploy:erc721-preset-configurable');
+    const warperImpl = (await hre.run('deploy:erc721-preset-configurable')) as IWarper;
 
-    const baseToken = await hre.run('deploy:mock:ERC20', {
+    const baseToken = (await hre.run('deploy:mock:ERC20', {
       name: 'Test ERC721',
       symbol: 'ONFT',
       decimals: 18,
       totalSupply: 100_000_000,
-    });
+    })) as ERC20;
 
     // Deploy Asset Class Registry.
-    const assetClassRegistry = await hre.run('deploy:asset-class-registry', {
+    const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
       acl: acl.address,
-    });
+    })) as AssetClassRegistry;
 
     // Deploy Listing Strategy Registry
-    const listingStrategyRegistry = await hre.run('deploy:listing-strategy-registry', {
+    const listingStrategyRegistry = (await hre.run('deploy:listing-strategy-registry', {
       acl: acl.address,
-    });
+    })) as ListingStrategyRegistry;
 
     // Deploy Warper preset factory
-    const warperPresetFactory = await hre.run('deploy:warper-preset-factory', {
+    const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
       acl: acl.address,
-    });
+    })) as WarperPresetFactory;
 
     await warperPresetFactory.addPreset(warperPresetId, warperImpl.address);
     // Deploy Universe token
     const universeRegistry = (await hre.run('deploy:universe-registry', { acl: acl.address })) as IUniverseRegistry;
 
-    const metahub = await hre.run('deploy:metahub', {
+    const metahub = (await hre.run('deploy:metahub', {
       acl: acl.address,
       universeRegistry: universeRegistry.address,
       warperPresetFactory: warperPresetFactory.address,
@@ -64,7 +82,7 @@ export function unitTestMetahub(): void {
       assetClassRegistry: assetClassRegistry.address,
       baseToken: baseToken.address,
       rentalFeePercent: 100,
-    });
+    })) as Metahub;
 
     const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as IERC721WarperController;
     const erc721Vault = await hre.run('deploy:erc721-asset-vault', {

@@ -11,8 +11,8 @@ import {
   IERC721WarperController,
   Metahub,
 } from '../../../../../typechain';
-import { AddressZero } from '../../../../shared/types';
-import { AssetRentalStatus } from '../../../../shared/utils';
+import { ADDRESS_ZERO } from '../../../../shared/types';
+import { ASSET_RENTAL_STATUS } from '../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {
@@ -41,7 +41,7 @@ export function shouldBehaveTransfer(): void {
       [, , stranger] = this.signers.unnamed;
 
       assetClassRegistry.assetClassConfig.returns({
-        vault: AddressZero,
+        vault: ADDRESS_ZERO,
         controller: erc721WarperController.address,
       });
 
@@ -63,11 +63,11 @@ export function shouldBehaveTransfer(): void {
       data: BytesLike;
     };
 
-    const transferWasSuccessful = function () {
+    const transferWasSuccessful = function (): void {
       context('When rented', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.assetRentalStatus.returns(AssetRentalStatus.RENTED);
+          metahub.assetRentalStatus.returns(ASSET_RENTAL_STATUS.RENTED);
         });
 
         it('transfers the ownership of the given token ID', async () => {
@@ -78,7 +78,7 @@ export function shouldBehaveTransfer(): void {
       context('When available for renting', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.assetRentalStatus.returns(AssetRentalStatus.AVAILABLE);
+          metahub.assetRentalStatus.returns(ASSET_RENTAL_STATUS.AVAILABLE);
         });
 
         it('does not change the ownership', async () => {
@@ -89,12 +89,12 @@ export function shouldBehaveTransfer(): void {
       context('When not minted', () => {
         beforeEach(() => {
           // NOTE: mocking the metahub return data
-          metahub.assetRentalStatus.returns(AssetRentalStatus.NONE);
+          metahub.assetRentalStatus.returns(ASSET_RENTAL_STATUS.NONE);
         });
 
         it('does not change the ownership', async () => {
           await expect(warper.ownerOf(transferArgs.tokenId)).to.be.revertedWith(
-            `OwnerQueryForNonexistentToken(${transferArgs.tokenId})`,
+            `OwnerQueryForNonexistentToken(${transferArgs.tokenId.toString()})`,
           );
         });
       });
@@ -109,7 +109,7 @@ export function shouldBehaveTransfer(): void {
       it.skip('adjusts owners balances', async () => {
         let expectedBalance: BigNumber;
         // If sending to himself, balance does not change
-        if (transferArgs.toWhom == assetOwner.address) {
+        if (transferArgs.toWhom === assetOwner.address) {
           expectedBalance = ownerBalanceOriginal;
         } else {
           expectedBalance = ownerBalanceOriginal.sub('1');
@@ -118,7 +118,7 @@ export function shouldBehaveTransfer(): void {
       });
     };
 
-    const shouldTransferTokensByUsers = function () {
+    const shouldTransferTokensByUsers = (): void => {
       describe('When called by the owner', () => {
         it('reverts', async () => {
           await expect(
@@ -148,6 +148,7 @@ export function shouldBehaveTransfer(): void {
             assetOwner.address,
             transferArgs.tokenId,
           );
+          // eslint-disable-next-line require-atomic-updates
           transferArgs.toWhom = assetOwner.address; // Asset owner sending to himself
         });
 
@@ -188,13 +189,13 @@ export function shouldBehaveTransfer(): void {
       context('When the address to transfer the token to is the zero address', () => {
         it('reverts', async () => {
           await expect(
-            transferTxBuilder(metahub.wallet, assetOwner.address, AddressZero, transferArgs.tokenId),
+            transferTxBuilder(metahub.wallet, assetOwner.address, ADDRESS_ZERO, transferArgs.tokenId),
           ).to.be.revertedWith('TransferToTheZeroAddress');
         });
       });
     };
 
-    const shouldTransferSafely = function () {
+    const shouldTransferSafely = (): void => {
       describe('to a user account', () => {
         shouldTransferTokensByUsers();
       });
@@ -258,7 +259,7 @@ export function shouldBehaveTransfer(): void {
     context('When the address to transfer the token to is the zero address', () => {
       it('reverts', async () => {
         await expect(
-          warper.connect(metahub.wallet).transferFrom(assetOwner.address, AddressZero, mintedTokenId),
+          warper.connect(metahub.wallet).transferFrom(assetOwner.address, ADDRESS_ZERO, mintedTokenId),
         ).to.be.revertedWith(`TransferToTheZeroAddress`);
       });
     });

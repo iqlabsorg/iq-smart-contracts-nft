@@ -183,7 +183,6 @@ export function shouldBehaveWarperPresetFactory(): void {
             );
 
             // Assert warper is deployed and initialized correctly.
-            expect(warperAddress).to.be.properAddress;
             const warper = new WarperPresetMock__factory(deployer).attach(warperAddress);
             await expect(warper.__original()).to.eventually.eq(originalAddress);
             await expect(warper.__metahub()).to.eventually.eq(metahubAddress);
