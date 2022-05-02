@@ -47,7 +47,7 @@ declare global {
        * @param account The signer
        * @param role The bytes32 string
        */
-      revertedByACL(account: string, role: string): Assertion;
+      revertedByACL(account: string, role: string): AsyncAssertion;
 
       /**
        * Compare two objects, but removes all of the "index" based fields.

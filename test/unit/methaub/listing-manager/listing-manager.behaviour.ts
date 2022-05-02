@@ -22,8 +22,8 @@ import {
   deployRandomERC721Token,
   makeERC721Asset,
   makeFixedPriceStrategy,
-  solidityId,
 } from '../../../shared/utils';
+import { solidityId } from '../../../shared/constants';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',

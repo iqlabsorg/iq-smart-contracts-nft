@@ -1,4 +1,12 @@
-import { solidityId } from './utils';
+import { hexDataSlice, solidityKeccak256 } from 'ethers/lib/utils';
+
+/**
+ * Calculates ID by taking 4 byte of the provided string hashed value.
+ * @param string Arbitrary string.
+ */
+export const solidityId = (string: string): string => {
+  return hexDataSlice(solidityKeccak256(['string'], [string]), 0, 4);
+};
 
 export const MAX_UINT_32 = 2 ** 32 - 1;
 

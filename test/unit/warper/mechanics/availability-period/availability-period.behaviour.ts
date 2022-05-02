@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { MAX_UINT_32 } from '../../../../shared/utils';
+import { MAX_UINT_32 } from '../../../../shared/constants';
 
 /**
  * TODO

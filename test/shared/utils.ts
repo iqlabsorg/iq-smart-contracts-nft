@@ -2,7 +2,7 @@ import hre, { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { formatBytes32String } from 'ethers/lib/utils';
+import { formatBytes32String, defaultAbiCoder } from 'ethers/lib/utils';
 import { wait } from '../../tasks';
 import {
   ERC721,
@@ -22,8 +22,6 @@ import {
 import { Assets } from '../../typechain/contracts/metahub/Metahub';
 import { ASSET_CLASS, LISTING_STRATEGY } from './constants';
 
-const { solidityKeccak256, hexDataSlice, defaultAbiCoder } = ethers.utils;
-
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
 export const randomInteger = (max: number): number => {
@@ -41,14 +39,6 @@ export const latestBlockTimestamp = async (): Promise<number> => {
 export const waitBlockchainTime = async (seconds: number): Promise<void> => {
   const time = await latestBlockTimestamp();
   await mineBlock(time + seconds);
-};
-
-/**
- * Calculates ID by taking 4 byte of the provided string hashed value.
- * @param string Arbitrary string.
- */
-export const solidityId = (string: string): string => {
-  return hexDataSlice(solidityKeccak256(['string'], [string]), 0, 4);
 };
 
 /**
@@ -201,10 +191,8 @@ export class AccessControlledHelper {
 
     context('When called by stranger', () => {
       it('reverts', async () => {
-        await expect(tx(actorSet().stranger)).to.eventually.revertedByACL(
-          await actorSet().stranger.getAddress(),
-          actorSet().requiredRole,
-        );
+        const strangerAddress = await actorSet().stranger.getAddress();
+        await expect(tx(actorSet().stranger)).to.be.revertedByACL(strangerAddress, actorSet().requiredRole);
       });
     });
   }
