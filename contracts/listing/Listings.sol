@@ -13,6 +13,7 @@ library Listings {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using Listings for Registry;
     using Listings for Listing;
+    using Assets for Assets.Asset;
 
     /**
      * @dev Thrown when the `listingId` is invalid or the asset has been delisted.
@@ -145,6 +146,13 @@ library Listings {
     struct ListerInfo {
         EnumerableSetUpgradeable.UintSet listingIndex;
     }
+    /**
+     * @dev Listing related data associated with the specific account.
+     * @param listingIndex The set of listing IDs.
+     */
+    struct AssetInfo {
+        EnumerableSetUpgradeable.UintSet listingIndex;
+    }
 
     /**
      * @dev Listing registry.
@@ -160,6 +168,7 @@ library Listings {
         EnumerableSetUpgradeable.UintSet listingIndex;
         mapping(uint256 => Listing) listings;
         mapping(address => ListerInfo) listers;
+        mapping(address => AssetInfo) assets;
     }
 
     /**
@@ -176,6 +185,8 @@ library Listings {
         self.listingIndex.add(listingId);
         // Add user listing data.
         self.listers[listing.lister].listingIndex.add(listingId);
+        // Add asset listing data.
+        self.assets[listing.asset.token()].listingIndex.add(listingId);
     }
 
     /**
@@ -184,10 +195,14 @@ library Listings {
      */
     function remove(Registry storage self, uint256 listingId) external {
         address lister = self.listings[listingId].lister;
+        address original = self.listings[listingId].asset.token();
+
         // Remove the listing ID from the global index.
         self.listingIndex.remove(listingId);
         // Remove user listing data.
         self.listers[lister].listingIndex.remove(listingId);
+        // Delete asset.
+        self.assets[original].listingIndex.remove(listingId);
         // Delete listing.
         delete self.listings[listingId];
     }
@@ -213,6 +228,18 @@ library Listings {
         uint256 limit
     ) external view returns (uint256[] memory, Listing[] memory) {
         return self.paginateIndexedListings(self.listers[lister].listingIndex, offset, limit);
+    }
+
+    /**
+     * @dev Returns the paginated list of currently registered listings for the original asset.
+     */
+    function assetListings(
+        Registry storage self,
+        address original,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Listing[] memory) {
+        return self.paginateIndexedListings(self.assets[original].listingIndex, offset, limit);
     }
 
     /**
@@ -260,6 +287,13 @@ library Listings {
      */
     function userListingCount(Registry storage self, address lister) internal view returns (uint256) {
         return self.listers[lister].listingIndex.length();
+    }
+
+    /**
+     * @dev Returns the number of currently registered listings for a particular original asset.
+     */
+    function assetListingCount(Registry storage self, address original) internal view returns (uint256) {
+        return self.assets[original].listingIndex.length();
     }
 
     /**

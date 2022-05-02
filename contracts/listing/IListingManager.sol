@@ -153,4 +153,25 @@ interface IListingManager {
         uint256 offset,
         uint256 limit
     ) external view returns (uint256[] memory, Listings.Listing[] memory);
+
+    /**
+     * @dev Returns the number of currently registered listings for the particular original asset address.
+     * @param original Original asset address.
+     * @return Listing count.
+     */
+    function assetListingCount(address original) external view returns (uint256);
+
+    /**
+     * @dev Returns the paginated list of currently registered listings for the particular original asset address.
+     * @param original Original asset address.
+     * @param offset Starting index.
+     * @param limit Max number of items.
+     * @return Listing IDs.
+     * @return Listings.
+     */
+    function assetListings(
+        address original,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory, Listings.Listing[] memory);
 }
