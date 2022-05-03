@@ -1,3 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { task, types } from 'hardhat/config';
+import {
+  ACL,
+  AssetClassRegistry,
+  ERC721PresetConfigurable,
+  ERC721WarperController,
+  FixedPriceListingController,
+  ListingStrategyRegistry,
+  Metahub,
+  UniverseRegistry,
+  WarperPresetFactory,
+} from '../../typechain';
+
 import './acl';
 import './metahub';
 import './mocks';
@@ -7,3 +21,80 @@ import './controllers';
 import './universe';
 import './assets';
 import './listings';
+import { formatBytes32String } from 'ethers/lib/utils';
+
+export const PRESET_CONFIGURABLE_ID = formatBytes32String('ERC721PresetConfigurable');
+
+task('deploy:initial-deployment', 'Deploy the initial deployment set')
+  .addParam('baseToken', 'The base token contract address', undefined, types.string)
+  .addParam('rentalFee', 'The base rental fee', 100, types.int)
+  .setAction(async ({ baseToken, rentalFee }: { baseToken: string; rentalFee: number }, hre) => {
+    // Deploy and register warper preset
+    const acl = (await hre.run('deploy:acl')) as ACL;
+
+    // Deploy Asset Class Registry.
+    const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
+      acl: acl.address,
+    })) as AssetClassRegistry;
+
+    // Deploy Listing Strategy Registry
+    const listingStrategyRegistry = (await hre.run('deploy:listing-strategy-registry', {
+      acl: acl.address,
+    })) as ListingStrategyRegistry;
+
+    // Deploy Warper preset factory
+    const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
+      acl: acl.address,
+    })) as WarperPresetFactory;
+
+    // Deploy Universe token
+    const universeRegistry = (await hre.run('deploy:universe-registry', { acl: acl.address })) as UniverseRegistry;
+
+    // Deploy Metahub
+    const metahub = (await hre.run('deploy:metahub', {
+      acl: acl.address,
+      universeRegistry: universeRegistry.address,
+      warperPresetFactory: warperPresetFactory.address,
+      listingStrategyRegistry: listingStrategyRegistry.address,
+      assetClassRegistry: assetClassRegistry.address,
+      baseToken: baseToken,
+      rentalFeePercent: rentalFee,
+    })) as Metahub;
+
+    // Deploy fixed price listing controller
+    const fixedPriceListingController = (await hre.run(
+      'deploy:fixed-price-listing-controller',
+    )) as FixedPriceListingController;
+
+    // Deploy ERC721 Warper controller
+    const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as ERC721WarperController;
+
+    // Deploy ERC721 asset vault
+    const erc721Vault = await hre.run('deploy:erc721-asset-vault', {
+      operator: metahub.address,
+      acl: acl.address,
+    });
+
+    // Deploy and register warper preset
+    const erc721presetConfigurable = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
+
+    // Register the warper-configurable preset
+    {
+      const tx = await warperPresetFactory.addPreset(PRESET_CONFIGURABLE_ID, erc721presetConfigurable.address);
+      console.log('addPreset', tx.hash, tx.gasPrice?.toString());
+      await tx.wait();
+    }
+
+    return {
+      erc721Controller: erc721Controller,
+      erc721Vault: erc721Vault,
+      acl: acl,
+      erc721presetConfigurable: erc721presetConfigurable,
+      assetClassRegistry: assetClassRegistry,
+      listingStrategyRegistry: listingStrategyRegistry,
+      warperPresetFactory: warperPresetFactory,
+      universeRegistry: universeRegistry,
+      metahub: metahub,
+      fixedPriceListingController: fixedPriceListingController,
+    };
+  });

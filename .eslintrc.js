@@ -119,6 +119,12 @@ module.exports = {
       },
     },
     {
+      files: ['./deploy/**'],
+      rules: {
+        'filenames-simple/naming-convention': 'off',
+      },
+    },
+    {
       files: ['.eslintrc.js'],
       rules: {
         'sonarjs/no-duplicate-string': 'off',
