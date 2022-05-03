@@ -189,6 +189,137 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "original",
+          "type": "address"
+        }
+      ],
+      "name": "assetListingCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "original",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "offset",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "limit",
+          "type": "uint256"
+        }
+      ],
+      "name": "assetListings",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        },
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "components": [
+                    {
+                      "internalType": "bytes4",
+                      "name": "class",
+                      "type": "bytes4"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "data",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct Assets.AssetId",
+                  "name": "id",
+                  "type": "tuple"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Assets.Asset",
+              "name": "asset",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bytes4",
+                  "name": "strategy",
+                  "type": "bytes4"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "data",
+                  "type": "bytes"
+                }
+              ],
+              "internalType": "struct Listings.Params",
+              "name": "params",
+              "type": "tuple"
+            },
+            {
+              "internalType": "address",
+              "name": "lister",
+              "type": "address"
+            },
+            {
+              "internalType": "uint32",
+              "name": "maxLockPeriod",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "lockedTill",
+              "type": "uint32"
+            },
+            {
+              "internalType": "bool",
+              "name": "immediatePayout",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "delisted",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "paused",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct Listings.Listing[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "uint256",
           "name": "listingId",
           "type": "uint256"
