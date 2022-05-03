@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers';
 import {
   ERC20Mock,
   ERC721Mock,
+  ERC721Mock__factory,
   FixedPriceListingController,
   IAssetClassRegistry,
   IAssetController,
@@ -217,6 +218,17 @@ export function shouldBehaveLikeListingManager(): void {
             delisted: true,
             paused: false,
           });
+
+          // NOTE: the listing counts should not decrement!
+          await expect(listingManager.listingCount(), 'Total listing count does not match').to.eventually.equal(1);
+          await expect(
+            listingManager.assetListingCount(originalAsset.address),
+            'Asset listing count does not match',
+          ).to.eventually.equal(1);
+          await expect(
+            listingManager.userListingCount(nftCreator.address),
+            'User listing count does not match',
+          ).to.eventually.equal(1);
         });
       });
     });
@@ -306,6 +318,17 @@ export function shouldBehaveLikeListingManager(): void {
             delisted: false,
             paused: false,
           });
+
+          // NOTE: the listing counts not decrement!
+          await expect(listingManager.listingCount(), 'Total listing count does not match').to.eventually.equal(0);
+          await expect(
+            listingManager.assetListingCount(originalAsset.address),
+            'Asset listing count does not match',
+          ).to.eventually.equal(0);
+          await expect(
+            listingManager.userListingCount(nftCreator.address),
+            'User listing count does not match',
+          ).to.eventually.equal(0);
         });
 
         it('transfers the asset back to the lister', async () => {
@@ -594,7 +617,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
 
         context('There are less listings than requested', () => {
-          it('returns only the requested amount', async () => {
+          it('returns the requested amount', async () => {
             const retrievedListings = await listingManager.listings(0, 10);
 
             expect(retrievedListings[0].length).to.equal(5);
@@ -663,7 +686,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
 
         context('A user has less listings than requested', () => {
-          it('returns only the requested amount', async () => {
+          it('returns the requested amount', async () => {
             const retrievedListings = await listingManager.userListings(stranger.address, 0, 10);
 
             expect(retrievedListings[0].length).to.equal(5);
@@ -756,6 +779,49 @@ export function shouldBehaveLikeListingManager(): void {
 
         it('returns 5', async () => {
           await expect(listingManager.userListingCount(stranger.address)).to.eventually.equal(5);
+        });
+      });
+    });
+
+    describe('assetListingCount', () => {
+      context('When no listings exist', () => {
+        it('returns 0', async () => {
+          await expect(listingManager.assetListingCount(originalAsset.address)).to.eventually.equal(0);
+        });
+      });
+
+      context('When 10 listings exist, 4 for asset A, 6 for asset B', () => {
+        const listingCountA = 4;
+        const listingCountB = 6;
+        let originalAssetA: ERC721Mock;
+        let originalAssetB: ERC721Mock;
+        beforeEach(async () => {
+          originalAssetA = originalAsset;
+          originalAssetB = ERC721Mock__factory.connect((await deployRandomERC721Token()).address, originalAsset.signer);
+          await assetListerHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
+
+          for (const iterator of [
+            { count: listingCountA, asset: originalAssetA },
+            { count: listingCountB, asset: originalAssetB },
+          ]) {
+            for (let index = 0; index < iterator.count; index++) {
+              const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
+              await iterator.asset.mint(nftCreator.address, tokenId);
+              await assetListerHelper.listAsset(nftCreator, iterator.asset, maxLockPeriod, baseRate, tokenId, false);
+            }
+          }
+        });
+
+        context('When querying asset A', () => {
+          it('returns 5', async () => {
+            await expect(listingManager.assetListingCount(originalAssetA.address)).to.eventually.equal(listingCountA);
+          });
+        });
+
+        context('When querying asset B', () => {
+          it('returns 6', async () => {
+            await expect(listingManager.assetListingCount(originalAssetB.address)).to.eventually.equal(listingCountB);
+          });
         });
       });
     });
