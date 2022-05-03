@@ -2,6 +2,7 @@
 import { task, types } from 'hardhat/config';
 import {
   ACL,
+  ACL__factory,
   AssetClassRegistry,
   ERC721PresetConfigurable,
   ERC721WarperController,
@@ -28,73 +29,83 @@ export const PRESET_CONFIGURABLE_ID = formatBytes32String('ERC721PresetConfigura
 task('deploy:initial-deployment', 'Deploy the initial deployment set')
   .addParam('baseToken', 'The base token contract address', undefined, types.string)
   .addParam('rentalFee', 'The base rental fee', 100, types.int)
-  .setAction(async ({ baseToken, rentalFee }: { baseToken: string; rentalFee: number }, hre) => {
-    // Deploy and register warper preset
-    const acl = (await hre.run('deploy:acl')) as ACL;
+  .addParam('acl', 'The ACL contract address (optional)', undefined, types.string, true)
+  .setAction(
+    async ({ baseToken, rentalFee, acl }: { baseToken: string; rentalFee: number; acl: string | undefined }, hre) => {
+      // Deploy the ACL contract (conditionally)
+      let aclContract: ACL;
+      if (acl === undefined) {
+        aclContract = (await hre.run('deploy:acl')) as ACL;
+      } else {
+        aclContract = ACL__factory.connect(acl, await hre.ethers.getNamedSigner('deployer'));
+      }
 
-    // Deploy Asset Class Registry.
-    const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
-      acl: acl.address,
-    })) as AssetClassRegistry;
+      // Deploy Asset Class Registry.
+      const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
+        acl: aclContract.address,
+      })) as AssetClassRegistry;
 
-    // Deploy Listing Strategy Registry
-    const listingStrategyRegistry = (await hre.run('deploy:listing-strategy-registry', {
-      acl: acl.address,
-    })) as ListingStrategyRegistry;
+      // Deploy Listing Strategy Registry
+      const listingStrategyRegistry = (await hre.run('deploy:listing-strategy-registry', {
+        acl: aclContract.address,
+      })) as ListingStrategyRegistry;
 
-    // Deploy Warper preset factory
-    const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
-      acl: acl.address,
-    })) as WarperPresetFactory;
+      // Deploy Warper preset factory
+      const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
+        acl: aclContract.address,
+      })) as WarperPresetFactory;
 
-    // Deploy Universe token
-    const universeRegistry = (await hre.run('deploy:universe-registry', { acl: acl.address })) as UniverseRegistry;
+      // Deploy Universe token
+      const universeRegistry = (await hre.run('deploy:universe-registry', {
+        acl: aclContract.address,
+      })) as UniverseRegistry;
 
-    // Deploy Metahub
-    const metahub = (await hre.run('deploy:metahub', {
-      acl: acl.address,
-      universeRegistry: universeRegistry.address,
-      warperPresetFactory: warperPresetFactory.address,
-      listingStrategyRegistry: listingStrategyRegistry.address,
-      assetClassRegistry: assetClassRegistry.address,
-      baseToken: baseToken,
-      rentalFeePercent: rentalFee,
-    })) as Metahub;
+      // Deploy Metahub
+      const metahub = (await hre.run('deploy:metahub', {
+        acl: aclContract.address,
+        universeRegistry: universeRegistry.address,
+        warperPresetFactory: warperPresetFactory.address,
+        listingStrategyRegistry: listingStrategyRegistry.address,
+        assetClassRegistry: assetClassRegistry.address,
+        baseToken: baseToken,
+        rentalFeePercent: rentalFee,
+      })) as Metahub;
 
-    // Deploy fixed price listing controller
-    const fixedPriceListingController = (await hre.run(
-      'deploy:fixed-price-listing-controller',
-    )) as FixedPriceListingController;
+      // Deploy fixed price listing controller
+      const fixedPriceListingController = (await hre.run(
+        'deploy:fixed-price-listing-controller',
+      )) as FixedPriceListingController;
 
-    // Deploy ERC721 Warper controller
-    const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as ERC721WarperController;
+      // Deploy ERC721 Warper controller
+      const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as ERC721WarperController;
 
-    // Deploy ERC721 asset vault
-    const erc721Vault = await hre.run('deploy:erc721-asset-vault', {
-      operator: metahub.address,
-      acl: acl.address,
-    });
+      // Deploy ERC721 asset vault
+      const erc721Vault = await hre.run('deploy:erc721-asset-vault', {
+        operator: metahub.address,
+        acl: aclContract.address,
+      });
 
-    // Deploy and register warper preset
-    const erc721presetConfigurable = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
+      // Deploy and register warper preset
+      const erc721presetConfigurable = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
 
-    // Register the warper-configurable preset
-    {
-      const tx = await warperPresetFactory.addPreset(PRESET_CONFIGURABLE_ID, erc721presetConfigurable.address);
-      console.log('addPreset', tx.hash, tx.gasPrice?.toString());
-      await tx.wait();
-    }
+      // Register the warper-configurable preset
+      {
+        const tx = await warperPresetFactory.addPreset(PRESET_CONFIGURABLE_ID, erc721presetConfigurable.address);
+        console.log('addPreset', tx.hash, tx.gasPrice?.toString());
+        await tx.wait();
+      }
 
-    return {
-      erc721Controller: erc721Controller,
-      erc721Vault: erc721Vault,
-      acl: acl,
-      erc721presetConfigurable: erc721presetConfigurable,
-      assetClassRegistry: assetClassRegistry,
-      listingStrategyRegistry: listingStrategyRegistry,
-      warperPresetFactory: warperPresetFactory,
-      universeRegistry: universeRegistry,
-      metahub: metahub,
-      fixedPriceListingController: fixedPriceListingController,
-    };
-  });
+      return {
+        erc721Controller: erc721Controller,
+        erc721Vault: erc721Vault,
+        acl: aclContract,
+        erc721presetConfigurable: erc721presetConfigurable,
+        assetClassRegistry: assetClassRegistry,
+        listingStrategyRegistry: listingStrategyRegistry,
+        warperPresetFactory: warperPresetFactory,
+        universeRegistry: universeRegistry,
+        metahub: metahub,
+        fixedPriceListingController: fixedPriceListingController,
+      };
+    },
+  );

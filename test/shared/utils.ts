@@ -2,7 +2,7 @@ import hre, { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { formatBytes32String, defaultAbiCoder } from 'ethers/lib/utils';
+import { defaultAbiCoder } from 'ethers/lib/utils';
 import { wait } from '../../tasks';
 import {
   ERC721,
@@ -21,6 +21,7 @@ import {
 } from '../../typechain';
 import { Assets } from '../../typechain/contracts/metahub/Metahub';
 import { ASSET_CLASS, LISTING_STRATEGY } from './constants';
+import { PRESET_CONFIGURABLE_ID } from '../../tasks/deployment';
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
@@ -199,7 +200,7 @@ export class AccessControlledHelper {
 }
 
 export class AssetListerHelper {
-  public static warperPresetId = formatBytes32String('ERC721Basic');
+  public static warperPresetId = PRESET_CONFIGURABLE_ID;
 
   constructor(
     readonly assetClassRegistry: IAssetClassRegistry,

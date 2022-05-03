@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { formatBytes32String, solidityKeccak256 } from 'ethers/lib/utils';
+import { solidityKeccak256 } from 'ethers/lib/utils';
 import hre from 'hardhat';
 import { beforeEach } from 'mocha';
 import {
@@ -58,8 +58,6 @@ const warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct = 
   universeId: 1,
   paused: true,
 };
-
-export const warperPresetId = formatBytes32String('ERC721Basic');
 
 const maxLockPeriod = 86400;
 const baseRate = 100;
