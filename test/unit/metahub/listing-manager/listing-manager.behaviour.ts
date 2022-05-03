@@ -825,5 +825,94 @@ export function shouldBehaveLikeListingManager(): void {
         });
       });
     });
+
+    describe('assetListings', () => {
+      context('When no listings', () => {
+        it('returns 0', async () => {
+          const offset = 0;
+          const limit = 10;
+          await expect(listingManager.assetListings(originalAsset.address, offset, limit)).to.eventually.deep.equal([
+            [],
+            [],
+          ]);
+        });
+      });
+
+      context('When user has 5 listings, but in total there are 10', () => {
+        const listingCountA = 4;
+        const listingCountB = 6;
+        let originalAssetA: ERC721Mock;
+        let originalAssetB: ERC721Mock;
+        let listingsB: Array<BigNumber>;
+        beforeEach(async () => {
+          originalAssetA = originalAsset;
+          originalAssetB = ERC721Mock__factory.connect((await deployRandomERC721Token()).address, originalAsset.signer);
+          await assetListerHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
+
+          listingsB = [];
+          for (const iterator of [
+            { count: listingCountA, asset: originalAssetA, listingBucket: [] },
+            { count: listingCountB, asset: originalAssetB, listingBucket: listingsB }, // Reference to the `listings` var
+          ]) {
+            for (let index = 0; index < iterator.count; index++) {
+              const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
+              await iterator.asset.mint(nftCreator.address, tokenId);
+              iterator.listingBucket.push(
+                await assetListerHelper.listAsset(nftCreator, iterator.asset, maxLockPeriod, baseRate, tokenId, false),
+              );
+            }
+          }
+        });
+
+        /**
+         * Fetch all the listings in the specified range and compare the results with the returned data of `listingInfo`.
+         * Also makes sure that the expected listing IDs are returned by comparing to the stored listing ids.
+         */
+        async function listingsAreEqual(limit: number, offset: number): Promise<void> {
+          const retrievedListings = await listingManager.assetListings(originalAssetB.address, offset, limit);
+
+          for (let index = 0; index < retrievedListings[0].length; index++) {
+            const listingId = retrievedListings[0][index];
+            const listingData = retrievedListings[1][index];
+            await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct(listingData);
+          }
+          expect(retrievedListings[0].length).to.equal(limit);
+          expect(retrievedListings[1].length).to.equal(limit);
+
+          expect(retrievedListings[0]).to.deep.equal(
+            listingsB.slice(offset, offset + limit).map(e => BigNumber.from(e)),
+          );
+        }
+
+        it('can request first 2 listings', async () => {
+          await listingsAreEqual(0, 2);
+        });
+
+        it('can request next 2 listings', async () => {
+          await listingsAreEqual(2, 2);
+        });
+
+        it('can request all listings', async () => {
+          await listingsAreEqual(0, 5);
+        });
+
+        context('Am original asset has less listings than requested', () => {
+          it('returns the requested amount', async () => {
+            const retrievedListings = await listingManager.assetListings(originalAssetB.address, 0, 10);
+
+            expect(retrievedListings[0].length).to.equal(6);
+            expect(retrievedListings[1].length).to.equal(6);
+          });
+        });
+
+        context('Offset larger than total amount', () => {
+          it('returns empty arrays', async () => {
+            const retrievedListings = await listingManager.assetListings(originalAssetB.address, 6, 10);
+
+            expect(retrievedListings).to.deep.equal([[], []]);
+          });
+        });
+      });
+    });
   });
 }
