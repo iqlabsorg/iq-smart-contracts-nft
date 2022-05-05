@@ -58,7 +58,11 @@ jobs:
         with:
           cmd: lint
 
-      # TODO lint commits
+      - name: Run commitlint
+        uses: wagoid/commitlint-github-action@v2
+        with:
+          configFile: .commitlintrc.json
+
   test:
     name: test
     runs-on: ubuntu-20.04
