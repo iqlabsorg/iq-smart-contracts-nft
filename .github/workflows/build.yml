@@ -53,6 +53,22 @@ jobs:
           path: ./*
           key: ${{ github.sha }}
 
+      # will run `yarn lint` command
       - uses: borales/actions-yarn@v2.3.0
         with:
-          cmd: lint # will run `yarn lint` command
+          cmd: lint
+  test:
+    name: test
+    runs-on: ubuntu-20.04
+    needs: ["build"]
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      # will run `yarn test` command
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: test
