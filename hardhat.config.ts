@@ -75,7 +75,7 @@ const config: HardhatUserConfig = {
     outDir: 'typechain',
     target: 'ethers-v5',
   },
-  docgen: { pages: 'files', outputDir: 'docs' },
+  docgen: { pages: 'files', outputDir: 'docs', templates: './themes/custom-markdown' },
 };
 
 export default config;
