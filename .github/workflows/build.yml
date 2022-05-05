@@ -1,4 +1,4 @@
-name: Build
+name: build
 
 on:
   push:
@@ -8,21 +8,51 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: build
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: install # will run `yarn install` command
-      - uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: compile # will run `yarn compile` command
 
+      # Cache node modules for the next time we need to execute the build task
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: "./node_modules"
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./yarn.lock') }}
+
+      # Will run `yarn install` command.
+      # Pretty much does nothing if valid node modules is restored from cache.
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: install
+
+      # Will run `yarn compile` command.
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: compile
+
+      # Will cache the typechain files and all other artifacts to be used in future tasks.
       - name: Cache the state of the repository
         uses: actions/cache@v2
         id: restore-build
         with:
           path: ./*
           key: ${{ github.sha }}
+
+  lint:
+    name: lint
+    runs-on: ubuntu-20.04
+    needs: ["build"]
+    steps:
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      - uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: lint # will run `yarn lint` command
