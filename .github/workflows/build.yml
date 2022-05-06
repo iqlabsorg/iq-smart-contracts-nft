@@ -58,6 +58,15 @@ jobs:
         with:
           cmd: lint
 
+  commit-lint:
+    name: commit-lint
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out github repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Run commitlint
         uses: wagoid/commitlint-github-action@v2
         with:
