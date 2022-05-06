@@ -85,23 +85,22 @@ jobs:
         with:
           configFile: .commitlintrc.json
 
-  # TODO: uncomment before merge
-  # test:
-  #   name: test
-  #   runs-on: ubuntu-20.04
-  #   needs: ["build"]
-  #   steps:
-  #     - uses: actions/cache@v3
-  #       id: restore-build
-  #       with:
-  #         path: ./*
-  #         key: ${{ github.sha }}
+  test:
+    name: test
+    runs-on: ubuntu-20.04
+    needs: ["build"]
+    steps:
+      - uses: actions/cache@v3
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
 
-  #     # will run `yarn test` command
-  #     - name: Execute tests
-  #       uses: borales/actions-yarn@v2.3.0
-  #       with:
-  #         cmd: test
+      # will run `yarn test` command
+      - name: Execute tests
+        uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: test
 
   # TODO: Uncomment the `slither` job when this is fixed: https://github.com/crytic/slither/issues/1001
   # slither:
@@ -131,8 +130,9 @@ jobs:
   docs:
     name: docs
     runs-on: ubuntu-20.04
-    needs: ["lint"]
-    # needs: ["test", "lint"] # TODO uncomment later
+    # Only on the main branch
+    if: github.ref == 'refs/heads/main'
+    needs: ["test", "lint"]
     steps:
       # ---- 1. Checkout the git repo so we have access to git state --- #
       - name: Checkout main
