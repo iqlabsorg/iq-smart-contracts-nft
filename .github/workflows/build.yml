@@ -1,0 +1,160 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Cache node modules for the next time we need to execute the build task
+      - name: Cache node modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: "./node_modules"
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./yarn.lock') }}
+
+      # Pretty much does nothing if valid node modules is restored from cache.
+      - name: Install node modules
+        uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: install
+
+      - name: Compile the Solidity code
+        uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: compile
+
+      - name: Markdown doc gen
+        uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: hardhat docgen
+
+      - name: Cache generated docs
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-generated-docs
+        with:
+          path: "./docs"
+          key: ${{ github.sha }}-docs-${{ env.cache-name }}
+
+      # Will cache the typechain files and all other artifacts to be used in future tasks.
+      - name: Cache the state of the repository
+        uses: actions/cache@v3
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+  lint:
+    name: lint
+    runs-on: ubuntu-20.04
+    needs: ["build"]
+    steps:
+      - uses: actions/cache@v3
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      - name: Lint the codebase
+        uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: lint
+
+  commit-lint:
+    name: commit-lint
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out github repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run commitlint
+        uses: wagoid/commitlint-github-action@v2
+        with:
+          configFile: .commitlintrc.json
+
+  test:
+    name: test
+    runs-on: ubuntu-20.04
+    needs: ["build"]
+    steps:
+      - uses: actions/cache@v3
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      # will run `yarn test` command
+      - name: Execute tests
+        uses: borales/actions-yarn@v2.3.0
+        with:
+          cmd: test
+
+  # TODO: Uncomment the `slither` job when this is fixed: https://github.com/crytic/slither/issues/1001
+  # slither:
+  #   name: slither
+  #   runs-on: ubuntu-20.04
+  #   needs: ["build"]
+  #   steps:
+  #     - uses: actions/cache@v3
+  #       id: restore-build
+  #       with:
+  #         path: ./*
+  #         key: ${{ github.sha }}
+
+  #     - name: Run Slither
+  #       uses: crytic/slither-action@v0.1.1
+  #       id: slither
+  #       with:
+  #         solc-version: 0.8.13
+  #         ignore-compile: true
+  #         sarif: results.sarif
+
+  #     - name: Upload SARIF file
+  #       uses: github/codeql-action/upload-sarif@v1
+  #       with:
+  #         sarif_file: ${{ steps.slither.outputs.sarif }}
+
+  docs:
+    name: docs
+    runs-on: ubuntu-20.04
+    # Only on the main branch
+    if: github.ref == 'refs/heads/main'
+    needs: ["test", "lint"]
+    steps:
+      # ---- 1. Checkout the git repo so we have access to git state --- #
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          clean: false
+
+      # ---- 2. Load the cached markdown docs --- #
+      - name: Fetch generated docs
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-generated-docs
+        with:
+          path: "./docs"
+          key: ${{ github.sha }}-docs-${{ env.cache-name }}
+
+      # ---- 3. Deploy to github pages --- #
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONFIG_FILE: mkdocs.yml
+          REQUIREMENTS: requirements.txt
+
+  # TODO Publish smart contract artifacts to github

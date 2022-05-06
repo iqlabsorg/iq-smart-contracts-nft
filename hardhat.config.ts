@@ -8,6 +8,7 @@ import 'hardhat-gas-reporter';
 import 'solidity-coverage';
 import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
+import 'solidity-docgen';
 
 // Enable tasks
 // NOTE: https://github.com/dethcrypto/TypeChain/issues/371
@@ -74,6 +75,7 @@ const config: HardhatUserConfig = {
     outDir: 'typechain',
     target: 'ethers-v5',
   },
+  docgen: { pages: 'files', outputDir: 'docs', templates: './themes/custom-markdown' },
 };
 
 export default config;
