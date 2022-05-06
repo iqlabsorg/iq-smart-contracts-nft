@@ -72,22 +72,23 @@ jobs:
         with:
           configFile: .commitlintrc.json
 
-  test:
-    name: test
-    runs-on: ubuntu-20.04
-    needs: ["build"]
-    steps:
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+  # TODO: uncomment before merge
+  # test:
+  #   name: test
+  #   runs-on: ubuntu-20.04
+  #   needs: ["build"]
+  #   steps:
+  #     - uses: actions/cache@v2
+  #       id: restore-build
+  #       with:
+  #         path: ./*
+  #         key: ${{ github.sha }}
 
-      # will run `yarn test` command
-      - name: Execute tests
-        uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: test
+  #     # will run `yarn test` command
+  #     - name: Execute tests
+  #       uses: borales/actions-yarn@v2.3.0
+  #       with:
+  #         cmd: test
 
   # TODO: Uncomment the `slither` job when this is fixed: https://github.com/crytic/slither/issues/1001
   # slither:
@@ -117,25 +118,17 @@ jobs:
   docs:
     name: docs
     runs-on: ubuntu-20.04
-    needs: ["test", "lint"]
+    needs: ["lint"]
+    # needs: ["test", "lint"] # TODO uncomment later
     steps:
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
-
-      - name: Markdown doc gen
-        uses: borales/actions-yarn@v2.3.0
-        with:
-          cmd: hardhat docgen
+      - name: Checkout main
+        uses: actions/checkout@v2
 
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG_FILE: mkdocs.yml
-          EXTRA_PACKAGES: build-base
           REQUIREMENTS: requirements.txt
 
   # TODO Publish smart contract artifacts to github
