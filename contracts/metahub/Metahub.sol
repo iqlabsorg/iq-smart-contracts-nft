@@ -694,6 +694,10 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         // Transfer the accumulated token amount from payer to the metahub.
         IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
         // todo: event with balance changes;
+        // 3 events:
+        // - UserEarned(address indexed user, address indexed paymentToken, uint256 amount)
+        // - UniverseEarned(uint256 indexed universeId, address indexed paymentToken, uint256 amount)
+        // - ProtocolEarned(address indexed paymentToken, uint256 amount)
     }
 
     /**
