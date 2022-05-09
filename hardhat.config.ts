@@ -1,5 +1,3 @@
-import * as dotenv from 'dotenv';
-
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
@@ -10,9 +8,10 @@ import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
 import 'solidity-docgen';
 
+import { config as dotenvConfig } from 'dotenv';
+
 // Enable tasks
 // NOTE: https://github.com/dethcrypto/TypeChain/issues/371
-// eslint-disable-next-line
 import('./tasks').catch((e: string) =>
   console.log(
     `
@@ -22,13 +21,13 @@ This is the expected behaviour on first time setup.`,
   ),
 );
 
-// Enable test assertions
+// Enable custom assertions on project startup
 import './test/assertions';
 
-dotenv.config();
+const env = dotenvConfig();
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+const DEPLOYMENT_PRIVATE_KEY = env.parsed?.DEPLOYMENT_PRIVATE_KEY;
+const accounts = DEPLOYMENT_PRIVATE_KEY ? [DEPLOYMENT_PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   mocha: {
@@ -61,6 +60,14 @@ const config: HardhatUserConfig = {
     ropsten: {
       url: process.env.ROPSTEN_URL ?? '',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    bscTestnet: {
+      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+      accounts,
+    },
+    mumbaiTestnet: {
+      url: 'https://matic-mumbai.chainstacklabs.com',
+      accounts,
     },
   },
   contractSizer: {

@@ -91,9 +91,11 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
       // Register the warper-configurable preset
       {
         const tx = await warperPresetFactory.addPreset(PRESET_CONFIGURABLE_ID, erc721presetConfigurable.address);
-        console.log('addPreset', tx.hash, tx.gasPrice?.toString());
+        console.log('tx: addPreset', tx.hash, tx.gasPrice?.toString());
         await tx.wait();
       }
+
+      // TODO register `erc721controller` on `assetClassRegistry`
 
       return {
         erc721Controller: erc721Controller,
