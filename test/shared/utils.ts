@@ -215,10 +215,12 @@ export class AssetListerHelper {
   ) {}
 
   async setupRegistries(): Promise<void> {
-    await this.assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
-      controller: this.assetController,
-      vault: this.erc721assetVault,
-    });
+    if (!(await this.assetClassRegistry.isRegisteredAssetClass(ASSET_CLASS.ERC721))) {
+      await this.assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
+        controller: this.assetController,
+        vault: this.erc721assetVault,
+      });
+    }
     await this.listingStrategyRegistry.registerListingStrategy(LISTING_STRATEGY.FIXED_PRICE, {
       controller: this.fixedPriceListingController.address,
     });

@@ -4,6 +4,7 @@ import {
   ACL,
   ACL__factory,
   AssetClassRegistry,
+  ERC721AssetVault,
   ERC721PresetConfigurable,
   ERC721WarperController,
   FixedPriceListingController,
@@ -23,6 +24,7 @@ import './universe';
 import './assets';
 import './listings';
 import { formatBytes32String } from 'ethers/lib/utils';
+import { ASSET_CLASS } from '../../test/shared/constants';
 
 export const PRESET_CONFIGURABLE_ID = formatBytes32String('ERC721PresetConfigurable');
 
@@ -80,10 +82,10 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
       const erc721Controller = (await hre.run('deploy:erc721-warper-controller')) as ERC721WarperController;
 
       // Deploy ERC721 asset vault
-      const erc721Vault = await hre.run('deploy:erc721-asset-vault', {
+      const erc721Vault = (await hre.run('deploy:erc721-asset-vault', {
         operator: metahub.address,
         acl: aclContract.address,
-      });
+      })) as ERC721AssetVault;
 
       // Deploy and register warper preset
       const erc721presetConfigurable = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
@@ -95,7 +97,14 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         await tx.wait();
       }
 
-      // TODO register `erc721controller` on `assetClassRegistry`
+      {
+        const tx = await assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
+          controller: erc721Controller.address,
+          vault: erc721Vault.address,
+        });
+        console.log('tx: registerAssetClass', tx.hash, tx.gasPrice?.toString());
+        await tx.wait();
+      }
 
       return {
         erc721Controller: erc721Controller,

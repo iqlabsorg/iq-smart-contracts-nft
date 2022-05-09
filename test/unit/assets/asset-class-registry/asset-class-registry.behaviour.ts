@@ -31,14 +31,14 @@ export function shouldBehaveLikeAssetClassRegistry(): void {
 
       context.skip('When called by stranger', () => {
         AccessControlledHelper.onlyAdminCan(async () => {
-          const tx = await assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
+          const tx = await assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC20, {
             // TODO invalid vault and controller
             vault: ADDRESS_ZERO,
             controller: ADDRESS_ZERO,
           });
 
           await expect(tx).to.emit(assetClassRegistry, 'AssetClassRegistered').withArgs(ASSET_CLASS.ERC721);
-          await expect(assetClassRegistry.isRegisteredAssetClass(ASSET_CLASS.ERC721)).to.eventually.equal(true);
+          await expect(assetClassRegistry.isRegisteredAssetClass(ASSET_CLASS.ERC20)).to.eventually.equal(true);
         });
       });
     });

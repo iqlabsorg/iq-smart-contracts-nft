@@ -72,12 +72,6 @@ export function shouldBehaveLikeWarperManager(): void {
 
       [stranger] = this.signers.unnamed;
 
-      // Register ERC721 asset class.
-      await this.contracts.assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
-        controller: this.contracts.assetController.address,
-        vault: this.contracts.erc721assetVault.address,
-      });
-
       // Assume a universe is already registered.
       // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
       universeId = await createUniverse(universeRegistry, {
