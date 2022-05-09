@@ -861,6 +861,20 @@ export function shouldBehaveLikeRentingManager(): void {
               startTime: blockTimestamp,
               endTime: blockTimestamp + Number(rentalParams.rentalPeriod),
             });
+            await expect(tx)
+              .to.emit(rentingManager, 'UserEarned')
+              .withArgs(
+                nftCreator.address,
+                0,
+                paymentToken.address,
+                rentCost.listerBaseFee.add(rentCost.listerPremium),
+              );
+            await expect(tx)
+              .to.emit(rentingManager, 'UniverseEarned')
+              .withArgs(universeId, paymentToken.address, rentCost.universeBaseFee.add(rentCost.universePremium));
+            await expect(tx)
+              .to.emit(rentingManager, 'ProtocolEarned')
+              .withArgs(paymentToken.address, rentCost.protocolFee);
           });
 
           it('changes the owner of the Warped token', async () => {

@@ -5,6 +5,42 @@ import "./Accounts.sol";
 
 interface IPaymentManager {
     /**
+     * @notice Describes the earning type.
+     */
+    enum EarningType {
+        LISTER_FEE
+    }
+
+    /**
+     * @dev Emitted when a user has earned some amount tokens.
+     * @param user Address of the user that earned some amount.
+     * @param earningType Describes the type of the user.
+     * @param paymentToken The currency that the user has earned.
+     * @param amount The amount of tokens that the user has earned.
+     */
+    event UserEarned(
+        address indexed user,
+        EarningType indexed earningType,
+        address indexed paymentToken,
+        uint256 amount
+    );
+
+    /**
+     * @dev Emitted when the universe has earned some amount of tokens.
+     * @param universeId ID of the universe that earned the tokens.
+     * @param paymentToken The currency that the user has earned.
+     * @param amount The amount of tokens that the user has earned.
+     */
+    event UniverseEarned(uint256 indexed universeId, address indexed paymentToken, uint256 amount);
+
+    /**
+     * @dev Emitted when the protocol has earned some amount of tokens.
+     * @param paymentToken The currency that the user has earned.
+     * @param amount The amount of tokens that the user has earned.
+     */
+    event ProtocolEarned(address indexed paymentToken, uint256 amount);
+
+    /**
      * @dev Transfers the specific `amount` of `token` from a protocol balance to an arbitrary address.
      * @param token The token address.
      * @param amount The amount to be withdrawn.
