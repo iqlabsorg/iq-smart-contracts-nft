@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { BigNumberish } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
@@ -7,6 +8,7 @@ import {
   InterfacePrinter__factory,
   WarperPresetMock__factory,
 } from '../../typechain';
+import { ERC721InternalTest__factory } from '../../typechain/factories/contracts/mocks/ERC721InternalTest__factory';
 
 const TOTAL_TOKENS = 1_000_000_000;
 const TOKEN_DECIMALS = 18;
@@ -55,6 +57,23 @@ task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
     });
 
     return new ERC721Mock__factory(deployer).attach(deployment.address);
+  });
+
+task('deploy:mock:ERC721-internal-tests', 'Deploy an ERC721 contract where anyone can mint tokens and set their URIs')
+  .addParam('name', 'name of the mock token', 'TEST', types.string)
+  .addParam('symbol', 'symbol of the mock token', 'TT', types.string)
+  .setAction(async ({ name, symbol }, hre) => {
+    const deployer = await hre.ethers.getNamedSigner('deployer');
+
+    await hre.deployments.delete('ERC721InternalTest');
+
+    const deployment = await hre.deployments.deploy('ERC721InternalTest', {
+      from: deployer.address,
+      args: [name, symbol],
+      log: true,
+    });
+
+    return new ERC721InternalTest__factory(deployer).attach(deployment.address);
   });
 
 task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAction(async (_args, hre) => {

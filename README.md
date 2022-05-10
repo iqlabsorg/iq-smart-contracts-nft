@@ -18,5 +18,12 @@
 
 ## Deployment
 
+### Testing purposes (for testnet deployments)
+
+1. A payment token: `yarn hardhat --network [network name] deploy:mock:ERC20 --name USDC --symbol USDC`
+2. An NFT collection: `yarn hardhat --network [network name] deploy:mock:ERC721-internal-tests --name TEST --symbol TT`
+
+### Metahub & friends
+
 1. Create a `.env` file that resembles the `.env.example` file in the current directory.
-2. Execute the script `yarn hardhat --network [netowrk name] deploy:initial-deployment --base-token [address]`
+2. Execute the script `yarn hardhat --network [network name] deploy:initial-deployment --base-token [address]`
