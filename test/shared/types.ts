@@ -21,6 +21,7 @@ import {
   IListingStrategyRegistry,
   IMetahub,
   InterfacePrinter,
+  IPaymentManager,
   IRentalPeriodMechanics,
   IRentingManager,
   IUniverseRegistry,
@@ -47,6 +48,7 @@ declare module 'mocha' {
 
 export interface Contracts {
   // Metahub
+  paymentManager: IPaymentManager;
   listingManager: IListingManager;
   rentingManager: IRentingManager;
   warperManager: IWarperManager;
