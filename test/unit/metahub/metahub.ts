@@ -99,6 +99,7 @@ export function unitTestMetahub(): void {
       this.contracts.listingManager = metahub;
       this.contracts.rentingManager = metahub;
       this.contracts.warperManager = metahub;
+      this.contracts.paymentManager = metahub;
       this.contracts.uupsUpgradeable = metahub;
 
       // Common dependencies
