@@ -19,6 +19,7 @@ task('deploy:erc721-asset-vault', 'Deploy ERC721 Asset Vault')
       args: [operator, acl],
       log: true,
     });
+    console.log('ERC721AssetVault deployed', deployment.address);
 
     return IERC721AssetVault__factory.connect(deployment.address, deployer);
   });

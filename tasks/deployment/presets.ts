@@ -16,6 +16,7 @@ task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').s
     args: [],
     log: true,
   });
+  console.log('ERC721PresetConfigurable deployed', deployment.address);
 
   return new ERC721PresetConfigurable__factory(deployer).attach(deployment.address);
 });
@@ -25,13 +26,11 @@ task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
   .setAction(async ({ acl }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
-    // Delete the previous deployment
-    await hre.deployments.delete('WarperPresetFactory_Proxy');
-    await hre.deployments.delete('WarperPresetFactory_Implementation');
-
     const deployment = (await hre.upgrades.deployProxy(new WarperPresetFactory__factory(deployer), [acl], {
+      kind: 'uups',
       initializer: 'initialize(address)',
     })) as WarperPresetFactory;
+    console.log('WarperPresetFactory deployed', deployment.address);
 
     return IWarperPresetFactory__factory.connect(deployment.address, deployer);
   });

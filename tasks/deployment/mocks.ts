@@ -37,6 +37,7 @@ task('deploy:mock:ERC20', 'Deploy an ERC20 contract')
         args: [name, symbol, decimals, parseEther(totalSupply.toString())],
         log: true,
       });
+      console.log('ERC20Mock deployed', deployment.address);
 
       return new ERC20Mock__factory(deployer).attach(deployment.address);
     },
@@ -55,6 +56,7 @@ task('deploy:mock:ERC721', 'Deploy an ERC721 contract')
       args: [name, symbol],
       log: true,
     });
+    console.log('ERC721Mock deployed', deployment.address);
 
     return new ERC721Mock__factory(deployer).attach(deployment.address);
   });
@@ -72,6 +74,7 @@ task('deploy:mock:ERC721-internal-tests', 'Deploy an ERC721 contract where anyon
       args: [name, symbol],
       log: true,
     });
+    console.log('ERC721InternalTest deployed', deployment.address);
 
     return new ERC721InternalTest__factory(deployer).attach(deployment.address);
   });
@@ -86,6 +89,7 @@ task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAc
     args: [],
     log: true,
   });
+  console.log('WarperPresetMock deployed', deployment.address);
 
   return new WarperPresetMock__factory(deployer).attach(deployment.address);
 });
@@ -99,6 +103,7 @@ task('deploy:interfaces-printer', 'Print interfaces IDs to the stdout').setActio
     from: deployer.address,
     log: true,
   });
+  console.log('InterfacePrinter deployed', deployment.address);
 
   return new InterfacePrinter__factory(deployer).attach(deployment.address);
 });

@@ -1,5 +1,4 @@
 import { task, types } from 'hardhat/config';
-import { wait } from '..';
 import {
   IAssetClassRegistry__factory,
   AssetClassRegistry,
@@ -14,15 +13,11 @@ task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
   .setAction(async ({ acl }: { acl: string }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
-    // Delete the previous deployment
-    await hre.deployments.delete('AssetClassRegistry_Proxy');
-    await hre.deployments.delete('AssetClassRegistry_Implementation');
-
-    const assetClassRegistry = (await hre.upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [], {
+    const assetClassRegistry = (await hre.upgrades.deployProxy(new AssetClassRegistry__factory(deployer), [acl], {
       kind: 'uups',
-      initializer: false,
+      initializer: 'initialize(address)',
     })) as AssetClassRegistry;
-    await wait(assetClassRegistry.initialize(acl));
+    console.log('AssetClassRegistry deployed', assetClassRegistry.address);
 
     return IAssetClassRegistry__factory.connect(assetClassRegistry.address, deployer);
   });
@@ -32,10 +27,6 @@ task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.'
   .setAction(async ({ acl }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
-    // Delete the previous deployment
-    await hre.deployments.delete('ListingStrategyRegistry_Proxy');
-    await hre.deployments.delete('ListingStrategyRegistry_Implementation');
-
     const listingStrategyRegistry = (await hre.upgrades.deployProxy(
       new ListingStrategyRegistry__factory(deployer),
       [acl],
@@ -44,6 +35,7 @@ task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.'
         initializer: 'initialize(address)',
       },
     )) as ListingStrategyRegistry;
+    console.log('ListingStrategyRegistry deployed', listingStrategyRegistry.address);
 
     return IListingStrategyRegistry__factory.connect(listingStrategyRegistry.address, deployer);
   });

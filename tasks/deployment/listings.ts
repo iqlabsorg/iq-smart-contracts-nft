@@ -4,7 +4,6 @@ import { FixedPriceListingController__factory } from '../../typechain';
 task('deploy:fixed-price-listing-controller', 'Deploy fixed price listing controller').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
 
-  // Delete the previous deployment
   await hre.deployments.delete('FixedPriceListingController');
 
   const deployment = await hre.deployments.deploy('FixedPriceListingController', {
@@ -12,6 +11,7 @@ task('deploy:fixed-price-listing-controller', 'Deploy fixed price listing contro
     args: [],
     log: true,
   });
+  console.log('FixedPriceListingController deployed', deployment.address);
 
   return FixedPriceListingController__factory.connect(deployment.address, deployer);
 });

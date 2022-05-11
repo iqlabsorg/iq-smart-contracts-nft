@@ -1,5 +1,4 @@
 import { task, types } from 'hardhat/config';
-import { wait } from '..';
 import {
   Metahub,
   Metahub__factory,
@@ -42,15 +41,15 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
     ) => {
       const deployer = await hre.ethers.getNamedSigner('deployer');
 
-      // Delete the previous deployment
-      await hre.deployments.delete('Metahub_Proxy');
-      await hre.deployments.delete('Metahub_Implementation');
-
       // Deploy external libraries used by Metahub.
       const rentingsLib = await new Rentings__factory(deployer).deploy();
+      console.log('rentingsLib', rentingsLib.address);
       const listingsLib = await new Listings__factory(deployer).deploy();
+      console.log('listingsLib', listingsLib.address);
       const assetsLib = await new Assets__factory(deployer).deploy();
+      console.log('assetsLib', assetsLib.address);
       const warpersLib = await new Warpers__factory(deployer).deploy();
+      console.log('warpersLib', warpersLib.address);
 
       const metahubLibs: MetahubLibraryAddresses = {
         'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
@@ -66,9 +65,12 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         unsafeAllow: ['delegatecall', 'external-library-linking'],
       })) as Metahub;
 
+      console.log('Metahub deployed at', metahub.address);
+
       // Initializing Metahub.
-      await wait(
-        metahub.initialize({
+      {
+        console.log('Initializing metahub: ');
+        const tx = await metahub.initialize({
           warperPresetFactory: warperPresetFactory,
           universeRegistry: universeRegistry,
           listingStrategyRegistry,
@@ -76,8 +78,12 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
           acl,
           baseToken,
           rentalFeePercent,
-        }),
-      );
+        });
+        console.log(`tx hash: ${tx.hash} | gas price ${tx.gasPrice?.toString() ?? ''}`);
+        await tx.wait();
+      }
+
+      console.log('Metahub', metahub.address);
 
       return IMetahub__factory.connect(metahub.address, deployer);
     },
