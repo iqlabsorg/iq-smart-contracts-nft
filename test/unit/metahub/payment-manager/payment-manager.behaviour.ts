@@ -1,5 +1,3 @@
-// TODO make sure to read events over from the rent() method!
-
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
@@ -19,6 +17,8 @@ import {
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
+import { Rentings } from '../../../../typechain/contracts/metahub/IMetahub';
+import { ADDRESS_ZERO } from '../../../shared/types';
 import { AccessControlledHelper, AssetListerHelper, makeERC721Asset } from '../../../shared/utils';
 
 const universeRegistrationParams = {
@@ -67,6 +67,9 @@ export function shouldBehaveLikePaymentManager(): void {
     let listingId: BigNumber;
     let warperAddress: string;
 
+    let rentalParams: Rentings.ParamsStruct;
+    let rentCost: Rentings.RentalFeesStructOutput;
+
     beforeEach(async function () {
       ({
         paymentManager,
@@ -114,7 +117,7 @@ export function shouldBehaveLikePaymentManager(): void {
       );
       const assetStruct = makeERC721Asset(warperAddress, tokenId);
       await warperController.collectionId(assetStruct.id);
-      const rentingParams1 = {
+      rentalParams = {
         listingId: listingId,
         paymentToken: paymentToken.address,
         rentalPeriod: 100,
@@ -125,7 +128,8 @@ export function shouldBehaveLikePaymentManager(): void {
       await paymentToken.mint(stranger.address, maxPaymentAmount);
       await paymentToken.connect(stranger).approve(metahub.address, maxPaymentAmount);
 
-      await metahub.connect(stranger).rent(rentingParams1, maxPaymentAmount);
+      rentCost = await metahub.connect(stranger).estimateRent(rentalParams);
+      await metahub.connect(stranger).rent(rentalParams, maxPaymentAmount);
     });
 
     describe('withdrawProtocolFunds', () => {
@@ -286,22 +290,65 @@ export function shouldBehaveLikePaymentManager(): void {
     });
 
     describe('protocolBalance', () => {
-      it('todo');
+      context('When payment token passed supplied', () => {
+        it('returns balance', async () => {
+          await expect(paymentManager.protocolBalance(paymentToken.address)).to.eventually.equal(rentCost.protocolFee);
+        });
+      });
+
+      context('When a non-payment token supplied', () => {
+        it('returns 0', async () => {
+          await expect(paymentManager.protocolBalance(ADDRESS_ZERO)).to.eventually.equal(0);
+        });
+      });
     });
+
     describe('protocolBalances', () => {
-      it('todo');
+      it('returns balance info', async () => {
+        await expect(paymentManager.protocolBalances()).to.eventually.containsAllStructs([
+          {
+            token: paymentToken.address,
+            amount: rentCost.protocolFee,
+          },
+        ]);
+      });
     });
+
     describe('universeBalance', () => {
-      it('todo');
+      it('returns balance info', async () => {
+        await expect(paymentManager.universeBalance(universeId, paymentToken.address)).to.eventually.equal(
+          rentCost.universeBaseFee.add(rentCost.universePremium),
+        );
+      });
     });
+
     describe('universeBalances', () => {
-      it('todo');
+      it('returns balance info', async () => {
+        await expect(paymentManager.universeBalances(universeId)).to.eventually.containsAllStructs([
+          {
+            token: paymentToken.address,
+            amount: rentCost.universeBaseFee.add(rentCost.universePremium),
+          },
+        ]);
+      });
     });
+
     describe('balance', () => {
-      it('todo');
+      it('returns balance info', async () => {
+        await expect(paymentManager.balance(nftCreator.address, paymentToken.address)).to.eventually.equal(
+          rentCost.listerPremium.add(rentCost.listerBaseFee),
+        );
+      });
     });
     describe('balances', () => {
-      it('todo');
+      it('returns balance info', async () => {
+        await expect(paymentManager.balances(nftCreator.address)).to.eventually.containsAllStructs([
+          {
+            token: paymentToken.address,
+            amount: rentCost.listerPremium.add(rentCost.listerBaseFee),
+          },
+        ]);
+      });
     });
   });
 }
