@@ -58,6 +58,7 @@ export function shouldBehaveLikePaymentManager(): void {
 
     let assetListerHelper: AssetListerHelper;
 
+    let universeOwner: SignerWithAddress;
     let nftCreator: SignerWithAddress;
     let admin: SignerWithAddress;
     let stranger: SignerWithAddress;
@@ -84,6 +85,7 @@ export function shouldBehaveLikePaymentManager(): void {
       paymentToken = this.mocks.assets.erc20;
 
       admin = this.signers.named.admin;
+      universeOwner = this.signers.named.universeOwner;
       nftCreator = this.signers.named.nftCreator;
       [stranger] = this.signers.unnamed;
 
@@ -93,16 +95,17 @@ export function shouldBehaveLikePaymentManager(): void {
         assetController.address,
         erc721assetVault.address,
         listingManager,
-        metahub,
-        universeRegistry,
+        metahub.connect(universeOwner),
+        universeRegistry.connect(universeOwner),
         warperPresetFactory,
         listingStrategyRegistry,
         fixedPriceListingController,
       );
       await assetListerHelper.setupRegistries();
+
       universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
       warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-      await metahub.unpauseWarper(warperAddress);
+      await metahub.connect(universeOwner).unpauseWarper(warperAddress);
       listingId = await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
 
       const warperController = IWarperController__factory.connect(
@@ -177,7 +180,62 @@ export function shouldBehaveLikePaymentManager(): void {
     });
 
     describe('withdrawUniverseFunds', () => {
-      it('todo');
+      context('When `amount` is 0', () => {
+        it('reverts', async () => {
+          const amount = 0;
+
+          await expect(
+            paymentManager
+              .connect(universeOwner)
+              .withdrawUniverseFunds(universeId, paymentToken.address, amount, stranger.address),
+          ).to.be.revertedWith(`InvalidWithdrawalAmount(${amount})`);
+        });
+      });
+
+      context('When `amount` is larger than the current balance', () => {
+        it('reverts', async () => {
+          const universeBalance = await paymentManager.universeBalance(universeId, paymentToken.address);
+          const amount = universeBalance.add(1);
+
+          await expect(
+            paymentManager
+              .connect(universeOwner)
+              .withdrawUniverseFunds(universeId, paymentToken.address, amount, stranger.address),
+          ).to.be.revertedWith(`InsufficientBalance(${universeBalance.toString()})`);
+        });
+      });
+
+      context('When `amount` is equal to the current balance', () => {
+        AccessControlledHelper.onlyUniverseOwnerCan(async signer => {
+          const universeBalance = await paymentManager.universeBalance(universeId, paymentToken.address);
+          const amount = universeBalance;
+
+          await expect(
+            paymentManager
+              .connect(signer)
+              .withdrawUniverseFunds(universeId, paymentToken.address, amount, stranger.address),
+          )
+            .to.emit(paymentToken, 'Transfer')
+            .withArgs(paymentManager.address, stranger.address, amount);
+          await expect(paymentManager.universeBalance(universeId, paymentToken.address)).to.eventually.equal(0);
+        });
+      });
+
+      context('When `amount` is less than the current balance', () => {
+        AccessControlledHelper.onlyUniverseOwnerCan(async signer => {
+          const universeBalance = await paymentManager.universeBalance(universeId, paymentToken.address);
+          const amount = universeBalance.sub(1);
+
+          await expect(
+            paymentManager
+              .connect(signer)
+              .withdrawUniverseFunds(universeId, paymentToken.address, amount, stranger.address),
+          )
+            .to.emit(paymentToken, 'Transfer')
+            .withArgs(paymentManager.address, stranger.address, amount);
+          await expect(paymentManager.universeBalance(universeId, paymentToken.address)).to.eventually.equal(1);
+        });
+      });
     });
     describe('withdrawFunds', () => {
       it('todo');

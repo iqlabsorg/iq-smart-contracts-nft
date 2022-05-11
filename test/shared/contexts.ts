@@ -32,6 +32,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       const [stranger] = this.signers.unnamed;
       await AccessControlledHelper.registerAdmin(this.signers.named.admin, stranger, acl);
       await AccessControlledHelper.registerSupervisor(this.signers.named.supervisor, stranger, acl);
+      AccessControlledHelper.registerUniverseOwner(this.signers.named.universeOwner, stranger);
 
       // Interface printer setup
       const interfacePrinter = (await hre.run('deploy:interfaces-printer')) as InterfacePrinter;
