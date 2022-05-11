@@ -237,9 +237,54 @@ export function shouldBehaveLikePaymentManager(): void {
         });
       });
     });
+
     describe('withdrawFunds', () => {
-      it('todo');
+      context('When `amount` is 0', () => {
+        it('reverts', async () => {
+          const amount = 0;
+
+          await expect(
+            paymentManager.connect(nftCreator).withdrawFunds(paymentToken.address, amount, stranger.address),
+          ).to.be.revertedWith(`InvalidWithdrawalAmount(${amount})`);
+        });
+      });
+
+      context('When `amount` is larger than the current balance', () => {
+        it('reverts', async () => {
+          const listersBalance = await paymentManager.balance(nftCreator.address, paymentToken.address);
+          const amount = listersBalance.add(1);
+
+          await expect(
+            paymentManager.connect(nftCreator).withdrawFunds(paymentToken.address, amount, stranger.address),
+          ).to.be.revertedWith(`InsufficientBalance(${listersBalance.toString()})`);
+        });
+      });
+
+      context('When `amount` is equal to the current balance', () => {
+        it('withdraws successfully', async () => {
+          const listersBalance = await paymentManager.balance(nftCreator.address, paymentToken.address);
+          const amount = listersBalance;
+
+          await expect(paymentManager.connect(nftCreator).withdrawFunds(paymentToken.address, amount, stranger.address))
+            .to.emit(paymentToken, 'Transfer')
+            .withArgs(paymentManager.address, stranger.address, amount);
+          await expect(paymentManager.balance(nftCreator.address, paymentToken.address)).to.eventually.equal(0);
+        });
+      });
+
+      context('When `amount` is less than the current balance', () => {
+        it('withdraws successfully', async () => {
+          const listersBalance = await paymentManager.balance(nftCreator.address, paymentToken.address);
+          const amount = listersBalance.sub(1);
+
+          await expect(paymentManager.connect(nftCreator).withdrawFunds(paymentToken.address, amount, stranger.address))
+            .to.emit(paymentToken, 'Transfer')
+            .withArgs(paymentManager.address, stranger.address, amount);
+          await expect(paymentManager.balance(nftCreator.address, paymentToken.address)).to.eventually.equal(1);
+        });
+      });
     });
+
     describe('protocolBalance', () => {
       it('todo');
     });
