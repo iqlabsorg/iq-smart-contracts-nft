@@ -156,6 +156,7 @@ interface ActorSet {
 export class AccessControlledHelper {
   public static adminData: ActorSet;
   public static supervisorData: ActorSet;
+  public static universeData: ActorSet;
 
   static async registerAdmin(successfulSigner: Signer, stranger: Signer, acl: IACL): Promise<void> {
     const adminBytes = await acl.adminRole();
@@ -175,6 +176,14 @@ export class AccessControlledHelper {
     };
   }
 
+  static registerUniverseOwner(successfulSigner: Signer, stranger: Signer): void {
+    AccessControlledHelper.universeData = {
+      successfulSigner,
+      stranger,
+      requiredRole: '0x0',
+    };
+  }
+
   static onlyAdminCan(tx: (signer: Signer) => Promise<void>): void {
     return AccessControlledHelper.onlyRoleCan('admin', () => AccessControlledHelper.adminData, tx);
   }
@@ -183,7 +192,15 @@ export class AccessControlledHelper {
     return AccessControlledHelper.onlyRoleCan('supervisor', () => AccessControlledHelper.supervisorData, tx);
   }
 
-  private static onlyRoleCan(roleName: string, actorSet: () => ActorSet, tx: (signer: Signer) => Promise<void>): void {
+  static onlyUniverseOwnerCan(tx: (signer: Signer) => Promise<void>): void {
+    return AccessControlledHelper.onlyRoleCan('universeOwner', () => AccessControlledHelper.universeData, tx);
+  }
+
+  private static onlyRoleCan(
+    roleName: 'admin' | 'universeOwner' | 'supervisor',
+    actorSet: () => ActorSet,
+    tx: (signer: Signer) => Promise<void>,
+  ): void {
     context(`When called by ${roleName}`, () => {
       it('executes successfully', async () => {
         await tx(actorSet().successfulSigner);
@@ -193,7 +210,12 @@ export class AccessControlledHelper {
     context('When called by stranger', () => {
       it('reverts', async () => {
         const strangerAddress = await actorSet().stranger.getAddress();
-        await expect(tx(actorSet().stranger)).to.be.revertedByACL(strangerAddress, actorSet().requiredRole);
+
+        if (roleName === 'universeOwner') {
+          await expect(tx(actorSet().stranger)).to.be.revertedWith(`AccountIsNotUniverseOwner("${strangerAddress}")`);
+        } else {
+          await expect(tx(actorSet().stranger)).to.be.revertedByACL(strangerAddress, actorSet().requiredRole);
+        }
       });
     });
   }
