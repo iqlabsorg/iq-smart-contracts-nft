@@ -1,27 +1,75 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ERC721AssetController, ERC721AssetController__factory, IAssetClassRegistry } from '../../../../typechain';
+import {
+  ERC721AssetController,
+  ERC721AssetController__factory,
+  IAssetClassRegistry,
+  IERC721AssetVault,
+} from '../../../../typechain';
 import { ADDRESS_ZERO } from '../../../shared/types';
 import { ASSET_CLASS } from '../../../../src';
 import { AccessControlledHelper } from '../../../shared/utils';
+import { MockContract, smock } from '@defi-wonderland/smock';
 
 /**
  * The assetClassRegistry contract behaves like IAssetClassRegistry
  */
 export function shouldBehaveLikeAssetClassRegistry(): void {
-  describe('IAssetClassRegistry', function () {
+  describe.only('IAssetClassRegistry', function () {
     let assetClassRegistry: IAssetClassRegistry;
+    let erc721assetVault: IERC721AssetVault;
     let deployer: SignerWithAddress;
 
     beforeEach(function () {
       deployer = this.signers.named.deployer;
-      assetClassRegistry = this.contracts.assetClassRegistry;
+      ({ assetClassRegistry, erc721assetVault } = this.contracts);
     });
 
     describe('registerAssetClass', () => {
-      context('When invalid asset controller', () => {
-        it('reverts');
+      context('When controllers asset class does not match the provided asset class', () => {
+        let misconfiguredAssetClassController: MockContract<ERC721AssetController>;
+
+        beforeEach(async () => {
+          const misconfiguredAssetClassControllerFactory = await smock.mock<ERC721AssetController__factory>(
+            'ERC721AssetController',
+            deployer,
+          );
+          misconfiguredAssetClassController = await misconfiguredAssetClassControllerFactory.deploy();
+          misconfiguredAssetClassController.assetClass.returns(ASSET_CLASS.ERC20);
+        });
+
+        it('reverts', async () => {
+          await expect(
+            assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
+              controller: misconfiguredAssetClassController.address,
+              vault: erc721assetVault.address,
+            }),
+          ).to.be.revertedWith(`AssetClassMismatch("${ASSET_CLASS.ERC20}", "${ASSET_CLASS.ERC721}")`);
+        });
       });
+
+      context('When controller does not implement IAssetController', () => {
+        let misconfiguredAssetClassController: MockContract<ERC721AssetController>;
+
+        beforeEach(async () => {
+          const misconfiguredAssetClassControllerFactory = await smock.mock<ERC721AssetController__factory>(
+            'ERC721AssetController',
+            deployer,
+          );
+          misconfiguredAssetClassController = await misconfiguredAssetClassControllerFactory.deploy();
+          misconfiguredAssetClassController.supportsInterface.returns(false);
+        });
+
+        it('reverts', async () => {
+          await expect(
+            assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
+              controller: misconfiguredAssetClassController.address,
+              vault: erc721assetVault.address,
+            }),
+          ).to.be.revertedWith('InvalidAssetControllerInterface()');
+        });
+      });
+
       context('When invalid asset vault', () => {
         it('reverts');
       });
