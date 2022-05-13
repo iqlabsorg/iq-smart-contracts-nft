@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ERC721Mock, IERC721AssetVault } from '../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { ASSET_CLASS } from '../../../shared/constants';
+import { ASSET_CLASS } from '../../../../src';
 
 /**
  * Tests for ERC721 Asset Vault specific behaviour

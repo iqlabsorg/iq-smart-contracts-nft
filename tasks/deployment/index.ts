@@ -24,7 +24,7 @@ import './universe';
 import './assets';
 import './listings';
 import { formatBytes32String } from 'ethers/lib/utils';
-import { ASSET_CLASS } from '../../test/shared/constants';
+import { ASSET_CLASS } from '../../src';
 
 export const PRESET_CONFIGURABLE_ID = formatBytes32String('ERC721PresetConfigurable');
 

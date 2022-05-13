@@ -11,10 +11,12 @@
     "./scripts",
     "./test",
     "./typechain",
-    "./deploy"
+    "./deploy",
+    "src/index.ts"
   ],
   "files": [
     "./hardhat.config.ts",
     "./.eslintrc.js",
+    "./rollup.config.js",
   ]
 }

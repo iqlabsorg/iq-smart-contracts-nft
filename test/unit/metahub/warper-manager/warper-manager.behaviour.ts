@@ -12,7 +12,7 @@ import {
 import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
 import { warperPresetId } from '../metahub';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
-import { ASSET_CLASS } from '../../../shared/constants';
+import { ASSET_CLASS } from '../../../../src';
 
 /**
  * The metahub contract behaves like IWarperManager

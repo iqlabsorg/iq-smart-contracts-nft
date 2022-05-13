@@ -24,7 +24,7 @@ import {
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Rentings } from '../../../../typechain/contracts/metahub/Metahub';
-import { ASSET_CLASS } from '../../../shared/constants';
+import { ASSET_CLASS } from '../../../../src';
 import { ADDRESS_ZERO } from '../../../shared/types';
 import {
   AssetListerHelper,

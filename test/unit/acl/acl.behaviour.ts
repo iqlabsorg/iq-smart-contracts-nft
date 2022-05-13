@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { IACL } from '../../../typechain';
-import { ROLES_LIBRARY } from '../../shared/constants';
+import { ROLES_LIBRARY } from '../../../src';
 
 /**
  * Warper preset factory tests

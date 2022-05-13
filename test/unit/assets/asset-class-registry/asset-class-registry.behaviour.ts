@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ERC721AssetController, ERC721AssetController__factory, IAssetClassRegistry } from '../../../../typechain';
 import { ADDRESS_ZERO } from '../../../shared/types';
-import { ASSET_CLASS } from '../../../shared/constants';
+import { ASSET_CLASS } from '../../../../src';
 import { AccessControlledHelper } from '../../../shared/utils';
 
 /**

@@ -20,7 +20,7 @@ import {
   WarperPresetFactory,
 } from '../../typechain';
 import { Assets } from '../../typechain/contracts/metahub/Metahub';
-import { ASSET_CLASS, LISTING_STRATEGY } from './constants';
+import { ASSET_CLASS, LISTING_STRATEGY } from '../../src';
 import { PRESET_CONFIGURABLE_ID } from '../../tasks/deployment';
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
