@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
+    "target": "ES2017",
+    "module": "commonjs",
     "lib": [
       "DOM",
       "ESNext"
@@ -12,16 +12,25 @@
     "declarationMap": true,
     "sourceMap": true,
     "strict": true,
+    "allowJs": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true,
+    "outDir": "./dist",
+    "rootDirs": [
+      "./src",
+      "./test",
+      "./tasks",
+      "./typechain",
+    ],
   },
   "include": [
-    "**/*.ts"
+    "src",
+    "tasks",
   ],
   "exclude": [
-    "hardhat.config.ts",
     "test/**/*",
   ],
-  "files": []
+  "files": [
+    "./hardhat.config.ts",
+  ]
 }

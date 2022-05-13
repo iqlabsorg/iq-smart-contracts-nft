@@ -28,6 +28,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   } = await hre.run('deploy:initial-deployment', {
     baseToken: baseToken.address,
     rentalFee: 100,
+    unsafe: true, // Note: not using openzeppelin upgrades plugin
   });
 
   // ----- Deploy ERC721 token ----- //

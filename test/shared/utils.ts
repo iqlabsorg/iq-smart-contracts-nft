@@ -1,9 +1,8 @@
 import hre, { ethers } from 'hardhat';
-import { BigNumber, BigNumberish, BytesLike, Signer } from 'ethers';
+import { BigNumber, BytesLike, ContractReceipt, ContractTransaction, Signer } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import { wait } from '../../tasks';
 import {
   ERC721,
   ERC721Mock,
@@ -19,11 +18,14 @@ import {
   IWarperPreset__factory,
   WarperPresetFactory,
 } from '../../typechain';
-import { Assets } from '../../typechain/contracts/metahub/Metahub';
-import { ASSET_CLASS, LISTING_STRATEGY } from '../../src';
+import { ASSET_CLASS, LISTING_STRATEGY, makeERC721Asset, makeFixedPriceStrategy } from '../../src';
 import { PRESET_CONFIGURABLE_ID } from '../../tasks/deployment';
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
+
+export const wait = async (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => {
+  return (await txPromise).wait();
+};
 
 export const randomInteger = (max: number): number => {
   return Math.floor(Math.random() * max);
@@ -101,50 +103,6 @@ export const deployRandomERC721Token = async (): Promise<{ address: string; symb
   const { address } = (await hre.run('deploy:mock:ERC721', { name, symbol })) as ERC721;
 
   return { address, symbol, name };
-};
-
-/**
- * Creates ERC721 Asset structure.
- * @param token
- * @param tokenId
- * @param value
- */
-export const makeERC721Asset = (token: string, tokenId: BigNumberish, value: BigNumberish = 1): Assets.AssetStruct => {
-  return makeAsset(ASSET_CLASS.ERC721, defaultAbiCoder.encode(['address', 'uint256'], [token, tokenId]), value);
-};
-
-/**
- * Creates Fixed Price listing strategy params structure.
- * @param baseRate
- */
-export const makeFixedPriceStrategy = (baseRate: BigNumberish): { strategy: string; data: string } => {
-  return {
-    strategy: LISTING_STRATEGY.FIXED_PRICE,
-    data: defaultAbiCoder.encode(['uint256'], [baseRate]),
-  };
-};
-
-/**
- * Creates Asset structure.
- * @param assetClass
- * @param data
- * @param value
- */
-export const makeAsset = (assetClass: BytesLike, data: BytesLike, value: BigNumberish): Assets.AssetStruct => {
-  return {
-    id: { class: assetClass, data },
-    value: BigNumber.from(value),
-  };
-};
-
-/**
- * Typescript mapping of the possible warper rental states.
- * Mimics the `WarperRentalStatus` enum.
- */
-export const ASSET_RENTAL_STATUS = {
-  NONE: 0,
-  AVAILABLE: 1,
-  RENTED: 2,
 };
 
 interface ActorSet {

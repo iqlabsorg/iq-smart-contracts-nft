@@ -1,8 +1,8 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { ASSET_RENTAL_STATUS } from '../../../../../src';
 import { IERC721Warper, IERC721WarperController, Metahub } from '../../../../../typechain';
-import { ASSET_RENTAL_STATUS } from '../../../../shared/utils';
 
 export function shouldBehaveLikeOwnerOf(): void {
   describe('ownerOf', () => {

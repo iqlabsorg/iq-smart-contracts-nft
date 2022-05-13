@@ -1,6 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { makeERC721Asset } from '../../../../src';
 import {
   ERC20Mock,
   ERC721Mock,
@@ -19,7 +20,7 @@ import {
 } from '../../../../typechain';
 import { Rentings } from '../../../../typechain/contracts/metahub/IMetahub';
 import { ADDRESS_ZERO } from '../../../shared/types';
-import { AccessControlledHelper, AssetListerHelper, makeERC721Asset } from '../../../shared/utils';
+import { AccessControlledHelper, AssetListerHelper } from '../../../shared/utils';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',

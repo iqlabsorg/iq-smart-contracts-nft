@@ -18,13 +18,8 @@ import {
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
 import { ADDRESS_ZERO } from '../../../shared/types';
-import {
-  AssetListerHelper,
-  deployRandomERC721Token,
-  makeERC721Asset,
-  makeFixedPriceStrategy,
-} from '../../../shared/utils';
-import { solidityId } from '../../../../src';
+import { AssetListerHelper, deployRandomERC721Token } from '../../../shared/utils';
+import { makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',

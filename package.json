@@ -13,14 +13,19 @@
   "repository": "github:iqlabsorg/iq-smart-contracts-nft",
   "license": "MIT",
   "author": "IQ Labs (https://iq.space)",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "typings": "dist/esm/index.d.ts",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "typings": "src/index.d.ts",
   "files": [
     "README.md",
-    "dist"
+    "artifacts",
+    "deploy",
+    "src",
+    "tasks",
+    "typechain"
   ],
   "scripts": {
+    "build": "./build.sh",
     "compile": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile",
     "compile:clean": "hardhat clean",
     "coverage": "hardhat coverage",

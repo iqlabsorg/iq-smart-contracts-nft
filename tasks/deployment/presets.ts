@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
 import {
   ERC721PresetConfigurable__factory,
@@ -5,6 +6,7 @@ import {
   WarperPresetFactory,
   WarperPresetFactory__factory,
 } from '../../typechain';
+import { unsafeDeployment } from './unsafe-deployment';
 
 task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
@@ -22,15 +24,26 @@ task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').s
 });
 
 task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
+  .addParam(
+    'unsafe',
+    'If `true` -- deploy using the deploy plugin (instead of openzeppelin.upgrades)',
+    false,
+    types.boolean,
+  )
   .addParam('acl', 'The ACL contract address', undefined, types.string)
-  .setAction(async ({ acl }, hre) => {
+  .setAction(async ({ acl, unsafe }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
+    const factory = new WarperPresetFactory__factory(deployer);
+    const args = [acl];
 
-    const deployment = (await hre.upgrades.deployProxy(new WarperPresetFactory__factory(deployer), [acl], {
-      kind: 'uups',
-      initializer: 'initialize(address)',
-    })) as WarperPresetFactory;
+    const safeDeployment = async () => {
+      return (await hre.upgrades.deployProxy(factory, args, {
+        kind: 'uups',
+        initializer: 'initialize(address)',
+      })) as WarperPresetFactory;
+    };
+
+    const deployment = await (unsafe ? unsafeDeployment(factory, 'WarperPresetFactory', hre, args) : safeDeployment());
     console.log('WarperPresetFactory deployed', deployment.address);
-
     return IWarperPresetFactory__factory.connect(deployment.address, deployer);
   });

@@ -24,15 +24,12 @@ import {
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Rentings } from '../../../../typechain/contracts/metahub/Metahub';
-import { ASSET_CLASS } from '../../../../src';
+import { ASSET_CLASS, ASSET_RENTAL_STATUS, makeERC721Asset, makeFixedPriceStrategy } from '../../../../src';
 import { ADDRESS_ZERO } from '../../../shared/types';
 import {
   AssetListerHelper,
-  ASSET_RENTAL_STATUS,
   deployRandomERC721Token,
   latestBlockTimestamp,
-  makeERC721Asset,
-  makeFixedPriceStrategy,
   waitBlockchainTime,
 } from '../../../shared/utils';
 

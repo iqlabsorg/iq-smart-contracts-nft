@@ -1,3 +1,5 @@
+/* eslint-disable multiline-ternary */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
 import {
   Metahub,
@@ -9,6 +11,7 @@ import {
   Assets__factory,
 } from '../../typechain';
 import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
+import { unsafeDeployment } from './unsafe-deployment';
 
 task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
@@ -18,6 +21,12 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
   .addParam('rentalFeePercent', 'The rental fee percent on metahub', undefined, types.int)
   .addParam('warperPresetFactory', 'The address of warper preset factory', undefined, types.string)
   .addParam('universeRegistry', 'The address of the universe registry', undefined, types.string)
+  .addParam(
+    'unsafe',
+    'If `true` -- deploy using the deploy plugin (instead of openzeppelin.upgrades)',
+    false,
+    types.boolean,
+  )
   .setAction(
     async (
       {
@@ -28,6 +37,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         listingStrategyRegistry,
         warperPresetFactory,
         universeRegistry,
+        unsafe,
       }: {
         acl: string;
         baseToken: string;
@@ -36,6 +46,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         listingStrategyRegistry: string;
         warperPresetFactory: string;
         universeRegistry: string;
+        unsafe: string;
       },
       hre,
     ) => {
@@ -58,12 +69,36 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
         'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
       };
 
+      const factory = new Metahub__factory(metahubLibs, deployer);
+
+      // Safe deployment
+      const safeDeployment = async () => {
+        return (await hre.upgrades.deployProxy(factory, [], {
+          kind: 'uups',
+          initializer: false,
+          unsafeAllow: ['delegatecall', 'external-library-linking'],
+        })) as Metahub;
+      };
+
       // Deploy Metahub
-      const metahub = (await hre.upgrades.deployProxy(new Metahub__factory(metahubLibs, deployer), [], {
-        kind: 'uups',
-        initializer: false,
-        unsafeAllow: ['delegatecall', 'external-library-linking'],
-      })) as Metahub;
+      const metahub = await (unsafe
+        ? unsafeDeployment(
+            factory,
+            'Metahub',
+            hre,
+            [],
+            {
+              Rentings: rentingsLib.address,
+              Listings: listingsLib.address,
+              Assets: assetsLib.address,
+              Warpers: warpersLib.address,
+            },
+            {
+              // We perform the contract initialization at a later step manually
+              execute: undefined,
+            },
+          )
+        : safeDeployment());
 
       console.log('Metahub deployed at', metahub.address);
 

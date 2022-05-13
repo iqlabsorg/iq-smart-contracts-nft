@@ -3,6 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish, BytesLike, ContractTransaction, Signer } from 'ethers';
 import { Address } from 'hardhat-deploy/dist/types';
+import { ASSET_RENTAL_STATUS } from '../../../../../src';
 import {
   AssetClassRegistry,
   ERC721ReceiverMock,
@@ -12,7 +13,6 @@ import {
   Metahub,
 } from '../../../../../typechain';
 import { ADDRESS_ZERO } from '../../../../shared/types';
-import { ASSET_RENTAL_STATUS } from '../../../../shared/utils';
 
 export function shouldBehaveTransfer(): void {
   describe('transfers', function () {

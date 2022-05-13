@@ -61,6 +61,7 @@ export function unitTestMetahub(): void {
       baseToken: baseToken.address,
       acl: acl.address,
       rentalFee: 100,
+      unsafe: false,
     });
 
     return {
