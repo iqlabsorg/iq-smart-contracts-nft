@@ -20,6 +20,7 @@
     "README.md",
     "artifacts",
     "deploy",
+    "contracts",
     "src",
     "tasks",
     "typechain"

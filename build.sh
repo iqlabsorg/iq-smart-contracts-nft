@@ -9,5 +9,8 @@ cp package.json dist/package.json
 # Copy over all the artifacts
 cp -r artifacts dist/artifacts
 
+# Copy over all contracts
+cp -r contracts dist/contracts
+
 # The deploy scripts need to be raw TS files for them to work. When it's compiled to commonjs, it will not work :)
 cp -r deploy dist/deploy
