@@ -6,6 +6,7 @@ node_modules
 coverage
 coverage.json
 typechain
+yarn-error.log
 
 dist
 
@@ -14,7 +15,7 @@ cache
 deployments/hardhat
 deployments/localhost
 # Exported artifacts
-artifacts/build-info
+artifacts
 *.dbg.json
 
 # openzeppelin deployment plugin artefacts

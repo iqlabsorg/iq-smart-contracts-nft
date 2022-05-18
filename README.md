@@ -1,5 +1,9 @@
 # IQ Protocol NFT
 
+## Docs
+
+- [Contract documentation](https://iqlabsorg.github.io/iq-smart-contracts-nft/)
+
 ## Setup
 
 1. Clone repository
