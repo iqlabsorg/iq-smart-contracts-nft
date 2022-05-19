@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
-import { UniverseRegistry__factory } from '../../typechain';
+import { UniverseRegistry, UniverseRegistry__factory } from '../../typechain';
 import { unsafeDeployment } from './unsafe-deployment';
 
 task('deploy:universe-registry', 'Deploy the `UniverseRegistry` contracts.')
@@ -18,17 +18,18 @@ task('deploy:universe-registry', 'Deploy the `UniverseRegistry` contracts.')
     const args = [acl];
 
     const safeDeployment = async () => {
-      return hre.upgrades.deployProxy(new UniverseRegistry__factory(deployer), [acl], {
+      return (await hre.upgrades.deployProxy(new UniverseRegistry__factory(deployer), [acl], {
         kind: 'uups',
         unsafeAllow: ['delegatecall'],
         initializer: 'initialize(address)',
-      });
+      })) as UniverseRegistry;
     };
 
     // Deploy Universe registry.
     const deployment = await (unsafe ? unsafeDeployment(factory, 'UniverseRegistry', hre, args) : safeDeployment());
 
     console.log('UniverseRegistry deployed', deployment.address);
+    console.log('UniverseToken deployed', await deployment.universeToken());
     return deployment;
   });
 
