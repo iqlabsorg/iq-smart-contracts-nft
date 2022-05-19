@@ -11,6 +11,8 @@ cp package.json dist/package.json
 
 # Copy over all the artifacts
 cp -r artifacts dist/artifacts
+rm -rf dist/artifacts/build-info  # Remove build info
+find dist/artifacts -name '*.dbg.json' | xargs rm  # Remove dbg build files
 
 # Copy over all contracts
 cp -r contracts dist/contracts
