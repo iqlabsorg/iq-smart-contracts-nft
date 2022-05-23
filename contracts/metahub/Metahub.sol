@@ -553,7 +553,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IWarperManager
      */
-    function supportedAssets(uint256 offset, uint256 limit) external view returns (address[] memory) {
+    function supportedAssets(uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory, Assets.AssetConfig[] memory)
+    {
         return _assetRegistry.supportedAssets(offset, limit);
     }
 

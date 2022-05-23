@@ -47,11 +47,12 @@ library Warpers {
 
     /**
      * @dev Registered warper data.
+     * @param assetClass The identifying asset class.
      * @param original Original asset contract address.
+     * @param paused Indicates whether the warper is paused.
      * @param controller Warper controller.
      * @param name Warper name.
      * @param universeId Warper universe ID.
-     * @param paused Indicates whether the warper is paused.
      */
     struct Warper {
         bytes4 assetClass;

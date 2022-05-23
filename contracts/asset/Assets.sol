@@ -93,6 +93,7 @@ library Assets {
     /**
      * @dev Original asset data.
      * @param controller Asset controller.
+     * @param assetClass The asset class identifier.
      * @param vault Asset vault.
      */
     struct AssetConfig {
@@ -132,25 +133,27 @@ library Assets {
     }
 
     /**
-     * @dev Returns the paginated list of currently registered listings.
+     * @dev Returns the paginated list of currently registered listings and their corresponding asset configs.
      */
     function supportedAssets(
         Registry storage self,
         uint256 offset,
         uint256 limit
-    ) external view returns (address[] memory) {
+    ) external view returns (address[] memory, AssetConfig[] memory) {
         uint256 indexSize = self.assetIndex.length();
-        if (offset >= indexSize) return new address[](0);
+        if (offset >= indexSize) return (new address[](0), new AssetConfig[](0));
 
         if (limit > indexSize - offset) {
             limit = indexSize - offset;
         }
 
-        address[] memory assets = new address[](limit);
+        AssetConfig[] memory assetConfigs = new AssetConfig[](limit);
+        address[] memory assetAddresses = new address[](limit);
         for (uint256 i = 0; i < limit; i++) {
-            assets[i] = self.assetIndex.at(offset + i);
+            assetAddresses[i] = self.assetIndex.at(offset + i);
+            assetConfigs[i] = self.assets[assetAddresses[i]];
         }
-        return assets;
+        return (assetAddresses, assetConfigs);
     }
 
     /**
