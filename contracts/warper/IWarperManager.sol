@@ -124,8 +124,12 @@ interface IWarperManager {
      * @param offset Starting index.
      * @param limit Max number of items.
      * @return List of original asset addresses.
+     * @return List of asset config structures.
      */
-    function supportedAssets(uint256 offset, uint256 limit) external view returns (address[] memory);
+    function supportedAssets(uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory, Assets.AssetConfig[] memory);
 
     /**
      * @dev Returns warper preset factory address.

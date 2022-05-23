@@ -14,6 +14,7 @@ import { warperPresetId } from '../metahub';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ASSET_CLASS } from '../../../../src';
 import { ADDRESS_ZERO } from '../../../shared/types';
+import { Assets } from '../../../../typechain/contracts/metahub/IMetahub';
 
 /**
  * The metahub contract behaves like IWarperManager
@@ -285,10 +286,17 @@ export function shouldBehaveLikeWarperManager(): void {
 
         it('returns a paginated list of supported asset addresses', async () => {
           const limit = 2;
+          const assetConfig = await assetClassRegistry.assetClassConfig(ASSET_CLASS.ERC721);
           for (let offset = 0; offset < supportedAssets.length; offset += limit) {
-            await expect(warperManager.supportedAssets(offset, limit)).to.eventually.eql(
-              supportedAssets.slice(offset, offset + limit),
-            );
+            const [supportedAssetAddresses, supportedAssetConfigs] = await warperManager.supportedAssets(offset, limit);
+            expect(supportedAssetAddresses).to.eql(supportedAssets.slice(offset, offset + limit));
+
+            const configs: Array<Assets.AssetConfigStruct> = [];
+            for (const _expectedConfig of supportedAssetConfigs) {
+              configs.push({ ...assetConfig, assetClass: ASSET_CLASS.ERC721 });
+            }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            expect(supportedAssetConfigs).to.containsAllStructs(configs);
           }
         });
 
@@ -296,7 +304,7 @@ export function shouldBehaveLikeWarperManager(): void {
           it('returns empty arrays', async () => {
             const result = await warperManager.supportedAssets(3, 10);
 
-            expect(result).to.deep.equal([]);
+            expect(result).to.deep.equal([[], []]);
           });
         });
       });
