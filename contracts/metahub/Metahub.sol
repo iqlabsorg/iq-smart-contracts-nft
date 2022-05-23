@@ -26,7 +26,6 @@ import "./IMetahub.sol";
 import "./MetahubStorage.sol";
 import "./Protocol.sol";
 import "../accounting/Accounts.sol";
-import "../accounting/Accounts.sol";
 
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUpgradeable, MetahubStorage {
     using Address for address;
@@ -330,6 +329,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
         // Make payments.
+        Accounts.handleRentalPayment();
         _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
 
         // Deliver warper asset to the renter!

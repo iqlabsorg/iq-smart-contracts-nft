@@ -1,3 +1,4 @@
+// solhint-disable private-vars-leading-underscore
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
@@ -44,14 +45,18 @@ library Accounts {
         address token,
         uint256 amount,
         address to
-    ) internal {
+    ) external {
         if (amount == 0) revert InvalidWithdrawalAmount(amount);
-        uint256 currentBalance = self.balance(token);
+        uint256 currentBalance = self._balance(token);
         if (amount > currentBalance) revert InsufficientBalance(currentBalance);
         unchecked {
             self.tokenBalances.set(token, currentBalance - amount);
         }
         IERC20Upgradeable(token).safeTransfer(to, amount);
+    }
+
+    function handleRentalPayment() external {
+        // solhint-disable-previous-line no-empty-blocks
     }
 
     /**
@@ -61,8 +66,8 @@ library Accounts {
         Account storage self,
         address token,
         uint256 amount
-    ) internal {
-        uint256 currentBalance = self.balance(token);
+    ) external {
+        uint256 currentBalance = self._balance(token);
         self.tokenBalances.set(token, currentBalance + amount);
     }
 
@@ -70,15 +75,14 @@ library Accounts {
      * @dev Returns account current balance.
      * Does not revert if `token` is not in the map.
      */
-    function balance(Account storage self, address token) internal view returns (uint256) {
-        (, uint256 value) = self.tokenBalances.tryGet(token);
-        return value;
+    function balance(Account storage self, address token) external view returns (uint256) {
+        return self._balance(token);
     }
 
     /**
      * @dev Returns the list of account balances in various tokens.
      */
-    function balances(Account storage self) internal view returns (Balance[] memory) {
+    function balances(Account storage self) external view returns (Balance[] memory) {
         uint256 length = self.tokenBalances.length();
         Balance[] memory allBalances = new Balance[](length);
         for (uint256 i = 0; i < length; i++) {
@@ -86,6 +90,15 @@ library Accounts {
             allBalances[i] = Balance({token: token, amount: amount});
         }
         return allBalances;
+    }
+
+    /**
+     * @dev Returns account current balance.
+     * Does not revert if `token` is not in the map.
+     */
+    function _balance(Account storage self, address token) internal view returns (uint256) {
+        (, uint256 value) = self.tokenBalances.tryGet(token);
+        return value;
     }
 
     /**
