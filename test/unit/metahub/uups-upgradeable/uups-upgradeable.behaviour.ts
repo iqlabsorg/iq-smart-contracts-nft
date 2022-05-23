@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { upgrades } from 'hardhat';
 import {
+  Accounts__factory,
   Assets__factory,
   Listings__factory,
   MetahubV2Mock,
@@ -32,12 +33,14 @@ export function shouldBehaveLikeUUPSUpgradeable(): void {
       const listingsLib = await new Listings__factory(deployer).deploy();
       const assetsLib = await new Assets__factory(deployer).deploy();
       const warpersLib = await new Warpers__factory(deployer).deploy();
+      const accountsLib = await new Accounts__factory(deployer).deploy();
 
       const metahubLibs: MetahubLibraryAddresses = {
         'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
         'contracts/listing/Listings.sol:Listings': listingsLib.address,
         'contracts/asset/Assets.sol:Assets': assetsLib.address,
         'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
+        'contracts/accounting/Accounts.sol:Accounts': accountsLib.address,
       };
 
       metahubV2Factory = new MetahubV2Mock__factory(metahubLibs, deployer);
