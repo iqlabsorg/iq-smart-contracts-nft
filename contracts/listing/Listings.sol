@@ -21,6 +21,11 @@ library Listings {
     error NotListed(uint256 listingId);
 
     /**
+     * @dev Thrown when the `listingId` has never been registered.
+     */
+    error ListingNotRegistered(uint256 listingId);
+
+    /**
      * @dev Thrown when the operation is not allowed due to the listing being paused.
      */
     error ListingIsPaused();
@@ -240,6 +245,14 @@ library Listings {
         uint256 limit
     ) external view returns (uint256[] memory, Listing[] memory) {
         return self.paginateIndexedListings(self.assets[original].listingIndex, offset, limit);
+    }
+
+    /**
+     * @dev Reverts if listing has not been registered.
+     * @param listingId Listing ID.
+     */
+    function checkRegisteredListing(Registry storage self, uint256 listingId) external view {
+        if (!self.isRegisteredListing(listingId)) revert ListingNotRegistered(listingId);
     }
 
     /**

@@ -94,6 +94,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @dev Modifier to make sure the function is called for a listing that has been registered.
+     */
+    modifier listingExists(uint256 listingId) {
+        _listingRegistry.checkRegisteredListing(listingId);
+        _;
+    }
+
+    /**
      * @dev Modifier to make sure that the warper has been registered beforehand.
      */
     modifier registeredWarper(address warper) {
@@ -433,7 +441,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @inheritdoc IListingManager
      */
-    function listingInfo(uint256 listingId) external view returns (Listings.Listing memory) {
+    function listingInfo(uint256 listingId) external view listingExists(listingId) returns (Listings.Listing memory) {
         return _listingRegistry.listings[listingId];
     }
 
