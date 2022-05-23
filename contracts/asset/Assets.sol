@@ -97,6 +97,7 @@ library Assets {
      */
     struct AssetConfig {
         IAssetController controller;
+        bytes4 assetClass;
         IAssetVault vault;
     }
 
@@ -123,8 +124,11 @@ library Assets {
         if (!self.assetIndex.add(asset)) revert AssetIsAlreadyRegistered(asset);
 
         IAssetClassRegistry.ClassConfig memory assetClassConfig = self.classRegistry.assetClassConfig(assetClass);
-        self.assets[asset].vault = IAssetVault(assetClassConfig.vault);
-        self.assets[asset].controller = IAssetController(assetClassConfig.controller);
+        self.assets[asset] = AssetConfig({
+            controller: IAssetController(assetClassConfig.controller),
+            assetClass: assetClass,
+            vault: IAssetVault(assetClassConfig.vault)
+        });
     }
 
     /**
