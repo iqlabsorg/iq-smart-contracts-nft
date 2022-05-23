@@ -9,6 +9,7 @@ import {
   Listings__factory,
   Warpers__factory,
   Assets__factory,
+  Accounts__factory,
 } from '../../typechain';
 import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
 import { unsafeDeployment } from './unsafe-deployment';
@@ -61,12 +62,15 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
       console.log('assetsLib', assetsLib.address);
       const warpersLib = await new Warpers__factory(deployer).deploy();
       console.log('warpersLib', warpersLib.address);
+      const accountsLib = await new Accounts__factory(deployer).deploy();
+      console.log('accountsLib', accountsLib.address);
 
       const metahubLibs: MetahubLibraryAddresses = {
         'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
         'contracts/listing/Listings.sol:Listings': listingsLib.address,
         'contracts/asset/Assets.sol:Assets': assetsLib.address,
         'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
+        'contracts/accounting/Accounts.sol:Accounts': accountsLib.address,
       };
 
       const factory = new Metahub__factory(metahubLibs, deployer);
@@ -92,6 +96,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
               Listings: listingsLib.address,
               Assets: assetsLib.address,
               Warpers: warpersLib.address,
+              Accounts: accountsLib.address,
             },
             {
               // We perform the contract initialization at a later step manually
