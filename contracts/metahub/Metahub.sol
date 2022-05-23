@@ -329,7 +329,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
         // Make payments.
-        Accounts.handleRentalPayment();
         _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
 
         // Deliver warper asset to the renter!
@@ -671,46 +670,21 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             _warperRegistry,
             _universeRegistry
         );
-        address paymentToken = rentingParams.paymentToken;
 
-        // Ensure no rental fee payment slippage.
-        if (fees.total > maxPaymentAmount) revert RentalFeeSlippage();
-
-        // The amount of payment tokens to be accumulated on the Metahub for future payouts.
-        // This will include all fees which are not being paid out immediately.
-        uint256 accumulatedTokens = 0;
-
-        // Handle lister fee component.
-        Listings.Listing storage listing = _listingRegistry.listings[rentingParams.listingId];
-        uint256 listerFee = fees.listerBaseFee + fees.listerPremium;
-        // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
-        // Otherwise increase the lister balance.
-        address lister = listing.lister;
-        if (listing.immediatePayout) {
-            IERC20Upgradeable(paymentToken).safeTransferFrom(payer, lister, listerFee);
-        } else {
-            _accountRegistry.users[lister].increaseBalance(paymentToken, listerFee);
-            accumulatedTokens += listerFee;
-        }
-
-        // Handle universe fee component.
-        uint256 universeId = _warperRegistry.warpers[rentingParams.warper].universeId;
-        uint256 universeFee = fees.universeBaseFee + fees.universePremium;
-        // Increase universe balance.
-        _accountRegistry.universes[universeId].increaseBalance(paymentToken, universeFee);
-        accumulatedTokens += universeFee;
-
-        // Handle protocol fee component.
-        _accountRegistry.protocol.increaseBalance(paymentToken, fees.protocolFee);
-        accumulatedTokens += fees.protocolFee;
-
-        // Transfer the accumulated token amount from payer to the metahub.
-        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
+        Accounts.handleRentalPayment(
+            rentingParams,
+            fees,
+            payer,
+            maxPaymentAmount,
+            _accountRegistry,
+            _warperRegistry,
+            _listingRegistry
+        );
 
         // Emit events
-        emit UserEarned(lister, EarningType.LISTER_FEE, paymentToken, listerFee);
-        emit UniverseEarned(universeId, paymentToken, universeFee);
-        emit ProtocolEarned(paymentToken, fees.protocolFee);
+        // emit UserEarned(lister, EarningType.LISTER_FEE, paymentToken, listerFee);
+        // emit UniverseEarned(universeId, paymentToken, universeFee);
+        // emit ProtocolEarned(paymentToken, fees.protocolFee);
     }
 
     /**

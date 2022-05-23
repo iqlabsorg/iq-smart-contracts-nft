@@ -3,13 +3,22 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableMapUpgradeable.sol";
 import "../renting/Rentings.sol";
+import "../universe/IUniverseRegistry.sol";
+import "../listing/Listings.sol";
 
 library Accounts {
     using Accounts for Account;
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using EnumerableMapUpgradeable for EnumerableMapUpgradeable.AddressToUintMap;
+
+    /**
+     * @dev Thrown when the estimated rental fee calculated upon renting
+     * is higher than maximal payment amount the renter is willing to pay.
+     */
+    error RentalFeeSlippage();
 
     /**
      * @dev Thrown when the amount requested to be paid out is not valid.
@@ -55,8 +64,50 @@ library Accounts {
         IERC20Upgradeable(token).safeTransfer(to, amount);
     }
 
-    function handleRentalPayment() external {
-        // solhint-disable-previous-line no-empty-blocks
+    function handleRentalPayment(
+        Rentings.Params calldata rentingParams,
+        Rentings.RentalFees calldata fees,
+        address payer,
+        uint256 maxPaymentAmount,
+        Accounts.Registry storage accountRegistry,
+        Warpers.Registry storage warperRegistry,
+        Listings.Registry storage listingRegistry
+    ) external {
+        address paymentToken = rentingParams.paymentToken;
+
+        // Ensure no rental fee payment slippage.
+        if (fees.total > maxPaymentAmount) revert RentalFeeSlippage();
+
+        // The amount of payment tokens to be accumulated on the Metahub for future payouts.
+        // This will include all fees which are not being paid out immediately.
+        uint256 accumulatedTokens = 0;
+
+        // Handle lister fee component.
+        Listings.Listing storage listing = listingRegistry.listings[rentingParams.listingId];
+        uint256 listerFee = fees.listerBaseFee + fees.listerPremium;
+        // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
+        // Otherwise increase the lister balance.
+        address lister = listing.lister;
+        if (listing.immediatePayout) {
+            IERC20Upgradeable(paymentToken).safeTransferFrom(payer, lister, listerFee);
+        } else {
+            accountRegistry.users[lister].increaseBalance(paymentToken, listerFee);
+            accumulatedTokens += listerFee;
+        }
+
+        // Handle universe fee component.
+        uint256 universeId = warperRegistry.warpers[rentingParams.warper].universeId;
+        uint256 universeFee = fees.universeBaseFee + fees.universePremium;
+        // Increase universe balance.
+        accountRegistry.universes[universeId].increaseBalance(paymentToken, universeFee);
+        accumulatedTokens += universeFee;
+
+        // Handle protocol fee component.
+        accountRegistry.protocol.increaseBalance(paymentToken, fees.protocolFee);
+        accumulatedTokens += fees.protocolFee;
+
+        // Transfer the accumulated token amount from payer to the metahub.
+        IERC20Upgradeable(paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
     }
 
     /**
@@ -66,7 +117,7 @@ library Accounts {
         Account storage self,
         address token,
         uint256 amount
-    ) external {
+    ) internal {
         uint256 currentBalance = self._balance(token);
         self.tokenBalances.set(token, currentBalance + amount);
     }

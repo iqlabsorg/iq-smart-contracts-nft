@@ -5,12 +5,6 @@ import "./Rentings.sol";
 
 interface IRentingManager {
     /**
-     * @dev Thrown when the estimated rental fee calculated upon renting
-     * is higher than maximal payment amount the renter is willing to pay.
-     */
-    error RentalFeeSlippage();
-
-    /**
      * @dev Thrown when the message sender doesn't match the renter address.
      */
     error CallerIsNotRenter();
