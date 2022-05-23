@@ -269,9 +269,10 @@ export function shouldBehaveLikeWarperManager(): void {
     describe('supportedAssets', () => {
       context('When warpers are not registered', () => {
         it('returns an empty list', async () => {
-          await expect(warperManager.supportedAssets(0, 10)).to.eventually.eql([]);
+          await expect(warperManager.supportedAssets(0, 10)).to.eventually.eql([[], []]);
         });
       });
+
       context('When warpers are registered', () => {
         const supportedAssets: string[] = [];
         beforeEach(async () => {
