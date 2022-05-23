@@ -162,7 +162,8 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
                 controller: controller,
                 name: params.name,
                 universeId: params.universeId,
-                paused: params.paused
+                paused: params.paused,
+                assetClass: assetClass
             })
         );
 

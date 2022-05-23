@@ -54,11 +54,12 @@ library Warpers {
      * @param paused Indicates whether the warper is paused.
      */
     struct Warper {
+        bytes4 assetClass;
         address original;
+        bool paused;
         IWarperController controller;
         string name;
         uint256 universeId;
-        bool paused;
     }
 
     /**
