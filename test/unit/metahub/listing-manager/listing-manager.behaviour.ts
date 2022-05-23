@@ -295,24 +295,11 @@ export function shouldBehaveLikeListingManager(): void {
         });
 
         it('deletes the listing record', async () => {
-          const asset = {
-            id: { class: '0x00000000', data: '0x' },
-            value: BigNumber.from(0),
-          };
-          const listingParams = { strategy: '0x00000000', data: '0x' };
-
           await listingManager.connect(nftCreator).withdrawAsset(listingId);
 
-          await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
-            asset: asset,
-            params: listingParams,
-            lister: ADDRESS_ZERO,
-            maxLockPeriod: 0,
-            lockedTill: 0,
-            immediatePayout: false,
-            delisted: false,
-            paused: false,
-          });
+          await expect(listingManager.listingInfo(listingId)).to.be.revertedWith(
+            `ListingNotRegistered(${listingId.toString()})`,
+          );
 
           // NOTE: the listing counts not decrement!
           await expect(listingManager.listingCount(), 'Total listing count does not match').to.eventually.equal(0);
@@ -731,23 +718,9 @@ export function shouldBehaveLikeListingManager(): void {
       });
 
       context('Listing does not exist', () => {
-        it('returns an empty listing', async () => {
-          const asset = {
-            id: { class: '0x00000000', data: '0x' },
-            value: BigNumber.from(0),
-          };
-          const listingParams = { strategy: '0x00000000', data: '0x' };
-
-          await expect(listingManager.listingInfo(1)).to.eventually.equalStruct({
-            asset: asset,
-            params: listingParams,
-            lister: ADDRESS_ZERO,
-            maxLockPeriod: 0,
-            lockedTill: 0,
-            immediatePayout: false,
-            delisted: false,
-            paused: false,
-          });
+        it('reverts', async () => {
+          const listingId = 1;
+          await expect(listingManager.listingInfo(listingId)).to.revertedWith(`ListingNotRegistered(${listingId})`);
         });
       });
     });
