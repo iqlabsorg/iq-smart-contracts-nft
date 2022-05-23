@@ -298,7 +298,7 @@ export function shouldBehaveLikeListingManager(): void {
           await listingManager.connect(nftCreator).withdrawAsset(listingId);
 
           await expect(listingManager.listingInfo(listingId)).to.be.revertedWith(
-            `ListingNotRegistered(${listingId.toString()})`,
+            `ListingIsNotRegistered(${listingId.toString()})`,
           );
 
           // NOTE: the listing counts not decrement!
@@ -720,7 +720,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('Listing does not exist', () => {
         it('reverts', async () => {
           const listingId = 1;
-          await expect(listingManager.listingInfo(listingId)).to.revertedWith(`ListingNotRegistered(${listingId})`);
+          await expect(listingManager.listingInfo(listingId)).to.revertedWith(`ListingIsNotRegistered(${listingId})`);
         });
       });
     });

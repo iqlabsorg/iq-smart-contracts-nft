@@ -23,7 +23,7 @@ library Listings {
     /**
      * @dev Thrown when the `listingId` has never been registered.
      */
-    error ListingNotRegistered(uint256 listingId);
+    error ListingIsNotRegistered(uint256 listingId);
 
     /**
      * @dev Thrown when the operation is not allowed due to the listing being paused.
@@ -252,7 +252,7 @@ library Listings {
      * @param listingId Listing ID.
      */
     function checkRegisteredListing(Registry storage self, uint256 listingId) external view {
-        if (!self.isRegisteredListing(listingId)) revert ListingNotRegistered(listingId);
+        if (!self.isRegisteredListing(listingId)) revert ListingIsNotRegistered(listingId);
     }
 
     /**
