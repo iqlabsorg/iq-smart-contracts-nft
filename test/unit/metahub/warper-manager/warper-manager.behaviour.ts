@@ -13,6 +13,7 @@ import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWa
 import { warperPresetId } from '../metahub';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ASSET_CLASS } from '../../../../src';
+import { ADDRESS_ZERO } from '../../../shared/types';
 
 /**
  * The metahub contract behaves like IWarperManager
@@ -57,6 +58,7 @@ export function shouldBehaveLikeWarperManager(): void {
           name,
           universeId,
           paused,
+          assetClass: ASSET_CLASS.ERC721,
         };
       }
       return result;
@@ -311,7 +313,36 @@ export function shouldBehaveLikeWarperManager(): void {
     });
 
     describe('warperInfo', () => {
-      it('todo');
+      context('Query for non-existent warper', () => {
+        it('revers', async () => {
+          await expect(warperManager.warperInfo(ADDRESS_ZERO)).to.be.revertedWith('WarperIsNotRegistered');
+        });
+      });
+
+      context('Query for registered warper', () => {
+        let warperAddress: string;
+        let warperInfo: Warpers.WarperStruct;
+        let originalAddress: string;
+        beforeEach(async () => {
+          const original = await deployRandomERC721Token();
+
+          const warperInfoRecord = await deployManyWarperPresetsAndRegister(universeId, 1, original.address);
+          warperAddress = Object.keys(warperInfoRecord)[0];
+          warperInfo = warperInfoRecord[warperAddress];
+          originalAddress = original.address;
+        });
+
+        it('returns the warper info', async () => {
+          await expect(warperManager.warperInfo(warperAddress)).to.eventually.equalStruct({
+            assetClass: ASSET_CLASS.ERC721,
+            controller: warperInfo.controller,
+            name: 'Warper 0',
+            original: originalAddress,
+            paused: false,
+            universeId: universeId,
+          });
+        });
+      });
     });
 
     describe('warperController', () => {
