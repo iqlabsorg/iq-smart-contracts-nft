@@ -32,6 +32,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     using ERC165CheckerUpgradeable for address;
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using Accounts for Accounts.Account;
+    using Accounts for Accounts.Registry;
     using Assets for Assets.Asset;
     using Assets for Assets.Registry;
     using Listings for Listings.Listing;
@@ -671,20 +672,24 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             _universeRegistry
         );
 
-        Accounts.handleRentalPayment(
+        Accounts.RentalEarnings memory rentalEarnings = _accountRegistry.handleRentalPayment(
             rentingParams,
             fees,
             payer,
             maxPaymentAmount,
-            _accountRegistry,
             _warperRegistry,
             _listingRegistry
         );
 
         // Emit events
-        // emit UserEarned(lister, EarningType.LISTER_FEE, paymentToken, listerFee);
-        // emit UniverseEarned(universeId, paymentToken, universeFee);
-        // emit ProtocolEarned(paymentToken, fees.protocolFee);
+        emit UserEarned(
+            rentalEarnings.lister,
+            rentalEarnings.earningType,
+            rentalEarnings.listerPaymentToken,
+            rentalEarnings.listerFee
+        );
+        emit UniverseEarned(rentalEarnings.universeId, rentalEarnings.universePaymentToken, rentalEarnings.universeFee);
+        emit ProtocolEarned(rentalEarnings.protocolPaymentToken, rentalEarnings.protocolFee);
     }
 
     /**
