@@ -154,7 +154,7 @@ library Accounts {
     /**
      * @dev Returns the list of account balances in various tokens.
      */
-    function balances(Account storage self) external view returns (Balance[] memory) {
+    function balances(Account storage self) internal view returns (Balance[] memory) {
         uint256 length = self.tokenBalances.length();
         Balance[] memory allBalances = new Balance[](length);
         for (uint256 i = 0; i < length; i++) {
