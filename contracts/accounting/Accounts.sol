@@ -57,7 +57,7 @@ library Accounts {
         address to
     ) external {
         if (amount == 0) revert InvalidWithdrawalAmount(amount);
-        uint256 currentBalance = self._balance(token);
+        uint256 currentBalance = self.balance(token);
         if (amount > currentBalance) revert InsufficientBalance(currentBalance);
         unchecked {
             self.tokenBalances.set(token, currentBalance - amount);
@@ -138,7 +138,7 @@ library Accounts {
         address token,
         uint256 amount
     ) internal {
-        uint256 currentBalance = self._balance(token);
+        uint256 currentBalance = self.balance(token);
         self.tokenBalances.set(token, currentBalance + amount);
     }
 
@@ -146,8 +146,9 @@ library Accounts {
      * @dev Returns account current balance.
      * Does not revert if `token` is not in the map.
      */
-    function balance(Account storage self, address token) external view returns (uint256) {
-        return self._balance(token);
+    function balance(Account storage self, address token) internal view returns (uint256) {
+        (, uint256 value) = self.tokenBalances.tryGet(token);
+        return value;
     }
 
     /**
@@ -161,15 +162,6 @@ library Accounts {
             allBalances[i] = Balance({token: token, amount: amount});
         }
         return allBalances;
-    }
-
-    /**
-     * @dev Returns account current balance.
-     * Does not revert if `token` is not in the map.
-     */
-    function _balance(Account storage self, address token) internal view returns (uint256) {
-        (, uint256 value) = self.tokenBalances.tryGet(token);
-        return value;
     }
 
     /**
