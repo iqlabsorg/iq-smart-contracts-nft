@@ -22,8 +22,14 @@ interface IWarperManager {
      * @param universeId Universe ID.
      * @param warper Warper address.
      * @param original Original asset address.
+     * @param assetClass Asset class ID (identical for the `original` and `warper`).
      */
-    event WarperRegistered(uint256 indexed universeId, address indexed warper, address indexed original);
+    event WarperRegistered(
+        uint256 indexed universeId,
+        address indexed warper,
+        address indexed original,
+        bytes4 assetClass
+    );
 
     /**
      * @dev Emitted when the warper is no longer registered.

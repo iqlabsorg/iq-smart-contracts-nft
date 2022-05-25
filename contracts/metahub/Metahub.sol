@@ -180,7 +180,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             _assetRegistry.registerAsset(assetClass, original);
         }
 
-        emit WarperRegistered(params.universeId, warper, original);
+        emit WarperRegistered(params.universeId, warper, original, assetClass);
     }
 
     /**

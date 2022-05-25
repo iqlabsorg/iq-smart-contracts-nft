@@ -127,12 +127,18 @@ export function shouldBehaveLikeWarperManager(): void {
 
         context('When called by the warper universe owner', () => {
           context('When valid warper provided', () => {
-            it('registers the warper');
+            it('registers the warper', async () => {
+              await warperManager.registerWarper(warperAddress, warperRegistrationParams);
+              const info = await warperManager.warperInfo(warperAddress);
+              expect(info.universeId).to.eq(universeId);
+              expect(info.original).to.eq(originalAsset.address);
+              expect(info.assetClass).to.eq(ASSET_CLASS.ERC721);
+            });
 
             it('emits a WarperRegistered event', async () => {
               await expect(warperManager.registerWarper(warperAddress, warperRegistrationParams))
                 .to.emit(warperManager, 'WarperRegistered')
-                .withArgs(universeId, warperAddress, originalAsset.address);
+                .withArgs(universeId, warperAddress, originalAsset.address, ASSET_CLASS.ERC721);
             });
           });
         });
@@ -140,7 +146,38 @@ export function shouldBehaveLikeWarperManager(): void {
     });
 
     describe('deregisterWarper', () => {
-      it('todo');
+      let warperAddress: string;
+
+      beforeEach(async () => {
+        warperAddress = await deployWarperPreset(
+          warperPresetFactory,
+          warperPresetId,
+          metahub.address,
+          originalAsset.address,
+        );
+        await warperManager.registerWarper(warperAddress, warperRegistrationParams);
+      });
+
+      context('When called by stranger', () => {
+        it('reverts', async () => {
+          await expect(warperManager.connect(stranger).deregisterWarper(warperAddress)).to.be.revertedWith(
+            `AccountIsNotUniverseOwner("${stranger.address}")`,
+          );
+        });
+      });
+
+      context('When called by the warper universe owner', () => {
+        it('removes warper information', async () => {
+          await warperManager.deregisterWarper(warperAddress);
+          await expect(warperManager.warperInfo(warperAddress)).to.be.revertedWith('WarperIsNotRegistered');
+        });
+
+        it('emits WarperDeregistered event', async () => {
+          await expect(warperManager.deregisterWarper(warperAddress))
+            .to.emit(warperManager, 'WarperDeregistered')
+            .withArgs(warperAddress);
+        });
+      });
     });
 
     describe('universeWarperCount', () => {
@@ -335,9 +372,9 @@ export function shouldBehaveLikeWarperManager(): void {
         beforeEach(async () => {
           const original = await deployRandomERC721Token();
 
-          const warperInfoRecord = await deployManyWarperPresetsAndRegister(universeId, 1, original.address);
-          warperAddress = Object.keys(warperInfoRecord)[0];
-          warperInfo = warperInfoRecord[warperAddress];
+          const warpers = await deployManyWarperPresetsAndRegister(universeId, 1, original.address);
+          warperAddress = Object.keys(warpers)[0];
+          warperInfo = warpers[warperAddress];
           originalAddress = original.address;
         });
 
