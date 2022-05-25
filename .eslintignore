@@ -4,3 +4,4 @@ deployments
 cache
 coverage
 typechain
+dist
