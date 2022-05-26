@@ -2,6 +2,22 @@
 
 ## Deployed smart contract addresses
 
+### BNB testnet
+
+| Contract                  | Address                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Metahub                   | [0x13588466cc1B2482D107aAf43d2C459a54a4203C](https://mumbai.polygonscan.com/address/0x13588466cc1B2482D107aAf43d2C459a54a4203C) |
+| Asset class registry      | [0x9501AE9A5332299Db46AB8bD9178F9CA2ee45a0B](https://mumbai.polygonscan.com/address/0x9501AE9A5332299Db46AB8bD9178F9CA2ee45a0B) |
+| Listing strategy registry | [0x4e8Dd17a192E97B34ec42F37E1F573dC15ddfaBf](https://mumbai.polygonscan.com/address/0x4e8Dd17a192E97B34ec42F37E1F573dC15ddfaBf) |
+| Universe registry         | [0x8a10734f85f0B4f42666F9179Bb2A61fE8ebF086](https://mumbai.polygonscan.com/address/0x8a10734f85f0B4f42666F9179Bb2A61fE8ebF086) |
+| Universe token            | [0xc479Ed9f57a43592589B84A395749f964397312e](https://mumbai.polygonscan.com/address/0xc479Ed9f57a43592589B84A395749f964397312e) |
+| Warper preset factory     | [0xd2997e6De526A3A8AB6e7ced61B3aa78d7Caae99](https://mumbai.polygonscan.com/address/0xd2997e6De526A3A8AB6e7ced61B3aa78d7Caae99) |
+| ERC721 asset vault        | [0x06DAEBaa805713d6878EEa886195492A004dC734](https://mumbai.polygonscan.com/address/0x06DAEBaa805713d6878EEa886195492A004dC734) |
+| Base token (ERC20)        | [0x7D6a53F6932eB3c13C6Da2650C9449F215365BA9](https://mumbai.polygonscan.com/address/0x7D6a53F6932eB3c13C6Da2650C9449F215365BA9) |
+| Mock ERC721 (for tests)   | [0x13B194B552fa059A9FB8cecc317D7085f7f254a6](https://mumbai.polygonscan.com/address/0x13B194B552fa059A9FB8cecc317D7085f7f254a6) |
+
+### Mumbai testnet
+
 | Contract                  | Address                                                                                                                         |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Metahub                   | [0xA3F67AE966aBf339344D1c5e2C8FB4DEdF81B111](https://mumbai.polygonscan.com/address/0xA3F67AE966aBf339344D1c5e2C8FB4DEdF81B111) |
