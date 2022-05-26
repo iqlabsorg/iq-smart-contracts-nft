@@ -111,7 +111,7 @@ interface IUniverseRegistry {
      * @dev Aggregate and return Universe data.
      * @param universeId Universe-specific ID.
      * @return name The name of the universe.
-     * @param rentalFeePercent The base percentage of the rental fee which the universe charges for using its warpers.
+     * @return rentalFeePercent The base percentage of the rental fee which the universe charges for using its warpers.
      */
     function universe(uint256 universeId) external view returns (string memory name, uint16 rentalFeePercent);
 
