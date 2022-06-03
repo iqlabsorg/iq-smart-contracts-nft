@@ -4,6 +4,8 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../acl/AccessControlled.sol";
 import "./IAssetVault.sol";
@@ -20,6 +22,8 @@ import "./IAssetVault.sol";
  *
  */
 abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 {
+    using SafeERC20 for IERC20;
+
     /**
      * @dev Vault recovery mode state.
      */
@@ -91,6 +95,17 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
     function switchToRecoveryMode() external onlyAdmin whenNotRecovery {
         _recovery = true;
         emit RecoveryModeActivated(_msgSender());
+    }
+
+    /**
+     * @inheritdoc IAssetVault
+     */
+    function recoverTokens(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) external override onlyAdmin {
+        token.safeTransfer(to, amount);
     }
 
     /**

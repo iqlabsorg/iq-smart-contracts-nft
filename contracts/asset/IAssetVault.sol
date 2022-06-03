@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IAssetVault is IERC165 {
     /**
@@ -34,6 +35,17 @@ interface IAssetVault is IERC165 {
      * Emits a {RecoveryModeActivated} event.
      */
     function switchToRecoveryMode() external;
+
+    /**
+     * @notice Send ERC20 tokens to an address.
+     * Lets assume that a user has mistakingly sent his ERC20 tokens to our contract.
+     * To help him out, the contract owner can send back the tokens.
+     */
+    function recoverTokens(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) external;
 
     /**
      * @dev Pauses the vault.
