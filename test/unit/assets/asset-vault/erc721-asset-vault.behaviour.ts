@@ -1,8 +1,7 @@
 import { expect } from 'chai';
-import { ERC20Mock, ERC721Mock, IERC721AssetVault } from '../../../../typechain';
+import { ERC721Mock, IERC721AssetVault } from '../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ASSET_CLASS } from '../../../../src';
-import { AccessControlledHelper } from '../../../shared/utils';
 
 /**
  * Tests for ERC721 Asset Vault specific behaviour
@@ -12,21 +11,18 @@ export function shouldBehaveLikeERC721AssetVault(): void {
     const mintedTokenId = 1;
     let vault: IERC721AssetVault;
     let asset: ERC721Mock;
-    let erc20: ERC20Mock;
 
     let operator: SignerWithAddress;
     let admin: SignerWithAddress;
     let deployer: SignerWithAddress;
     let assetOwner: SignerWithAddress;
-    let stranger: SignerWithAddress;
 
     beforeEach(async function () {
       operator = this.signers.named.operator;
       deployer = this.signers.named.deployer;
 
-      [assetOwner, admin, stranger] = this.signers.unnamed;
+      [assetOwner, admin] = this.signers.unnamed;
       asset = this.mocks.assets.erc721;
-      erc20 = this.mocks.assets.erc20;
       vault = this.contracts.erc721assetVault;
 
       await this.contracts.acl.connect(deployer).grantRole(await this.contracts.acl.adminRole(), admin.address);
@@ -99,19 +95,6 @@ export function shouldBehaveLikeERC721AssetVault(): void {
             );
           });
         });
-      });
-    });
-
-    describe('recoverTokens', () => {
-      const amount = 100000;
-      beforeEach(async () => {
-        // Send the ERC20 tokens to the contract
-        await erc20.connect(deployer).transfer(vault.address, amount);
-      });
-
-      AccessControlledHelper.onlyAdminCan(async signer => {
-        const tx = vault.connect(signer).recoverTokens(erc20.address, stranger.address, amount);
-        await expect(tx).to.emit(erc20, 'Transfer').withArgs(vault.address, stranger.address, amount);
       });
     });
   });

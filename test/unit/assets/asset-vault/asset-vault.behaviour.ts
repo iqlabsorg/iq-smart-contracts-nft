@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { IAssetVault, Pausable__factory } from '../../../../typechain';
+import { IAssetVault, ERC20Mock, Pausable__factory } from '../../../../typechain';
 import { AccessControlledHelper } from '../../../shared/utils';
 
 /**
@@ -9,14 +9,21 @@ import { AccessControlledHelper } from '../../../shared/utils';
 export function shouldBehaveLikeAssetVault(): void {
   describe('IAssetVault', function () {
     let assetVault: IAssetVault;
+    let erc20: ERC20Mock;
+
     let admin: SignerWithAddress;
     let supervisor: SignerWithAddress;
     let operator: SignerWithAddress;
+    let stranger: SignerWithAddress;
+    let deployer: SignerWithAddress;
 
     beforeEach(function () {
+      erc20 = this.mocks.assets.erc20;
       assetVault = this.contracts.assetVault;
 
+      [stranger] = this.signers.unnamed;
       admin = this.signers.named.admin;
+      deployer = this.signers.named.deployer;
       operator = this.signers.named.operator;
       supervisor = this.signers.named.supervisor;
     });
@@ -43,6 +50,19 @@ export function shouldBehaveLikeAssetVault(): void {
         it('cannot unpause', async () => {
           await expect(assetVault.pause()).to.be.revertedWith('VaultIsInRecoveryMode()');
         });
+      });
+    });
+
+    describe('recoverTokens', () => {
+      const amount = 100000;
+      beforeEach(async () => {
+        // Send the ERC20 tokens to the contract
+        await erc20.connect(deployer).transfer(assetVault.address, amount);
+      });
+
+      AccessControlledHelper.onlyAdminCan(async signer => {
+        const tx = assetVault.connect(signer).recoverTokens(erc20.address, stranger.address, amount);
+        await expect(tx).to.emit(erc20, 'Transfer').withArgs(assetVault.address, stranger.address, amount);
       });
     });
 
