@@ -100,7 +100,7 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
     /**
      * @inheritdoc IAssetVault
      */
-    function recoverTokens(
+    function withdrawERC20Tokens(
         IERC20 token,
         address to,
         uint256 amount

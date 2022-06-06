@@ -38,10 +38,8 @@ interface IAssetVault is IERC165 {
 
     /**
      * @notice Send ERC20 tokens to an address.
-     * Lets assume that a user has mistakingly sent his ERC20 tokens to our contract.
-     * To help him out, the contract owner can send back the tokens.
      */
-    function recoverTokens(
+    function withdrawERC20Tokens(
         IERC20 token,
         address to,
         uint256 amount
