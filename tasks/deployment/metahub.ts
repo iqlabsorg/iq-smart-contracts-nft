@@ -104,6 +104,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
             },
           )
         : safeDeployment());
+      await metahub.deployed();
 
       console.log('Metahub deployed at', metahub.address);
 

@@ -44,6 +44,8 @@ task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
     };
 
     const deployment = await (unsafe ? unsafeDeployment(factory, 'WarperPresetFactory', hre, args) : safeDeployment());
+    await deployment.deployed();
+
     console.log('WarperPresetFactory deployed', deployment.address);
     return IWarperPresetFactory__factory.connect(deployment.address, deployer);
   });

@@ -27,6 +27,7 @@ task('deploy:universe-registry', 'Deploy the `UniverseRegistry` contracts.')
 
     // Deploy Universe registry.
     const deployment = await (unsafe ? unsafeDeployment(factory, 'UniverseRegistry', hre, args) : safeDeployment());
+    await deployment.deployed();
 
     console.log('UniverseRegistry deployed', deployment.address);
     console.log('UniverseToken deployed', await deployment.universeToken());
