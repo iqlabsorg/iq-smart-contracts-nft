@@ -32,6 +32,8 @@ task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
     };
 
     const deployment = await (unsafe ? unsafeDeployment(factory, 'AssetClassRegistry', hre, args) : safeDeployment());
+    await deployment.deployed();
+
     console.log('AssetClassRegistry deployed', deployment.address);
     return IAssetClassRegistry__factory.connect(deployment.address, deployer);
   });
@@ -59,6 +61,7 @@ task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.'
     const deployment = await (unsafe
       ? unsafeDeployment(factory, 'ListingStrategyRegistry', hre, args)
       : safeDeployment());
+    await deployment.deployed();
     console.log('ListingStrategyRegistry deployed', deployment.address);
     return IListingStrategyRegistry__factory.connect(deployment.address, deployer);
   });

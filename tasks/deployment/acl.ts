@@ -23,6 +23,8 @@ task('deploy:acl', 'Deploy the `ACL` contract')
     };
 
     const deployment = await (unsafe ? unsafeDeployment(factory, 'ACL', hre) : safeACL());
+    await deployment.deployed();
+
     console.log('ACL deployed', deployment.address);
 
     return deployment;
