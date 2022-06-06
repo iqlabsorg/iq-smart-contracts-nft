@@ -53,7 +53,7 @@ export function shouldBehaveLikeAssetVault(): void {
       });
     });
 
-    describe('recoverTokens', () => {
+    describe('withdrawERC20Tokens', () => {
       const amount = 100000;
       beforeEach(async () => {
         // Send the ERC20 tokens to the contract
@@ -61,7 +61,7 @@ export function shouldBehaveLikeAssetVault(): void {
       });
 
       AccessControlledHelper.onlyAdminCan(async signer => {
-        const tx = assetVault.connect(signer).recoverTokens(erc20.address, stranger.address, amount);
+        const tx = assetVault.connect(signer).withdrawERC20Tokens(erc20.address, stranger.address, amount);
         await expect(tx).to.emit(erc20, 'Transfer').withArgs(assetVault.address, stranger.address, amount);
       });
     });
