@@ -632,37 +632,6 @@ export function shouldBehaveLikeRentingManager(): void {
         await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
       });
 
-      context('When msg.sender is not the renter', () => {
-        beforeEach(async () => {
-          await paymentToken.mint(stranger.address, maxPaymentAmount);
-          await paymentToken.connect(stranger).approve(rentingManager.address, maxPaymentAmount);
-
-          warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
-        });
-
-        it('reverts', async () => {
-          const rentalParams = {
-            listingId: listingId,
-            paymentToken: paymentToken.address,
-            rentalPeriod: 1000,
-            renter: nftCreator.address,
-            warper: warperAddress,
-          };
-
-          await expect(rentingManager.connect(stranger).rent(rentalParams, maxPaymentAmount)).to.be.revertedWith(
-            'CallerIsNotRenter()',
-          );
-        });
-      });
-
       context('When invalid rental params', () => {
         context('When base token does not match renting params', () => {
           let anotherToken: ERC20Mock;
