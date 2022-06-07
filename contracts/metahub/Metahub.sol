@@ -323,9 +323,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IRentingManager
      */
     function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256) {
-        // Currently payer must match the renter address since the estimation might be renter specific.
-        if (_msgSender() != rentingParams.renter) revert CallerIsNotRenter();
-
         // Validate renting parameters.
         Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
