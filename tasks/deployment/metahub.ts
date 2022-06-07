@@ -14,7 +14,32 @@ import {
 import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
 import { unsafeDeployment } from './unsafe-deployment';
 
-task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
+task('deploy:metahub-libraries', 'Deploy the `Metahub` libraries').setAction(async (_args, hre) => {
+  const deployer = await hre.ethers.getNamedSigner('deployer');
+
+  // Deploy external libraries used by Metahub.
+  const rentingsLib = await new Rentings__factory(deployer).deploy();
+  console.log('rentingsLib', rentingsLib.address);
+  const listingsLib = await new Listings__factory(deployer).deploy();
+  console.log('listingsLib', listingsLib.address);
+  const assetsLib = await new Assets__factory(deployer).deploy();
+  console.log('assetsLib', assetsLib.address);
+  const warpersLib = await new Warpers__factory(deployer).deploy();
+  console.log('warpersLib', warpersLib.address);
+  const accountsLib = await new Accounts__factory(deployer).deploy();
+  console.log('accountsLib', accountsLib.address);
+
+  const metahubLibs: MetahubLibraryAddresses = {
+    'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
+    'contracts/listing/Listings.sol:Listings': listingsLib.address,
+    'contracts/asset/Assets.sol:Assets': assetsLib.address,
+    'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
+    'contracts/accounting/Accounts.sol:Accounts': accountsLib.address,
+  };
+  return metahubLibs;
+});
+
+task('deploy:metahub', 'Deploy the `Metahub` contract.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
   .addParam('baseToken', 'The base token contract address', undefined, types.string)
   .addParam('listingStrategyRegistry', 'The `ListingStrategyRegistry` contract address', undefined, types.string)
@@ -53,26 +78,7 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
     ) => {
       const deployer = await hre.ethers.getNamedSigner('deployer');
 
-      // Deploy external libraries used by Metahub.
-      const rentingsLib = await new Rentings__factory(deployer).deploy();
-      console.log('rentingsLib', rentingsLib.address);
-      const listingsLib = await new Listings__factory(deployer).deploy();
-      console.log('listingsLib', listingsLib.address);
-      const assetsLib = await new Assets__factory(deployer).deploy();
-      console.log('assetsLib', assetsLib.address);
-      const warpersLib = await new Warpers__factory(deployer).deploy();
-      console.log('warpersLib', warpersLib.address);
-      const accountsLib = await new Accounts__factory(deployer).deploy();
-      console.log('accountsLib', accountsLib.address);
-
-      const metahubLibs: MetahubLibraryAddresses = {
-        'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
-        'contracts/listing/Listings.sol:Listings': listingsLib.address,
-        'contracts/asset/Assets.sol:Assets': assetsLib.address,
-        'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
-        'contracts/accounting/Accounts.sol:Accounts': accountsLib.address,
-      };
-
+      const metahubLibs = (await hre.run('deploy:metahub-libraries')) as MetahubLibraryAddresses;
       const factory = new Metahub__factory(metahubLibs, deployer);
 
       // Safe deployment
@@ -92,11 +98,11 @@ task('deploy:metahub', 'Deploy the `Metahub`, `UniverseToken` contracts.')
             hre,
             [],
             {
-              Rentings: rentingsLib.address,
-              Listings: listingsLib.address,
-              Assets: assetsLib.address,
-              Warpers: warpersLib.address,
-              Accounts: accountsLib.address,
+              Rentings: metahubLibs['contracts/renting/Rentings.sol:Rentings'],
+              Listings: metahubLibs['contracts/listing/Listings.sol:Listings'],
+              Assets: metahubLibs['contracts/asset/Assets.sol:Assets'],
+              Warpers: metahubLibs['contracts/warper/Warpers.sol:Warpers'],
+              Accounts: metahubLibs['contracts/accounting/Accounts.sol:Accounts'],
             },
             {
               // We perform the contract initialization at a later step manually
