@@ -25,17 +25,17 @@ jobs:
 
       # Pretty much does nothing if valid node modules is restored from cache.
       - name: Install node modules
-        uses: borales/actions-yarn@v2.3.0
+        uses: borales/actions-yarn@v3.0.0
         with:
           cmd: install
 
       - name: Compile the Solidity code
-        uses: borales/actions-yarn@v2.3.0
+        uses: borales/actions-yarn@v3.0.0
         with:
           cmd: compile
 
       - name: Markdown doc gen
-        uses: borales/actions-yarn@v2.3.0
+        uses: borales/actions-yarn@v3.0.0
         with:
           cmd: hardhat docgen
 
@@ -67,7 +67,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: Lint the codebase
-        uses: borales/actions-yarn@v2.3.0
+        uses: borales/actions-yarn@v3.0.0
         with:
           cmd: lint
 
@@ -98,7 +98,7 @@ jobs:
 
       # will run `yarn test` command
       - name: Execute tests
-        uses: borales/actions-yarn@v2.3.0
+        uses: borales/actions-yarn@v3.0.0
         with:
           cmd: test
 
