@@ -1,6 +1,7 @@
 import { task, types } from 'hardhat/config';
 import { UUPSUpgradeable__factory } from '../../typechain';
 import './metahub';
+import './asset-class-registry';
 
 task('upgrade:unsafe:proxy', 'Upgrade an arbitrary proxy contract.')
   .addParam('proxy', 'The proxy contract address', undefined, types.string)
