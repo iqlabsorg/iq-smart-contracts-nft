@@ -166,6 +166,7 @@ library Listings {
      * @param listingIndex The global set of registered listing IDs.
      * @param listings Mapping from listing ID to the listing info.
      * @param listers Mapping from lister address to the lister info.
+     * @param assets Mapping from an asset address to the asset info.
      */
     struct Registry {
         CountersUpgradeable.Counter idTracker;
