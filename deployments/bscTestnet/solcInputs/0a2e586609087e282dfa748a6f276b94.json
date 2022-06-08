@@ -408,6 +408,23 @@
     },
     "metadata": {
       "useLiteralContent": true
+    },
+    "libraries": {
+      "contracts/renting/Rentings.sol": {
+        "Rentings": "0xf646f1fDcAaBEf9fF30C9736E74B9D1785325Ac8"
+      },
+      "contracts/listing/Listings.sol": {
+        "Listings": "0x25B27844B6b78EEfb02B92dbDfE4F0587F39B042"
+      },
+      "contracts/asset/Assets.sol": {
+        "Assets": "0x2b09128615f87B316f1a19eB1caf384268aCB8FF"
+      },
+      "contracts/warper/Warpers.sol": {
+        "Warpers": "0xB8c95baFe72FFD8E5dCcFc409777b139c7e57569"
+      },
+      "contracts/accounting/Accounts.sol": {
+        "Accounts": "0xE9fbC032aB4f4E1cC68F94eA043197d1A8BD7d07"
+      }
     }
   }
 }
