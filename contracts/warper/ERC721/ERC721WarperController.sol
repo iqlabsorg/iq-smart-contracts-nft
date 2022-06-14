@@ -87,7 +87,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
 
         // Handle asset rentability mechanics.
         if (supportedMechanics[2]) {
-            (bool isRentable, string memory errorMessage) = IAssetRentabilityMechanics(warper).isRentableAsset(
+            (bool isRentable, string memory errorMessage) = IAssetRentabilityMechanics(warper).__isRentableAsset(
                 rentingParams.renter,
                 tokenId,
                 asset.value
@@ -109,7 +109,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         if (IWarper(rentingParams.warper).supportsInterface(type(IRentalFeePremiumMechanics).interfaceId)) {
             (, uint256 tokenId) = _decodeAssetId(asset.id);
             return
-                IRentalFeePremiumMechanics(rentingParams.warper).calculatePremiums(
+                IRentalFeePremiumMechanics(rentingParams.warper).__calculatePremiums(
                     rentingParams.renter,
                     tokenId,
                     asset.value,

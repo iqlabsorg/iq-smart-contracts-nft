@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore
 pragma solidity 0.8.13;
 
 interface IAssetRentabilityMechanics {
@@ -15,7 +16,7 @@ interface IAssetRentabilityMechanics {
      * @return isRentable True if asset is rentable.
      * @return errorMessage The reason of the asset not being rentable.
      */
-    function isRentableAsset(
+    function __isRentableAsset(
         address renter,
         uint256 tokenId,
         uint256 amount

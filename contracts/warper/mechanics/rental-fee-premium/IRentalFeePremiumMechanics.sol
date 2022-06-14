@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore
 pragma solidity 0.8.13;
 
 interface IRentalFeePremiumMechanics {
@@ -13,7 +14,7 @@ interface IRentalFeePremiumMechanics {
      * @return universePremium The universe premium price to add.
      * @return listerPremium The lister premium price to add.
      */
-    function calculatePremiums(
+    function __calculatePremiums(
         address renter,
         uint256 tokenId,
         uint256 amount,
