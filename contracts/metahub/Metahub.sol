@@ -327,7 +327,11 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
         // Make payments.
-        _handleRentalPayment(rentingParams, _msgSender(), maxPaymentAmount);
+        Accounts.RentalEarnings memory rentalEarnings = _handleRentalPayment(
+            rentingParams,
+            _msgSender(),
+            maxPaymentAmount
+        );
 
         // Deliver warper asset to the renter!
         (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
@@ -355,6 +359,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Clean up x2 expired rental agreements.
         _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
+
+        // Execute rental hook.
+        _executeWarperRentalHook(rentingParams.warper, rentalId, rentalAgreement, rentalEarnings);
 
         emit AssetRented(
             rentalId,
@@ -659,7 +666,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Rentings.Params calldata rentingParams,
         address payer,
         uint256 maxPaymentAmount
-    ) internal {
+    ) internal returns (Accounts.RentalEarnings memory rentalEarnings) {
         // Get precise estimation.
         Rentings.RentalFees memory fees = Rentings.calculateRentalFees(
             rentingParams,
@@ -669,7 +676,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             _universeRegistry
         );
 
-        Accounts.RentalEarnings memory rentalEarnings = _accountRegistry.handleRentalPayment(
+        rentalEarnings = _accountRegistry.handleRentalPayment(
             rentingParams,
             fees,
             payer,
@@ -679,14 +686,42 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         );
 
         // Emit events
-        emit UserEarned(
-            rentalEarnings.lister,
-            rentalEarnings.earningType,
-            rentalEarnings.listerPaymentToken,
-            rentalEarnings.listerFee
+        for (uint256 i = 0; i < rentalEarnings.userEarnings.length; i++) {
+            Accounts.UserEarning memory userEarning = rentalEarnings.userEarnings[i];
+            emit UserEarned(userEarning.account, userEarning.earningType, userEarning.token, userEarning.value);
+        }
+
+        emit UniverseEarned(
+            rentalEarnings.universeId,
+            rentalEarnings.universeEarningToken,
+            rentalEarnings.universeEarningValue
         );
-        emit UniverseEarned(rentalEarnings.universeId, rentalEarnings.universePaymentToken, rentalEarnings.universeFee);
-        emit ProtocolEarned(rentalEarnings.protocolPaymentToken, rentalEarnings.protocolFee);
+        emit ProtocolEarned(rentalEarnings.protocolEarningToken, rentalEarnings.protocolEarningValue);
+    }
+
+    /**
+     * @dev Executes warper rental hook using the corresponding controller.
+     * @param warper Warper address.
+     * @param rentalId Rental Agreement ID.
+     * @param rentalAgreement Newly registered rental agreement details.
+     * @param rentalEarnings The rental earnings breakdown.
+     */
+    function _executeWarperRentalHook(
+        address warper,
+        uint256 rentalId,
+        Rentings.Agreement memory rentalAgreement,
+        Accounts.RentalEarnings memory rentalEarnings
+    ) internal {
+        address controller = address(_warperRegistry.warpers[warper].controller);
+
+        controller.functionDelegateCall(
+            abi.encodeWithSelector(
+                IWarperController.executeRentingHooks.selector,
+                rentalId,
+                rentalAgreement,
+                rentalEarnings
+            )
+        );
     }
 
     /**

@@ -65,19 +65,22 @@ library Accounts {
         IERC20Upgradeable(token).safeTransfer(to, amount);
     }
 
-    struct RentalEarnings {
-        // Lister
-        address lister;
-        uint256 listerFee;
-        address listerPaymentToken;
+    struct UserEarning {
         IPaymentManager.EarningType earningType;
+        address account;
+        uint256 value;
+        address token;
+    }
+
+    struct RentalEarnings {
+        UserEarning[] userEarnings;
         // Universe
         uint256 universeId;
-        uint256 universeFee;
-        address universePaymentToken;
+        uint256 universeEarningValue;
+        address universeEarningToken;
         // Protocol
-        uint256 protocolFee;
-        address protocolPaymentToken;
+        uint256 protocolEarningValue;
+        address protocolEarningToken;
     }
 
     function handleRentalPayment(
@@ -89,10 +92,6 @@ library Accounts {
         Warpers.Registry storage warperRegistry,
         Listings.Registry storage listingRegistry
     ) external returns (RentalEarnings memory earnings) {
-        earnings.listerPaymentToken = rentingParams.paymentToken;
-        earnings.universePaymentToken = rentingParams.paymentToken;
-        earnings.protocolPaymentToken = rentingParams.paymentToken;
-
         // Ensure no rental fee payment slippage.
         if (fees.total > maxPaymentAmount) revert RentalFeeSlippage();
 
@@ -102,29 +101,38 @@ library Accounts {
 
         // Handle lister fee component.
         Listings.Listing storage listing = listingRegistry.listings[rentingParams.listingId];
-        earnings.listerFee = fees.listerBaseFee + fees.listerPremium;
-        earnings.earningType = IPaymentManager.EarningType.LISTER_FEE;
+        UserEarning memory listerEarning = UserEarning({
+            earningType: IPaymentManager.EarningType.LISTER_FEE,
+            account: listing.lister,
+            value: fees.listerBaseFee + fees.listerPremium,
+            token: rentingParams.paymentToken
+        });
+
         // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
         // Otherwise increase the lister balance.
-        earnings.lister = listing.lister;
         if (listing.immediatePayout) {
-            IERC20Upgradeable(rentingParams.paymentToken).safeTransferFrom(payer, earnings.lister, earnings.listerFee);
+            IERC20Upgradeable(listerEarning.token).safeTransferFrom(payer, listerEarning.account, listerEarning.value);
         } else {
-            self.users[earnings.lister].increaseBalance(rentingParams.paymentToken, earnings.listerFee);
-            accumulatedTokens += earnings.listerFee;
+            self.users[listerEarning.account].increaseBalance(listerEarning.token, listerEarning.value);
+            accumulatedTokens += listerEarning.value;
         }
 
         // Handle universe fee component.
         earnings.universeId = warperRegistry.warpers[rentingParams.warper].universeId;
-        earnings.universeFee = fees.universeBaseFee + fees.universePremium;
+        earnings.universeEarningValue = fees.universeBaseFee + fees.universePremium;
+        earnings.universeEarningToken = rentingParams.paymentToken;
         // Increase universe balance.
-        self.universes[earnings.universeId].increaseBalance(rentingParams.paymentToken, earnings.universeFee);
-        accumulatedTokens += earnings.universeFee;
+        self.universes[earnings.universeId].increaseBalance(
+            earnings.universeEarningToken,
+            earnings.universeEarningValue
+        );
+        accumulatedTokens += earnings.universeEarningValue;
 
         // Handle protocol fee component.
-        earnings.protocolFee = fees.protocolFee;
-        self.protocol.increaseBalance(rentingParams.paymentToken, earnings.protocolFee);
-        accumulatedTokens += earnings.protocolFee;
+        earnings.protocolEarningValue = fees.protocolFee;
+        earnings.protocolEarningToken = rentingParams.paymentToken;
+        self.protocol.increaseBalance(earnings.protocolEarningToken, earnings.protocolEarningValue);
+        accumulatedTokens += earnings.protocolEarningValue;
 
         // Transfer the accumulated token amount from payer to the metahub.
         IERC20Upgradeable(rentingParams.paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);

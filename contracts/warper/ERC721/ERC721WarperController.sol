@@ -3,11 +3,13 @@
 pragma solidity 0.8.13;
 
 import "../../asset/ERC721/ERC721AssetController.sol";
+import "../../accounting/Accounts.sol";
 import "../../renting/IRentingManager.sol";
 import "../mechanics/availability-period/IAvailabilityPeriodMechanics.sol";
 import "../mechanics/rental-period/IRentalPeriodMechanics.sol";
 import "../mechanics/asset-rentability/IAssetRentabilityMechanics.sol";
 import "../mechanics/rental-fee-premium/IRentalFeePremiumMechanics.sol";
+import "../mechanics/renting-hook/IRentingHookMechanics.sol";
 import "./IERC721WarperController.sol";
 import "./IERC721Warper.sol";
 
@@ -39,6 +41,28 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
             IERC721Warper(warper).mint(to, tokenId, new bytes(0));
         } else {
             _transferAsset(warpedAsset, address(this), to, new bytes(0));
+        }
+    }
+
+    /**
+     * @inheritdoc IWarperController
+     */
+    function executeRentingHooks(
+        uint256 rentalId,
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata rentalEarnings
+    ) external onlyDelegatecall {
+        _validateAsset(rentalAgreement.warpedAsset);
+        (address warper, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAsset.id);
+        if (IWarper(warper).supportsInterface(type(IRentingHookMechanics).interfaceId)) {
+            (bool success, string memory errorMessage) = IRentingHookMechanics(warper).__onRent(
+                rentalId,
+                tokenId,
+                rentalAgreement.warpedAsset.value,
+                rentalAgreement,
+                rentalEarnings
+            );
+            if (!success) revert IRentingHookMechanics.RentingHookError(errorMessage);
         }
     }
 

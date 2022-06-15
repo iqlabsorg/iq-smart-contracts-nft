@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
+import "../accounting/Accounts.sol";
 import "../asset/Assets.sol";
 import "../renting/Rentings.sol";
 import "../asset/IAssetController.sol";
@@ -36,6 +37,18 @@ interface IWarperController is IAssetController {
         address warper,
         address to
     ) external returns (bytes32 collectionId, Assets.Asset memory warpedAsset);
+
+    /**
+     * @dev Executes warper rental hook.
+     * @param rentalId Rental agreement ID.
+     * @param rentalAgreement Newly registered rental agreement details.
+     * @param rentalEarnings The rental earnings breakdown.
+     */
+    function executeRentingHooks(
+        uint256 rentalId,
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata rentalEarnings
+    ) external;
 
     /**
      * @dev Validates that the warper interface is supported by the current WarperController.
