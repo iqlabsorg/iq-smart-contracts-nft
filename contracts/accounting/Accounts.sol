@@ -99,6 +99,9 @@ library Accounts {
         // This will include all fees which are not being paid out immediately.
         uint256 accumulatedTokens = 0;
 
+        // Currently we only support earnings for 1 user
+        earnings.userEarnings = new UserEarning[](1);
+
         // Handle lister fee component.
         Listings.Listing storage listing = listingRegistry.listings[rentingParams.listingId];
         UserEarning memory listerEarning = UserEarning({
@@ -107,6 +110,7 @@ library Accounts {
             value: fees.listerBaseFee + fees.listerPremium,
             token: rentingParams.paymentToken
         });
+        earnings.userEarnings[0] = listerEarning;
 
         // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
         // Otherwise increase the lister balance.
@@ -116,10 +120,6 @@ library Accounts {
             self.users[listerEarning.account].increaseBalance(listerEarning.token, listerEarning.value);
             accumulatedTokens += listerEarning.value;
         }
-
-        // Insert all data regarding the user earnings.
-        earnings.userEarnings = new UserEarning[](1);
-        earnings.userEarnings[0] = listerEarning;
 
         // Handle universe fee component.
         earnings.universeId = warperRegistry.warpers[rentingParams.warper].universeId;
