@@ -26,12 +26,6 @@ library Assets {
         keccak256("Asset(AssetId id,uint256 value)AssetId(bytes4 class,bytes data)");
 
     /**
-     * @dev Thrown when the asset class is not registered or deprecated.
-     * @param assetClass Asset class ID.
-     */
-    error UnsupportedAssetClass(bytes4 assetClass);
-
-    /**
      * @dev Thrown upon attempting to register an asset twice.
      * @param asset Duplicate asset address.
      */
@@ -197,14 +191,6 @@ library Assets {
      */
     function isRegisteredAsset(Registry storage self, address asset) internal view returns (bool) {
         return self.assetIndex.contains(asset);
-    }
-
-    /**
-     * @dev Reverts if asset class is not supported.
-     * @param assetClass Asset class ID.
-     */
-    function checkSupportedAssetClass(Registry storage self, bytes4 assetClass) internal view {
-        if (!self.classRegistry.isRegisteredAssetClass(assetClass)) revert UnsupportedAssetClass(assetClass);
     }
 
     /**

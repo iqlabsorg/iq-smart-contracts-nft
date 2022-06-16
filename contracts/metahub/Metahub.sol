@@ -1,36 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
 import "../acl/AccessControlledUpgradeable.sol";
-import "../asset/IAssetController.sol";
-import "../asset/IAssetVault.sol";
-import "../warper/Warpers.sol";
-import "../warper/IWarper.sol";
-import "../warper/ERC721/IERC721Warper.sol";
-import "../warper/IWarperPreset.sol";
-import "../warper/IWarperPresetFactory.sol";
-import "../warper/IWarperController.sol";
-import "../universe/IUniverseRegistry.sol";
-import "../listing/IListingController.sol";
 import "./IMetahub.sol";
 import "./MetahubStorage.sol";
-import "./Protocol.sol";
-import "../accounting/Accounts.sol";
 
 contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUpgradeable, MetahubStorage {
     using Address for address;
-    using ERC165CheckerUpgradeable for address;
-    using SafeERC20Upgradeable for IERC20Upgradeable;
     using Accounts for Accounts.Account;
     using Accounts for Accounts.Registry;
     using Assets for Assets.Asset;
@@ -147,33 +126,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         external
         onlyUniverseOwner(params.universeId)
     {
-        // Check that provided warper address is a valid contract.
-        if (!warper.isContract() || !warper.supportsInterface(type(IWarper).interfaceId))
-            revert InvalidWarperInterface();
-
-        // Check that warper asset class is supported.
-        bytes4 assetClass = IWarper(warper).__assetClass();
-        _assetRegistry.checkSupportedAssetClass(assetClass);
-
-        // Check that warper has correct metahub reference.
-        address warperMetahub = IWarper(warper).__metahub();
-        if (warperMetahub != address(this)) revert WarperHasIncorrectMetahubReference(warperMetahub, address(this));
-
-        IWarperController controller = IWarperController(_assetRegistry.assetClassController(assetClass));
-
-        // Register warper.
-        address original = IWarper(warper).__original();
-        _warperRegistry.register(
-            warper,
-            Warpers.Warper({
-                original: original,
-                controller: controller,
-                name: params.name,
-                universeId: params.universeId,
-                paused: params.paused,
-                assetClass: assetClass
-            })
-        );
+        (bytes4 assetClass, address original) = _warperRegistry.registerWarper(warper, params, _assetRegistry);
 
         // Register the original asset if it is seen for the first time.
         if (!_assetRegistry.isRegisteredAsset(original)) {

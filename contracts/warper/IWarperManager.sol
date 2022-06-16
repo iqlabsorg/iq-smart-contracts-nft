@@ -6,16 +6,16 @@ import "./Warpers.sol";
 
 interface IWarperManager {
     /**
-     * @dev Thrown if provided warper address does not implement warper interface.
+     * @dev Warper registration params.
+     * @param name The warper name.
+     * @param universeId The universe ID.
+     * @param paused Indicates whether the warper should stay paused after registration.
      */
-    error InvalidWarperInterface();
-
-    /**
-     * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
-     * @param provided Metahub address returned by warper.
-     * @param required Required metahub address.
-     */
-    error WarperHasIncorrectMetahubReference(address provided, address required);
+    struct WarperRegistrationParams {
+        string name;
+        uint256 universeId;
+        bool paused;
+    }
 
     /**
      * @dev Emitted when a new warper is registered.
@@ -50,18 +50,6 @@ interface IWarperManager {
     event WarperUnpaused(address indexed warper);
 
     /**
-     * @dev Warper registration params.
-     * @param name The warper name.
-     * @param universeId The universe ID.
-     * @param paused Indicates whether the warper should stay paused after registration.
-     */
-    struct WarperRegistrationParams {
-        string name;
-        uint256 universeId;
-        bool paused;
-    }
-
-    /**
      * @dev Registers a new warper.
      * The warper must be deployed and configured prior to registration,
      * since it becomes available for renting immediately.
@@ -76,6 +64,20 @@ interface IWarperManager {
      * @param warper Warper address.
      */
     function deregisterWarper(address warper) external;
+
+    /**
+     * @dev Puts the warper on pause.
+     * Emits a {WarperPaused} event.
+     * @param warper Address.
+     */
+    function pauseWarper(address warper) external;
+
+    /**
+     * @dev Lifts the warper pause.
+     * Emits a {WarperUnpaused} event.
+     * @param warper Address.
+     */
+    function unpauseWarper(address warper) external;
 
     /**
      * @dev Returns the number of warpers belonging to the particular universe.
@@ -163,18 +165,4 @@ interface IWarperManager {
      * @return Current controller.
      */
     function warperController(address warper) external view returns (address);
-
-    /**
-     * @dev Puts the warper on pause.
-     * Emits a {WarperPaused} event.
-     * @param warper Address.
-     */
-    function pauseWarper(address warper) external;
-
-    /**
-     * @dev Lifts the warper pause.
-     * Emits a {WarperUnpaused} event.
-     * @param warper Address.
-     */
-    function unpauseWarper(address warper) external;
 }

@@ -2,15 +2,33 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 
 import "./IWarperController.sol";
 import "./IWarperPresetFactory.sol";
 import "../asset/Assets.sol";
+import "./IWarperManager.sol";
 
 library Warpers {
+    using AddressUpgradeable for address;
+    using ERC165CheckerUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using Warpers for Registry;
     using Assets for Assets.Asset;
+    using Assets for Assets.Registry;
+
+    /**
+     * @dev Thrown if provided warper address does not implement warper interface.
+     */
+    error InvalidWarperInterface();
+
+    /**
+     * @dev Thrown when the warper returned metahub address differs from the one it is being registered in.
+     * @param provided Metahub address returned by warper.
+     * @param required Required metahub address.
+     */
+    error WarperHasIncorrectMetahubReference(address provided, address required);
 
     /**
      * @dev Thrown when performing action or accessing data of an unknown warper.
@@ -115,16 +133,61 @@ library Warpers {
 
     /**
      * @dev Performs warper registration.
+     * @param warper Warper address.
+     * @param params Warper registration params.
      */
-    function register(
+    function registerWarper(
+        Registry storage self,
+        address warper,
+        IWarperManager.WarperRegistrationParams calldata params,
+        Assets.Registry storage assetRegistry
+    ) external returns (bytes4 assetClass, address original) {
+        // Check that provided warper address is a valid contract.
+        if (!warper.isContract() || !warper.supportsInterface(type(IWarper).interfaceId)) {
+            revert InvalidWarperInterface();
+        }
+
+        // Check that warper has correct metahub reference.
+        address metahub = IWarper(warper).__metahub();
+        if (metahub != address(this)) revert WarperHasIncorrectMetahubReference(metahub, address(this));
+
+        // Check that warper asset class is supported.
+        assetClass = IWarper(warper).__assetClass();
+
+        // Retrieve warper controller based on assetClass.
+        // Controller resolution for unsupported asset class will revert.
+        IWarperController controller = IWarperController(assetRegistry.assetClassController(assetClass));
+
+        // Ensure warper compatibility with the current generation of asset controller.
+        controller.checkCompatibleWarper(warper);
+
+        // Retrieve original asset address.
+        original = IWarper(warper).__original();
+
+        // Save warper record.
+        _register(
+            self,
+            warper,
+            Warpers.Warper({
+                original: original,
+                controller: controller,
+                name: params.name,
+                universeId: params.universeId,
+                paused: params.paused,
+                assetClass: assetClass
+            })
+        );
+    }
+
+    /**
+     * @dev Performs warper registration.
+     */
+    function _register(
         Registry storage self,
         address warperAddress,
         Warper memory warper
-    ) external {
+    ) private {
         if (!self.warperIndex.add(warperAddress)) revert WarperIsAlreadyRegistered(warperAddress);
-
-        // Ensure warper compatibility with the current generation of asset controller.
-        warper.controller.checkCompatibleWarper(warperAddress);
 
         // Create warper main registration record.
         self.warpers[warperAddress] = warper;
