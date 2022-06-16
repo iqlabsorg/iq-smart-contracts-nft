@@ -47,12 +47,14 @@ export function shouldBehaveLikeUniverseToken(): void {
 
     describe('supportsInterface', () => {
       it('supports IUniverseToken interface', async () => {
-        const iUniverseTokenInterfaceId = await interfacePrinter.universeToken();
+        const iUniverseTokenInterfaceId = (await interfacePrinter.interfaces()).find(
+          x => x.name === 'IUniverseToken',
+        )!.id;
         await expect(universeToken.supportsInterface(iUniverseTokenInterfaceId)).to.eventually.eq(true);
       });
 
       it('supports ERC721 interface', async () => {
-        const erc721InterfaceId = await interfacePrinter.erc721();
+        const erc721InterfaceId = (await interfacePrinter.interfaces()).find(x => x.name === 'IERC721')!.id;
         await expect(universeToken.supportsInterface(erc721InterfaceId)).to.eventually.eq(true);
       });
     });
