@@ -117,6 +117,10 @@ library Accounts {
             accumulatedTokens += listerEarning.value;
         }
 
+        // Insert all data regarding the user earnings.
+        earnings.userEarnings = new UserEarning[](1);
+        earnings.userEarnings[0] = listerEarning;
+
         // Handle universe fee component.
         earnings.universeId = warperRegistry.warpers[rentingParams.warper].universeId;
         earnings.universeEarningValue = fees.universeBaseFee + fees.universePremium;
