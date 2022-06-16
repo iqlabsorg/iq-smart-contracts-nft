@@ -22,6 +22,8 @@ import {
   IWarperController__factory,
   IWarperManager,
   IWarperPresetFactory,
+  WarperWithRenting,
+  WarperWithRenting__factory,
 } from '../../../../typechain';
 import { Assets, Rentings } from '../../../../typechain/contracts/metahub/Metahub';
 import { ASSET_CLASS, ASSET_RENTAL_STATUS, makeERC721Asset, makeFixedPriceStrategy } from '../../../../src';
@@ -1005,6 +1007,45 @@ export function shouldBehaveLikeRentingManager(): void {
           await expect(rentingManager.connect(stranger).rent(rentalParams, rentCost.total)).to.be.revertedWith(
             'AlreadyRented()',
           );
+        });
+      });
+
+      context.only('When renting an item with Rental Hook extension', () => {
+        let warper: WarperWithRenting;
+        let rentalParams: Rentings.ParamsStruct;
+        let rentCost: Rentings.RentalFeesStructOutput;
+        beforeEach(async () => {
+          warper = await new WarperWithRenting__factory(stranger).deploy();
+          await warper.__initialize(originalAsset.address, metahub.address);
+
+          const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
+          await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, mockedWarperController.address);
+          await mockedWarperController.setPremiums(100, 300);
+
+          await metahub.registerWarper(warper.address, { ...warperRegistrationParams, universeId });
+          listingId = await assetListerHelper.listAsset(
+            nftCreator,
+            originalAsset,
+            maxLockPeriod,
+            baseRate,
+            tokenId,
+            false,
+          );
+          await metahub.unpauseWarper(warper.address);
+
+          rentalParams = {
+            listingId: listingId,
+            paymentToken: paymentToken.address,
+            rentalPeriod: 1000,
+            renter: stranger.address,
+            warper: warper.address,
+          };
+          rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
+          await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+        });
+
+        it('gets called', async () => {
+          await expect(warper.onRentCalled()).to.eventually.eq(true);
         });
       });
     });
