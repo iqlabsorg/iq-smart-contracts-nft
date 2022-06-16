@@ -5,7 +5,7 @@ import { task, types } from 'hardhat/config';
 import {
   ERC20Mock__factory,
   ERC721Mock__factory,
-  InterfacePrinter__factory,
+  SolidityInterfaces__factory,
   WarperPresetMock__factory,
 } from '../../typechain';
 import { ERC721InternalTest__factory } from '../../typechain/factories/contracts/mocks/ERC721InternalTest__factory';
@@ -97,15 +97,15 @@ task('deploy:mock:warper-preset', 'Deploy an `WarperPresetMock` contract').setAc
 task('deploy:interfaces-printer', 'Print interfaces IDs to the stdout').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
 
-  await hre.deployments.delete('InterfacePrinter');
+  await hre.deployments.delete('SolidityInterfaces');
 
-  const deployment = await hre.deployments.deploy('InterfacePrinter', {
+  const deployment = await hre.deployments.deploy('SolidityInterfaces', {
     from: deployer.address,
     log: true,
   });
-  console.log('InterfacePrinter deployed', deployment.address);
+  console.log('SolidityInterfaces deployed', deployment.address);
 
-  return new InterfacePrinter__factory(deployer).attach(deployment.address);
+  return new SolidityInterfaces__factory(deployer).attach(deployment.address);
 });
 
 export {};

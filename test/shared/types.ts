@@ -20,7 +20,7 @@ import {
   IListingManager,
   IListingStrategyRegistry,
   IMetahub,
-  InterfacePrinter,
+  SolidityInterfaces,
   IPaymentManager,
   IRentalPeriodMechanics,
   IRentingManager,
@@ -98,7 +98,7 @@ export interface Contracts {
 export interface Mocks {
   metahub: FakeContract<Metahub>;
   assetClassRegistry: FakeContract<AssetClassRegistry>;
-  interfacePrinter: InterfacePrinter;
+  solidityInterfaces: SolidityInterfaces;
   assets: {
     erc721: ERC721Mock;
     erc20: ERC20Mock;

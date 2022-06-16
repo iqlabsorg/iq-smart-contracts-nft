@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { InterfacePrinter, IUniverseRegistry, IUniverseToken } from '../../../../typechain';
+import { SolidityInterfaces, IUniverseRegistry, IUniverseToken } from '../../../../typechain';
 import { ADDRESS_ZERO } from '../../../shared/types';
 import hre from 'hardhat';
 
@@ -14,14 +14,14 @@ export function shouldBehaveLikeUniverseToken(): void {
     let universeToken: IUniverseToken;
     let universeRegistry: IUniverseRegistry;
 
-    let interfacePrinter: InterfacePrinter;
+    let solidityInterfaces: SolidityInterfaces;
     let universeRegistrySigner: SignerWithAddress;
     let universeOwner: SignerWithAddress;
 
     beforeEach(async function () {
       universeToken = this.contracts.universeToken;
       universeRegistry = this.contracts.universeRegistry;
-      interfacePrinter = this.mocks.interfacePrinter;
+      solidityInterfaces = this.mocks.solidityInterfaces;
 
       universeOwner = this.signers.named.universeOwner;
 
@@ -47,14 +47,12 @@ export function shouldBehaveLikeUniverseToken(): void {
 
     describe('supportsInterface', () => {
       it('supports IUniverseToken interface', async () => {
-        const iUniverseTokenInterfaceId = (await interfacePrinter.interfaces()).find(
-          x => x.name === 'IUniverseToken',
-        )!.id;
+        const iUniverseTokenInterfaceId = (await solidityInterfaces.list()).find(x => x.name === 'IUniverseToken')!.id;
         await expect(universeToken.supportsInterface(iUniverseTokenInterfaceId)).to.eventually.eq(true);
       });
 
       it('supports ERC721 interface', async () => {
-        const erc721InterfaceId = (await interfacePrinter.interfaces()).find(x => x.name === 'IERC721')!.id;
+        const erc721InterfaceId = (await solidityInterfaces.list()).find(x => x.name === 'IERC721')!.id;
         await expect(universeToken.supportsInterface(erc721InterfaceId)).to.eventually.eq(true);
       });
     });

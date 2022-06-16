@@ -1,5 +1,5 @@
 import hre, { ethers } from 'hardhat';
-import { IACL, InterfacePrinter } from '../../typechain';
+import { IACL, SolidityInterfaces } from '../../typechain';
 
 import type { Contracts, Mocks, Signers } from './types';
 import { AccessControlledHelper } from './utils';
@@ -35,8 +35,8 @@ export function baseContext(description: string, testSuite: () => void): void {
       AccessControlledHelper.registerUniverseOwner(this.signers.named.universeOwner, stranger);
 
       // Interface printer setup
-      const interfacePrinter = (await hre.run('deploy:interfaces-printer')) as InterfacePrinter;
-      this.mocks.interfacePrinter = interfacePrinter;
+      const solidityInterfaces = (await hre.run('deploy:interfaces-printer')) as SolidityInterfaces;
+      this.mocks.solidityInterfaces = solidityInterfaces;
     });
 
     testSuite();
