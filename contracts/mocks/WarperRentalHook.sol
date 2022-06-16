@@ -6,21 +6,37 @@ import "../warper/ERC721/ERC721Warper.sol";
 import "../warper/mechanics/renting-hook/IRentingHookMechanics.sol";
 
 contract WarperWithRenting is IRentingHookMechanics, ERC721Warper {
-    bool public onRentCalled;
+    uint256 public rentalId;
+    uint256 public tokenId;
+    uint256 public amount;
+    Rentings.Agreement public rentalAgreement;
+    Accounts.RentalEarnings public rentalEarnings;
+
+    bool public successState = true;
 
     function __initialize(address original, address metahub) external virtual initializer {
         _Warper_init(original, metahub);
     }
 
+    function setSuccessState(bool successState_) external {
+        successState = successState_;
+    }
+
     function __onRent(
-        uint256 rentalId,
-        uint256 tokenId,
-        uint256 amount,
-        Rentings.Agreement calldata rentalAgreement,
-        Accounts.RentalEarnings calldata rentalEarnings
+        uint256 rentalId_,
+        uint256 tokenId_,
+        uint256 amount_,
+        Rentings.Agreement calldata rentalAgreement_,
+        Accounts.RentalEarnings calldata rentalEarnings_
     ) external override returns (bool success, string memory errorMessage) {
-        onRentCalled = true;
-        success = true;
+        rentalId = rentalId_;
+        tokenId = tokenId_;
+        amount = amount_;
+        rentalAgreement = rentalAgreement_;
+        rentalEarnings = rentalEarnings_;
+
+        success = successState;
+        errorMessage = "There was an error!";
     }
 
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {

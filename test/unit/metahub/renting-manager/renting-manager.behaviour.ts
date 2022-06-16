@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { solidityKeccak256 } from 'ethers/lib/utils';
 import hre from 'hardhat';
 import { beforeEach } from 'mocha';
@@ -1014,8 +1014,10 @@ export function shouldBehaveLikeRentingManager(): void {
         let warper: WarperWithRenting;
         let rentalParams: Rentings.ParamsStruct;
         let rentCost: Rentings.RentalFeesStructOutput;
+        let rentalId: BigNumberish;
         beforeEach(async () => {
           warper = await new WarperWithRenting__factory(stranger).deploy();
+          await warper.setSuccessState(true);
           await warper.__initialize(originalAsset.address, metahub.address);
 
           const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
@@ -1041,11 +1043,33 @@ export function shouldBehaveLikeRentingManager(): void {
             warper: warper.address,
           };
           rentCost = await rentingManager.connect(stranger).estimateRent(rentalParams);
-          await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+          rentalId = await rentingManager.connect(stranger).callStatic.rent(rentalParams, rentCost.total);
         });
 
-        it('gets called', async () => {
-          await expect(warper.onRentCalled()).to.eventually.eq(true);
+        context('mechanic call succeeds', () => {
+          beforeEach(async () => {
+            await warper.setSuccessState(true);
+            await rentingManager.connect(stranger).rent(rentalParams, rentCost.total);
+          });
+
+          it('can be observed in side-effects', async () => {
+            await expect(warper.rentalId()).to.eventually.eq(rentalId);
+            await expect(warper.tokenId()).to.eventually.eq(tokenId);
+            await expect(warper.amount()).to.eventually.eq(1);
+            // NOTE: note asserting `rentalAgreement`
+            // NOTE: note asserting `rentalEarnings`
+          });
+        });
+
+        context('mechanic call does not succeed', () => {
+          beforeEach(async () => {
+            await warper.setSuccessState(false);
+          });
+
+          it('And error message gets raised', async () => {
+            // NOTE: The exact error is not recognised by ethers some reason. "reverted with an unrecognized custom error".
+            await expect(rentingManager.connect(stranger).rent(rentalParams, rentCost.total)).to.be.reverted;
+          });
         });
       });
     });
