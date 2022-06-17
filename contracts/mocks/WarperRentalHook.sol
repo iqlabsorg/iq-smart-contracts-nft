@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable private-vars-leading-underscore
-pragma solidity 0.8.13;
+pragma solidity ^0.8.13;
 
 import "../warper/ERC721/ERC721Warper.sol";
 import "../warper/mechanics/renting-hook/IRentingHookMechanics.sol";

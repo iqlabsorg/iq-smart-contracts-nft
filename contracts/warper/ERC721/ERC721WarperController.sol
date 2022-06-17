@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable code-complexity
-pragma solidity 0.8.13;
+pragma solidity ^0.8.13;
 
 import "../../asset/ERC721/ERC721AssetController.sol";
 import "../../accounting/Accounts.sol";

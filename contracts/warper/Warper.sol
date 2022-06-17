@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable private-vars-leading-underscore, func-name-mixedcase
-pragma solidity 0.8.13;
+pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
