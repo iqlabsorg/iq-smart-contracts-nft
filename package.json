@@ -47,7 +47,10 @@
     "contracts/**/*.sol": "solhint --fix",
     "package.json": "sort-package-json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openzeppelin/contracts": "4.6.0",
+    "@openzeppelin/contracts-upgradeable": "4.6.0"
+  },
   "devDependencies": {
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
@@ -58,8 +61,6 @@
     "@fintechstudios/eslint-plugin-chai-as-promised": "^3.1.0",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@latest",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
-    "@openzeppelin/contracts": "4.6.0",
-    "@openzeppelin/contracts-upgradeable": "4.6.0",
     "@openzeppelin/hardhat-upgrades": "^1.17.0",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
