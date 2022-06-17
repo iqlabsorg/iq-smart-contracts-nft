@@ -2,12 +2,18 @@
 import hre, { ethers } from 'hardhat';
 import { PRESET_CONFIGURABLE_ID } from '../../../tasks/deployment';
 import {
-  ERC20,
+  AssetClassRegistry,
+  ERC20Mock,
+  ERC721AssetVault,
   ERC721Mock,
+  FixedPriceListingController,
   IACL,
   IAssetController__factory,
   IERC721WarperController,
   IUniverseRegistry,
+  ListingStrategyRegistry,
+  Metahub,
+  WarperPresetFactory,
 } from '../../../typechain';
 import { shouldBehaveLikeMetahub } from './metahub.behaviour';
 
@@ -15,17 +21,18 @@ export const warperPresetId = PRESET_CONFIGURABLE_ID;
 
 export function unitTestMetahub(): void {
   let acl: IACL;
+
   async function unitFixtureMetahub(): Promise<{
-    assetClassRegistry: any;
+    assetClassRegistry: AssetClassRegistry;
     universeRegistry: IUniverseRegistry;
-    fixedPriceListingController: any;
+    fixedPriceListingController: FixedPriceListingController;
     originalAsset: ERC721Mock;
     erc721Controller: IERC721WarperController;
-    erc721Vault: any;
-    listingStrategyRegistry: any;
-    warperPresetFactory: any;
-    metahub: any;
-    baseToken: any;
+    erc721Vault: ERC721AssetVault;
+    listingStrategyRegistry: ListingStrategyRegistry;
+    warperPresetFactory: WarperPresetFactory;
+    metahub: Metahub;
+    baseToken: ERC20Mock;
   }> {
     // Resolve primary roles
     const nftCreator = await ethers.getNamedSigner('nftCreator');
@@ -46,7 +53,7 @@ export function unitTestMetahub(): void {
       symbol: 'ONFT',
       decimals: 18,
       totalSupply: 100_000_000,
-    })) as ERC20;
+    })) as ERC20Mock;
 
     const {
       erc721Controller,

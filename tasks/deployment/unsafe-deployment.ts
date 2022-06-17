@@ -6,7 +6,7 @@ export const unsafeDeployment = async <T extends ContractFactory>(
   factory: T,
   name: string,
   hre: HardhatRuntimeEnvironment,
-  args: Array<any> = [],
+  args: Array<unknown> = [],
   libraries?: Libraries,
   proxyOptions?: ProxyOptions,
 ): Promise<ReturnType<T['attach']>> => {
@@ -32,6 +32,5 @@ export const unsafeDeployment = async <T extends ContractFactory>(
     args: [],
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return factory.attach(deployment.address) as any;
+  return factory.attach(deployment.address) as ReturnType<T['attach']>;
 };

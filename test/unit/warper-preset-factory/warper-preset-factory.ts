@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import hre from 'hardhat';
-import { IACL } from '../../../typechain';
+import { IACL, WarperPresetFactory, WarperPresetMock } from '../../../typechain';
 import { shouldBehaveWarperPresetFactory } from './warper-preset-factory.behaviour';
 
 export function unitTestWarperPresetFactory(): void {
   let acl: IACL;
 
   async function unitFixtureWarperPresetFactory(): Promise<{
-    warperImplMock1: any;
-    warperImplMock2: any;
-    warperPresetFactory: any;
+    warperImplMock1: WarperPresetMock;
+    warperImplMock2: WarperPresetMock;
+    warperPresetFactory: WarperPresetFactory;
   }> {
     const warperImplMock1 = await hre.run('deploy:mock:warper-preset');
     const warperImplMock2 = await hre.run('deploy:mock:warper-preset');

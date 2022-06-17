@@ -2,20 +2,24 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import hre, { ethers } from 'hardhat';
-import { IACL, IAssetVault__factory, IERC721AssetVault } from '../../../../typechain';
+import { ERC20Mock, ERC721Mock, IACL, IAssetVault__factory, IERC721AssetVault } from '../../../../typechain';
 import { shouldBehaveLikeAssetVault } from './asset-vault.behaviour';
 import { shouldBehaveLikeERC721AssetVault } from './erc721-asset-vault.behaviour';
 
 export function unitTestAssetVault(): void {
   let acl: IACL;
-  async function unitFixtureERC721AssetsVault(): Promise<{ vault: any; asset: any; erc20Mock: any }> {
+  async function unitFixtureERC721AssetsVault(): Promise<{
+    vault: IERC721AssetVault;
+    asset: ERC721Mock;
+    erc20Mock: ERC20Mock;
+  }> {
     // Resolve primary roles
     const operator = await ethers.getNamedSigner('operator');
 
-    const vault = (await hre.run('deploy:erc721-asset-vault', {
+    const vault = await hre.run('deploy:erc721-asset-vault', {
       operator: operator.address,
       acl: acl.address,
-    })) as IERC721AssetVault;
+    });
 
     const asset = await hre.run('deploy:mock:ERC721', {
       symbol: 'Test ERC721',

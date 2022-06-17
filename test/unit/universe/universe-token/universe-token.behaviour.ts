@@ -47,11 +47,13 @@ export function shouldBehaveLikeUniverseToken(): void {
 
     describe('supportsInterface', () => {
       it('supports IUniverseToken interface', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const iUniverseTokenInterfaceId = (await solidityInterfaces.list()).find(x => x.name === 'IUniverseToken')!.id;
         await expect(universeToken.supportsInterface(iUniverseTokenInterfaceId)).to.eventually.eq(true);
       });
 
       it('supports ERC721 interface', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const erc721InterfaceId = (await solidityInterfaces.list()).find(x => x.name === 'IERC721')!.id;
         await expect(universeToken.supportsInterface(erc721InterfaceId)).to.eventually.eq(true);
       });

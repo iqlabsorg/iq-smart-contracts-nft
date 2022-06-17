@@ -1,16 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 import { FakeContract, smock } from '@defi-wonderland/smock';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import hre from 'hardhat';
 import {
   AssetClassRegistry,
   AssetClassRegistry__factory,
+  ERC20Mock,
+  ERC721Mock,
   ERC721Mock__factory,
+  ERC721PresetConfigurable,
+  ERC721WarperController,
   Metahub,
   Metahub__factory,
-  ERC721Mock,
-  ERC721PresetConfigurable,
-  ERC20Mock,
 } from '../../../typechain';
 import { shouldBehavesLikeMulticall } from '../shared/multicall.behaviour';
 import { shouldBehaveLikeERC721Warper } from './erc721/erc721-warper.behaviour';
@@ -24,10 +25,10 @@ import { shouldBehaveLikeWarper } from './warper.behaviour';
 export async function unitFixtureERC721WarperConfigurable(): Promise<{
   erc721Warper: any;
   metahub: FakeContract<Metahub>;
-  oNFT: any;
-  erc20Token: any;
-  uninitializedErc721Warper: any;
-  erc721WarperController: any;
+  oNFT: ERC721Mock;
+  erc20Token: ERC20Mock;
+  uninitializedErc721Warper: ERC721PresetConfigurable;
+  erc721WarperController: ERC721WarperController;
   assetClassRegistry: FakeContract<AssetClassRegistry>;
 }> {
   // Deploy original asset mock.

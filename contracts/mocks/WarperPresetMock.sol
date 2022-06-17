@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable private-vars-leading-underscore
 pragma solidity 0.8.13;
 
 import "../warper/Warper.sol";
@@ -16,20 +17,20 @@ contract WarperPresetMock is IWarperPreset, Warper {
         _initValue = initValue1 + initValue2;
     }
 
-    function __assetClass() external pure returns (bytes4) {
-        return "";
-    }
-
-    function initValue() external view returns (uint256) {
-        return _initValue;
-    }
-
     function setExtraValue(uint256 value) external {
         _extraValue = value;
     }
 
     function extraValue() external view returns (uint256) {
         return _extraValue;
+    }
+
+    function initValue() external view returns (uint256) {
+        return _initValue;
+    }
+
+    function __assetClass() external pure returns (bytes4) {
+        return "";
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(Warper, IERC165) returns (bool) {
