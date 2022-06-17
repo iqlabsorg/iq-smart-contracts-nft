@@ -31,3 +31,9 @@
 
 1. Create a `.env` file that resembles the `.env.example` file in the current directory.
 2. Execute the script `yarn hardhat --network [network name] deploy:initial-deployment --base-token [address]`
+
+
+## Publish to NPM
+
+1. yarn build
+2. yarn run publish
