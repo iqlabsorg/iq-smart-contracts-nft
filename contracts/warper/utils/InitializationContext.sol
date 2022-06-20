@@ -28,7 +28,7 @@ abstract contract InitializationContext {
     /**
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
-    modifier initializer() {
+    modifier warperInitializer() {
         bool initialized = !(
             StorageSlot.getBooleanSlot(_INITIALIZING_SLOT).value
                 ? _isConstructor()
@@ -56,7 +56,7 @@ abstract contract InitializationContext {
      * @dev Modifier to protect an initialization function so that it can only be invoked by functions with the
      * {initializer} modifier, directly or indirectly.
      */
-    modifier onlyInitializing() {
+    modifier onlyInitializingWarper() {
         if (!StorageSlot.getBooleanSlot(_INITIALIZING_SLOT).value) {
             revert ContractIsNotInitializing();
         }

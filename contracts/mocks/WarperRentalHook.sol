@@ -14,7 +14,7 @@ contract WarperWithRenting is IRentingHookMechanics, ERC721Warper {
 
     bool public successState = true;
 
-    function __initialize(address original, address metahub) external virtual initializer {
+    function __initialize(address original, address metahub) external virtual warperInitializer {
         _Warper_init(original, metahub);
     }
 

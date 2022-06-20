@@ -20,7 +20,7 @@ abstract contract ConfigurableRentalPeriodExtension is IConfigurableRentalPeriod
     /**
      * @dev Extension initializer.
      */
-    function _ConfigurableRentalPeriodExtension_init() internal onlyInitializing {
+    function _ConfigurableRentalPeriodExtension_init() internal onlyInitializingWarper {
         // Store default values.
         _setRentalPeriods(0, type(uint32).max);
     }

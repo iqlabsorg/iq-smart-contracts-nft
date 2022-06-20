@@ -49,14 +49,14 @@ abstract contract WarperContext is Context, InitializationContext {
     /**
      * @dev Sets warper original asset address.
      */
-    function _setOriginal(address original) internal onlyInitializing {
+    function _setOriginal(address original) internal onlyInitializingWarper {
         StorageSlot.getAddressSlot(_ORIGINAL_SLOT).value = original;
     }
 
     /**
      * @dev Sets warper metahub address.
      */
-    function _setMetahub(address metahub) internal onlyInitializing {
+    function _setMetahub(address metahub) internal onlyInitializingWarper {
         StorageSlot.getAddressSlot(_METAHUB_SLOT).value = metahub;
     }
 
