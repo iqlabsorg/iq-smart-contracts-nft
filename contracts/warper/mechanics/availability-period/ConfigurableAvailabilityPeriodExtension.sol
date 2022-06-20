@@ -20,7 +20,7 @@ abstract contract ConfigurableAvailabilityPeriodExtension is IConfigurableAvaila
     /**
      * Extension initializer.
      */
-    function _ConfigurableAvailabilityPeriodExtension_init() internal onlyInitializing {
+    function _ConfigurableAvailabilityPeriodExtension_init() internal onlyInitializingWarper {
         _setAvailabilityPeriods(0, type(uint32).max);
     }
 

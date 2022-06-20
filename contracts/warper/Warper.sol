@@ -38,7 +38,7 @@ abstract contract Warper is IWarper, WarperContext, CallForwarder, Multicall {
      * @dev Warper initializer.
      *
      */
-    function _Warper_init(address original, address metahub) internal onlyInitializing {
+    function _Warper_init(address original, address metahub) internal onlyInitializingWarper {
         _validateOriginal(original);
         _setOriginal(original);
         _setMetahub(metahub);
