@@ -35,5 +35,6 @@
 
 ## Publish to NPM
 
-1. yarn build
-2. yarn run publish
+1. manually update the version in `package.json`
+2. yarn build
+3. yarn run publish
