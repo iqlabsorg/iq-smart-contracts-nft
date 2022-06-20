@@ -10,6 +10,7 @@ import "../warper/mechanics/availability-period/IAvailabilityPeriodMechanics.sol
 import "../warper/mechanics/rental-fee-premium/IRentalFeePremiumMechanics.sol";
 import "../warper/mechanics/rental-period/IRentalPeriodMechanics.sol";
 import "../warper/mechanics/renting-hook/IRentingHookMechanics.sol";
+import "../warper/ERC721/IERC721Warper.sol";
 
 contract SolidityInterfaces {
     struct Interface {
@@ -27,6 +28,8 @@ contract SolidityInterfaces {
         _list.push(Interface("IRentalFeePremiumMechanics", type(IRentalFeePremiumMechanics).interfaceId));
         _list.push(Interface("IRentalPeriodMechanics", type(IRentalPeriodMechanics).interfaceId));
         _list.push(Interface("IRentingHookMechanics", type(IRentingHookMechanics).interfaceId));
+        _list.push(Interface("IWarper", type(IWarper).interfaceId));
+        _list.push(Interface("IERC721Warper", type(IERC721Warper).interfaceId));
     }
 
     function list() external view returns (Interface[] memory) {
