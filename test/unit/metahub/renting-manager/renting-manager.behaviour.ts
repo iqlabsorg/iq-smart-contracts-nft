@@ -1010,7 +1010,7 @@ export function shouldBehaveLikeRentingManager(): void {
         });
       });
 
-      context.only('When renting an item with Rental Hook extension', () => {
+      context('When renting an item with Rental Hook extension', () => {
         let warper: WarperWithRenting;
         let rentalParams: Rentings.ParamsStruct;
         let rentCost: Rentings.RentalFeesStructOutput;
