@@ -10,7 +10,6 @@ import {
   ERC721Mock__factory,
   ERC721WarperControllerMock,
   ERC721WarperControllerMock__factory,
-  FixedPriceListingController,
   IAssetClassRegistry,
   IAssetController,
   IERC721AssetVault,
@@ -80,7 +79,6 @@ export function shouldBehaveLikeRentingManager(): void {
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
     let listingStrategyRegistry: IListingStrategyRegistry;
-    let fixedPriceListingController: FixedPriceListingController;
     let paymentToken: ERC20Mock;
 
     let assetListerHelper: AssetListerHelper;
@@ -97,7 +95,6 @@ export function shouldBehaveLikeRentingManager(): void {
         rentingManager,
         listingManager,
         metahub,
-        fixedPriceListingController,
         erc721assetVault,
         assetController,
         universeRegistry,
@@ -120,7 +117,6 @@ export function shouldBehaveLikeRentingManager(): void {
         universeRegistry,
         warperPresetFactory,
         listingStrategyRegistry,
-        fixedPriceListingController,
       );
       await assetListerHelper.setupRegistries();
       universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
