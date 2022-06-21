@@ -15,7 +15,7 @@ import "./IERC721WarperController.sol";
 /**
  * @title Warper for the ERC721 token contract
  */
-contract ERC721Warper is IERC721Warper, Warper {
+abstract contract ERC721Warper is IERC721Warper, Warper {
     using ERC165Checker for address;
     using Address for address;
 
