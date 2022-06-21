@@ -5,7 +5,6 @@ import { makeERC721Asset } from '../../../../src';
 import {
   ERC20Mock,
   ERC721Mock,
-  FixedPriceListingController,
   IAssetClassRegistry,
   IAssetController,
   IERC721AssetVault,
@@ -54,7 +53,6 @@ export function shouldBehaveLikePaymentManager(): void {
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
     let listingStrategyRegistry: IListingStrategyRegistry;
-    let fixedPriceListingController: FixedPriceListingController;
     let paymentToken: ERC20Mock;
 
     let assetListerHelper: AssetListerHelper;
@@ -76,7 +74,6 @@ export function shouldBehaveLikePaymentManager(): void {
         paymentManager,
         listingManager,
         metahub,
-        fixedPriceListingController,
         erc721assetVault,
         assetController,
         universeRegistry,
@@ -103,7 +100,6 @@ export function shouldBehaveLikePaymentManager(): void {
         universeRegistry.connect(universeOwner),
         warperPresetFactory,
         listingStrategyRegistry,
-        fixedPriceListingController,
       );
       await assetListerHelper.setupRegistries();
 

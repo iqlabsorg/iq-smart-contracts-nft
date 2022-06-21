@@ -6,7 +6,6 @@ import { defaultAbiCoder } from 'ethers/lib/utils';
 import {
   ERC721,
   ERC721Mock,
-  FixedPriceListingController,
   IACL,
   IAssetClassRegistry,
   IListingManager,
@@ -191,7 +190,6 @@ export class AssetListerHelper {
     readonly universeRegistry: IUniverseRegistry,
     readonly warperPresetFactory: IWarperPresetFactory,
     readonly listingStrategyRegistry: IListingStrategyRegistry,
-    readonly fixedPriceListingController: FixedPriceListingController,
   ) {}
 
   async setupRegistries(): Promise<void> {
@@ -201,9 +199,6 @@ export class AssetListerHelper {
         vault: this.erc721assetVault,
       });
     }
-    await this.listingStrategyRegistry.registerListingStrategy(LISTING_STRATEGY.FIXED_PRICE, {
-      controller: this.fixedPriceListingController.address,
-    });
   }
 
   async setupUniverse(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct): Promise<BigNumber> {
