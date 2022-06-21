@@ -16,7 +16,7 @@ contract ERC721PresetConfigurable is
     /**
      * @inheritdoc IWarperPreset
      */
-    function __initialize(bytes calldata config) public virtual warperInitializer {
+    function __initialize(bytes memory config) public virtual warperInitializer {
         // Decode config
         (address original, address metahub) = abi.decode(config, (address, address));
         _Warper_init(original, metahub);
