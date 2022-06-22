@@ -80,6 +80,13 @@ interface IWarperManager {
     function unpauseWarper(address warper) external;
 
     /**
+     * @dev Sets the new controller address for one or multiple registered warpers.
+     * @param warpers A list of registered warper addresses which controller will be changed.
+     * @param controller Warper controller address.
+     */
+    function setWarperController(address[] calldata warpers, address controller) external;
+
+    /**
      * @dev Returns the number of warpers belonging to the particular universe.
      * @param universeId The universe ID.
      * @return Warper count.

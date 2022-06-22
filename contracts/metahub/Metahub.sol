@@ -161,6 +161,18 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc IWarperManager
+     */
+    function setWarperController(address[] calldata warpers, address controller) external onlyAdmin {
+        for (uint256 i = 0; i < warpers.length; i++) {
+            address warper = warpers[i];
+            _warperRegistry.checkRegisteredWarper(warper);
+            IWarperController(controller).checkCompatibleWarper(warper);
+            _warperRegistry.warpers[warper].controller = IWarperController(controller);
+        }
+    }
+
+    /**
      * @inheritdoc IListingManager
      */
     function listAsset(

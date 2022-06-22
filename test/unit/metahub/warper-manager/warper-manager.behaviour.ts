@@ -1,8 +1,10 @@
+import hre from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import {
   ERC721Mock,
+  ERC721WarperController,
   IAssetClassRegistry,
   IMetahub,
   IUniverseRegistry,
@@ -22,6 +24,8 @@ import { Assets } from '../../../../typechain/contracts/metahub/IMetahub';
 export function shouldBehaveLikeWarperManager(): void {
   // eslint-disable-next-line sonarjs/cognitive-complexity
   describe('IWarperManager', function (): void {
+    const RANDOM_ADDRESS = '0xfbe4805Fd0ebe0Dd46b7ED8f6fcFD96798FFC742';
+
     let assetClassRegistry: IAssetClassRegistry;
     let warperManager: IWarperManager;
     let metahub: IMetahub;
@@ -89,7 +93,7 @@ export function shouldBehaveLikeWarperManager(): void {
         it('reverts', async () => {
           const universeId = 12345;
           await expect(
-            warperManager.registerWarper('0xfbe4805Fd0ebe0Dd46b7ED8f6fcFD96798FFC742', {
+            warperManager.registerWarper(RANDOM_ADDRESS, {
               ...warperRegistrationParams,
               universeId,
             }),
@@ -99,9 +103,9 @@ export function shouldBehaveLikeWarperManager(): void {
 
       context('When invalid warper address is provided', () => {
         it('reverts', async () => {
-          await expect(
-            warperManager.registerWarper('0xfbe4805Fd0ebe0Dd46b7ED8f6fcFD96798FFC742', warperRegistrationParams),
-          ).to.be.revertedWith('InvalidWarperInterface()');
+          await expect(warperManager.registerWarper(RANDOM_ADDRESS, warperRegistrationParams)).to.be.revertedWith(
+            'InvalidWarperInterface()',
+          );
         });
       });
 
@@ -401,6 +405,48 @@ export function shouldBehaveLikeWarperManager(): void {
 
     describe('unpauseWarper', () => {
       it('todo');
+    });
+
+    describe('setWarperController', () => {
+      context('When warpers are not registered', () => {
+        it('reverts', async () => {
+          const { controller } = await assetClassRegistry.assetClassConfig(ASSET_CLASS.ERC721);
+          await expect(warperManager.setWarperController([RANDOM_ADDRESS], controller)).to.be.revertedWith(
+            'WarperIsNotRegistered',
+          );
+        });
+      });
+
+      context('When warpers are registered', () => {
+        let registeredWarpers: Record<string, Warpers.WarperStruct>;
+        const warperCount = 2;
+        beforeEach(async () => {
+          registeredWarpers = await deployManyWarperPresetsAndRegister(universeId, warperCount);
+        });
+
+        context('When the new controller is incompatible', () => {
+          it('reverts', async () => {
+            await expect(warperManager.setWarperController(Object.keys(registeredWarpers), RANDOM_ADDRESS)).to.be
+              .reverted;
+          });
+        });
+
+        context('When the new controller is compatible', () => {
+          let newController: ERC721WarperController;
+          beforeEach(async () => {
+            newController = (await hre.run('deploy:erc721-warper-controller')) as ERC721WarperController;
+          });
+
+          it('set new controller', async () => {
+            await warperManager.setWarperController(Object.keys(registeredWarpers), newController.address);
+            for (const warperAddress of Object.keys(registeredWarpers)) {
+              const warper = await warperManager.warperInfo(warperAddress);
+              expect(warper.controller).to.not.eq(registeredWarpers[warperAddress].controller);
+              expect(warper.controller).to.eq(newController.address);
+            }
+          });
+        });
+      });
     });
   });
 }
