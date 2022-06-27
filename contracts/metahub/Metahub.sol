@@ -187,9 +187,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         // Check that listing strategy is supported.
         _listingRegistry.checkSupportedListingStrategy(params.strategy);
 
-        // Transfer asset from lister account to the vault.
-        _assetRegistry.transferAssetToVault(asset, _msgSender());
-
         // Register listing.
         Listings.Listing memory listing = Listings.Listing({
             asset: asset,
@@ -202,6 +199,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             paused: false
         });
         uint256 listingId = _listingRegistry.register(listing);
+
+        // Transfer asset from lister account to the vault.
+        _assetRegistry.transferAssetToVault(asset, _msgSender());
 
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
 
@@ -291,14 +291,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         // Validate renting parameters.
         Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
-        // Make payments.
-        Accounts.RentalEarnings memory rentalEarnings = _handleRentalPayment(
-            rentingParams,
-            _msgSender(),
-            maxPaymentAmount
-        );
-
-        // Deliver warper asset to the renter!
+        // Warp the asset and deliver to to the renter.
         (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
             rentingParams.listingId,
             rentingParams.warper,
@@ -324,6 +317,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Clean up x2 expired rental agreements.
         _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
+
+        // Handle rental payments.
+        Accounts.RentalEarnings memory rentalEarnings = _handleRentalPayment(
+            rentingParams,
+            _msgSender(),
+            maxPaymentAmount
+        );
 
         // Execute rental hook.
         _executeWarperRentalHook(rentingParams.warper, rentalId, rentalAgreement, rentalEarnings);

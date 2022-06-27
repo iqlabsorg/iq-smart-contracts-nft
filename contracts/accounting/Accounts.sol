@@ -99,7 +99,7 @@ library Accounts {
         // This will include all fees which are not being paid out immediately.
         uint256 accumulatedTokens = 0;
 
-        // Currently we only support earnings for 1 user
+        // Initialize user earnings array. Currently we only support earnings for single user, who is the lister.
         earnings.userEarnings = new UserEarning[](1);
 
         // Handle lister fee component.
@@ -112,11 +112,9 @@ library Accounts {
         });
         earnings.userEarnings[0] = listerEarning;
 
-        // If lister requested immediate payouts, transfer the lister fee part directly to the lister account.
-        // Otherwise increase the lister balance.
-        if (listing.immediatePayout) {
-            IERC20Upgradeable(listerEarning.token).safeTransferFrom(payer, listerEarning.account, listerEarning.value);
-        } else {
+        // If the lister has not requested immediate payout, the earned amount is added to the lister balance.
+        // The direct payout case is handled along with other transfers later.
+        if (!listing.immediatePayout) {
             self.users[listerEarning.account].increaseBalance(listerEarning.token, listerEarning.value);
             accumulatedTokens += listerEarning.value;
         }
@@ -138,8 +136,16 @@ library Accounts {
         self.protocol.increaseBalance(earnings.protocolEarningToken, earnings.protocolEarningValue);
         accumulatedTokens += earnings.protocolEarningValue;
 
+        // Proceed with transfers.
+        // If immediate payout requested, transfer the lister earnings directly to the lister account.
+        if (listing.immediatePayout && listerEarning.value > 0) {
+            IERC20Upgradeable(listerEarning.token).safeTransferFrom(payer, listerEarning.account, listerEarning.value);
+        }
+
         // Transfer the accumulated token amount from payer to the metahub.
-        IERC20Upgradeable(rentingParams.paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
+        if (accumulatedTokens > 0) {
+            IERC20Upgradeable(rentingParams.paymentToken).safeTransferFrom(payer, address(this), accumulatedTokens);
+        }
     }
 
     /**
