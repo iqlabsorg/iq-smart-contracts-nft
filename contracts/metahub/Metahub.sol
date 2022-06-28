@@ -292,7 +292,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
 
         // Warp the asset and deliver to to the renter.
-        (bytes32 collectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
+        (bytes32 warpedCollectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
             rentingParams.listingId,
             rentingParams.warper,
             rentingParams.renter
@@ -302,7 +302,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         uint32 blockTimestamp = uint32(block.timestamp);
         Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
             warpedAsset: warpedAsset,
-            collectionId: collectionId,
+            collectionId: warpedCollectionId,
             listingId: rentingParams.listingId,
             renter: rentingParams.renter,
             startTime: blockTimestamp,
@@ -316,7 +316,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _listingRegistry.listings[rentingParams.listingId].addLock(rentalAgreement.endTime);
 
         // Clean up x2 expired rental agreements.
-        _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, collectionId, 2);
+        _rentingRegistry.deleteExpiredUserRentalAgreements(rentingParams.renter, warpedCollectionId, 2);
 
         // Handle rental payments.
         Accounts.RentalEarnings memory rentalEarnings = _handleRentalPayment(

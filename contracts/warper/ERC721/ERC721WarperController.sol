@@ -25,7 +25,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         Assets.Asset calldata asset,
         address warper,
         address to
-    ) external onlyDelegatecall returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
+    ) external onlyDelegatecall returns (bytes32 warpedCollectionId, Assets.Asset memory warpedAsset) {
         _validateAsset(asset);
         (address original, uint256 tokenId) = _decodeAssetId(asset.id);
         // Make sure the correct warper is used for the asset.
@@ -34,7 +34,7 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
         // Encode warped asset. The tokenId of the warped asset is identical to the original one,
         // but the address is changed to warper contract.
         warpedAsset = Assets.Asset(_encodeAssetId(warper, tokenId), asset.value);
-        collectionId = _collectionId(warper);
+        warpedCollectionId = _collectionId(warper);
 
         // If the warped asset has never been rented before, create new instance, otherwise transfer existing one.
         if (rentalStatus(address(this), warper, tokenId) == Rentings.RentalStatus.NONE) {
