@@ -146,6 +146,17 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
     }
 
     /**
+     * @inheritdoc IERC721WarperController
+     */
+    function rentalBalance(
+        address metahub,
+        address warper,
+        address renter
+    ) external view returns (uint256) {
+        return IRentingManager(metahub).collectionRentedValue(_collectionId(warper), renter);
+    }
+
+    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId)
@@ -163,17 +174,6 @@ contract ERC721WarperController is IERC721WarperController, ERC721AssetControlle
      */
     function isCompatibleWarper(address warper) public view returns (bool) {
         return IWarper(warper).supportsInterface(type(IERC721Warper).interfaceId);
-    }
-
-    /**
-     * @inheritdoc IERC721WarperController
-     */
-    function rentalBalance(
-        address metahub,
-        address warper,
-        address renter
-    ) public view returns (uint256) {
-        return IRentingManager(metahub).collectionRentedValue(_collectionId(warper), renter);
     }
 
     /**

@@ -109,24 +109,24 @@ abstract contract AssetVault is IAssetVault, AccessControlled, Pausable, ERC165 
     }
 
     /**
-     * @inheritdoc IERC165
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return interfaceId == type(IAssetVault).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    /**
      * @inheritdoc IAssetVault
      */
-    function metahub() public view returns (address) {
+    function metahub() external view returns (address) {
         return _metahub;
     }
 
     /**
      * @inheritdoc IAssetVault
      */
-    function isRecovery() public view returns (bool) {
+    function isRecovery() external view returns (bool) {
         return _recovery;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IAssetVault).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**
