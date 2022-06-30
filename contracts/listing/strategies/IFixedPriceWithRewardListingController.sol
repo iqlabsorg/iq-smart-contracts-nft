@@ -3,73 +3,109 @@
 pragma solidity ^0.8.13;
 
 import "../IListingController.sol";
+import "../../asset/Assets.sol";
 
 interface IFixedPriceWithRewardListingController is IListingController {
+    /**
+     * @dev Defines lister reward percentage for specific listing.
+     * @param listingId The listing ID.
+     * @param rewardPercentage Lister reward percentage for certain listing.
+     */
+    function setListerRewardForListing(uint256 listingId, uint8 rewardPercentage) external;
+
     /**
      * @dev Defines lister reward percentage for specific warper.
      * @param listingId The listing ID.
      * @param warper Warper address.
-     * @param percentage Reward base percentage (lister reward for certain warper).
+     * @param rewardPercentage Lister reward percentage for certain warper.
      */
-    function setListerWarperReward(
+    function setListerRewardForWarper(
         uint256 listingId,
         address warper,
-        uint256 percentage
+        uint8 rewardPercentage
     ) external;
 
     /**
      * @dev Defines lister reward percentage for specific universe.
      * @param listingId The listing ID.
      * @param universeId The universe ID.
-     * @param percentage Reward base percentage (lister reward for certain universe).
+     * @param rewardPercentage Lister reward percentage for certain universe.
      */
-    function setListerUniverseReward(
+    function setListerRewardForUniverse(
         uint256 listingId,
         uint256 universeId,
-        uint256 percentage
+        uint8 rewardPercentage
     ) external;
 
     /**
-     * @dev Defines universe reward percentage.
+     * @dev Defines universe reward percentage for specific listing.
      * @param universeId The universe ID.
-     * @param percentage Reward base percentage (default universe reward).
+     * @param listingId The listing ID.
+     * @param rewardPercentage Universe reward percentage for certain listing.
      */
-    function setUniverseReward(uint256 universeId, uint256 percentage) external;
+    function setUniverseRewardForListing(
+        uint256 universeId,
+        uint256 listingId,
+        uint8 rewardPercentage
+    ) external;
 
     /**
-     * @dev Defines universe reward percentage for specific warper.
+     * @dev Defines universe reward for specific warper.
      * @param universeId The universe ID.
      * @param warper Warper address.
-     * @param percentage Reward base percentage (universe reward for certain warper).
+     * @param rewardPercentage Universe reward percentage for certain warper.
      */
-    function setUniverseWarperReward(
+    function setUniverseRewardForWarper(
         uint256 universeId,
         address warper,
-        uint256 percentage
+        uint8 rewardPercentage
     ) external;
 
     /**
-     * @dev Defines protocol reward percentage for specific warper.
-     * @param warper Warper address.
-     * @param percentage Reward base percentage (protocol reward for certain warper).
+     * @dev Defines global universe reward percentage.
+     * @param universeId The universe ID.
+     * @param rewardPercentage Global universe reward percentage.
      */
-    function setProtocolWarperReward(address warper, uint256 percentage) external;
+    function setUniverseReward(uint256 universeId, uint8 rewardPercentage) external;
+
+    /**
+     * @dev Defines protocol reward percentage for certain listing.
+     * @param listingId The listing ID.
+     * @param rewardPercentage Protocol reward percentage for certain listing.
+     */
+    function setProtocolRewardForListing(uint256 listingId, uint8 rewardPercentage) external;
+
+    /**
+     * @dev Defines protocol reward percentage for certain warper.
+     * @param warper Warper address.
+     * @param rewardPercentage Protocol reward percentage for certain warper.
+     */
+    function setProtocolRewardForWarper(address warper, uint8 rewardPercentage) external;
+
+    /**
+     * @dev Defines protocol reward percentage for certain warper.
+     * @param universeId The universe ID.
+     * @param rewardPercentage Protocol reward percentage for certain warper.
+     */
+    function setProtocolRewardForUniverse(uint256 universeId, uint8 rewardPercentage) external;
+
+    /**
+     * @dev Defines protocol reward percentage for certain warper.
+     * @param rewardPercentage Global protocol reward percentage.
+     */
+    function setProtocolReward(uint8 rewardPercentage) external;
 
     /**
      * @dev Returns the reward percentages allocation for lister, universe, protocol.
-     * @param listingId The listing ID.
-     * @return listerPercentage Lister reward percentage.
-     * @return universePercentage Universe reward percentage.
-     * @return protocolPercentage Protocol reward percentage.
+     * @param warpedAssetId The listing ID.
+     * @param rentalId The listing ID.
+     * @return rewardReceivers Array of reward receivers.
+     * @return distributionPercentages Array of rewarding percentages.
      */
-    function getRewardAllocations(uint256 listingId)
+    function getRewardAllocations(Assets.AssetId calldata warpedAssetId, uint256 rentalId)
         external
         view
-        returns (
-            uint256 listerPercentage,
-            uint256 universePercentage,
-            uint256 protocolPercentage
-        );
+        returns (address[] memory rewardReceivers, uint8[] memory distributionPercentages);
 
     /**
      * @inheritdoc IListingController
@@ -78,26 +114,4 @@ interface IFixedPriceWithRewardListingController is IListingController {
         external
         pure
         returns (uint256);
-
-    /**
-     * @inheritdoc IListingController
-     */
-    function strategyId() external pure returns (bytes4);
-
-    /**
-     * @dev Decodes listing strategy params.
-     * @param params Encoded listing strategy params.
-     * @return baseRate Asset renting base rate (base tokens per second).
-     * @return basePercentage Reward base percentage (default lister reward).
-     */
-    function _decodeStrategyParams(Listings.Params memory params)
-        external
-        pure
-        returns (uint256 baseRate, uint256 basePercentage);
-
-    /**
-     * @dev Reverts if strategy is not compatible.
-     * @param checkedStrategyId Strategy ID.
-     */
-    function _checkStrategy(bytes4 checkedStrategyId) external pure;
 }

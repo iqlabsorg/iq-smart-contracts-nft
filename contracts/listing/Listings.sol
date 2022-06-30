@@ -50,6 +50,10 @@ library Listings {
      * @dev Listing strategy identifiers to be used across the system:
      */
     bytes4 public constant FIXED_PRICE = bytes4(keccak256("FIXED_PRICE"));
+    /*
+     * @dev Listing strategy identifiers to be used across the system:
+     */
+    bytes4 public constant FIXED_PRICE_WITH_REWARD = bytes4(keccak256("FIXED_PRICE_WITH_REWARD"));
 
     /**
      * @dev Listing params.
