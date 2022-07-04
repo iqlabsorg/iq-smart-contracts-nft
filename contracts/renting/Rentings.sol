@@ -24,6 +24,13 @@ library Rentings {
     using Warpers for Warpers.Warper;
 
     /**
+     * A constant that represents one hundred percent for calculation.
+     * This defines a calculation precision for percentage values as two decimals.
+     * For example: 1 is 0.01%, 100 is 1%, 10_000 is 100%.
+     */
+    uint16 public constant HUNDRED_PERCENT = 10_000;
+
+    /**
      * @dev Thrown when a rental agreement is being registered for a specific warper ID,
      * while the previous rental agreement for this warper is still effective.
      */
@@ -335,10 +342,10 @@ library Rentings {
         // Calculate universe base fee.
         Warpers.Warper storage warper = warperRegistry.warpers[rentingParams.warper];
         uint16 universeRentalFeePercent = universeRegistry.universeRentalFeePercent(warper.universeId);
-        fees.universeBaseFee = (fees.listerBaseFee * universeRentalFeePercent) / 10_000;
+        fees.universeBaseFee = (fees.listerBaseFee * universeRentalFeePercent) / HUNDRED_PERCENT;
 
         // Calculate protocol fee.
-        fees.protocolFee = (fees.listerBaseFee * protocolConfig.rentalFeePercent) / 10_000;
+        fees.protocolFee = (fees.listerBaseFee * protocolConfig.rentalFeePercent) / HUNDRED_PERCENT;
 
         // Calculate warper premiums.
         (uint256 universePremium, uint256 listerPremium) = warper.controller.calculatePremiums(
