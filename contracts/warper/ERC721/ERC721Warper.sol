@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable ordering
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -36,7 +37,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function setApprovalForAll(address, bool) public virtual override {
+    function setApprovalForAll(address, bool) external virtual {
         revert MethodNotAllowed();
     }
 
@@ -44,7 +45,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function approve(address, uint256) public virtual override {
+    function approve(address, uint256) external virtual {
         revert MethodNotAllowed();
     }
 
@@ -64,7 +65,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public {
+    ) external {
         if (to == address(0)) revert MintToTheZeroAddress();
         if (_exists(tokenId)) revert TokenIsAlreadyMinted(tokenId);
 
@@ -88,7 +89,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) external {
         _transfer(from, to, tokenId);
     }
 
@@ -101,7 +102,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) public {
         safeTransferFrom(from, to, tokenId, "");
     }
 
@@ -115,7 +116,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public virtual override {
+    ) public {
         _safeTransfer(from, to, tokenId, data);
     }
 
@@ -133,7 +134,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      * @dev The rental count calculations get offloaded to the Metahub
      */
-    function balanceOf(address owner) public view virtual override returns (uint256) {
+    function balanceOf(address owner) public view returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
         IERC721WarperController warperController = _warperController();
         return warperController.rentalBalance(_metahub(), address(this), owner);
@@ -147,7 +148,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      *          - AVAILABLE: means, that the token is not currently rented. Metahub is the owner.
      *          - RENTED: Use the Warpers internal ownership constructs
      */
-    function ownerOf(uint256 tokenId) public view virtual override returns (address) {
+    function ownerOf(uint256 tokenId) public view returns (address) {
         // Special rent-sate handling
         {
             IERC721WarperController warperController = _warperController();
@@ -169,7 +170,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function getApproved(uint256) public view virtual override returns (address) {
+    function getApproved(uint256) public pure returns (address) {
         revert MethodNotAllowed();
     }
 
@@ -177,7 +178,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * @inheritdoc IERC721
      * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function isApprovedForAll(address, address) public view virtual override returns (bool) {
+    function isApprovedForAll(address, address) public pure returns (bool) {
         revert MethodNotAllowed();
     }
 
@@ -212,7 +213,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual onlyMetahub {
+    ) internal onlyMetahub {
         // solhint-disable-previous-line no-empty-blocks
     }
 
@@ -241,7 +242,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) internal virtual {
+    ) internal {
         _transfer(from, to, tokenId);
         if (!_checkOnERC721Received(from, to, tokenId, data)) {
             revert TransferToNonERC721ReceiverImplementer(to);
@@ -262,7 +263,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual {
+    ) internal {
         if (!_exists(tokenId)) revert OperatorQueryForNonexistentToken(tokenId);
         if (to == address(0)) revert TransferToTheZeroAddress();
 
@@ -281,7 +282,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * Tokens start existing when they are minted (`_mint`),
      * and stop existing when they are burned (`_burn`).
      */
-    function _exists(uint256 tokenId) internal view virtual returns (bool) {
+    function _exists(uint256 tokenId) internal view returns (bool) {
         return _owners[tokenId] != address(0);
     }
 
