@@ -3,9 +3,8 @@
 pragma solidity ^0.8.13;
 
 import "../accounting/IPaymentManager.sol";
-import "../warper/IWarperManager.sol";
 import "../listing/IListingManager.sol";
 import "../renting/IRentingManager.sol";
 import "./IProtocolConfigManager.sol";
 
-interface IMetahub is IProtocolConfigManager, IPaymentManager, IWarperManager, IListingManager, IRentingManager {}
+interface IMetahub is IProtocolConfigManager, IPaymentManager, IListingManager, IRentingManager {}

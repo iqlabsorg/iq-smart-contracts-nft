@@ -40,7 +40,7 @@ abstract contract WarperContext is Context, InitializationContext {
      * @dev Modifier to make a function callable only by the warper admin.
      */
     modifier onlyWarperAdmin() {
-        if (!IMetahub(_metahub()).isWarperAdmin(address(this), _msgSender())) {
+        if (!IWarperManager(_metahub()).isWarperAdmin(address(this), _msgSender())) {
             revert CallerIsNotWarperAdmin();
         }
         _;
