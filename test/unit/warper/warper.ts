@@ -15,7 +15,6 @@ import {
 } from '../../../typechain';
 import { shouldBehavesLikeMulticall } from '../shared/multicall.behaviour';
 import { shouldBehaveLikeERC721Warper } from './erc721/erc721-warper.behaviour';
-import { shouldBehaveLikeERC721PresetConfigurable } from './erc721/presets/erc721-configurable.behaviour';
 import { shouldBehaveLikeAvailabilityPeriod } from './mechanics/availability-period/availability-period.behaviour';
 import { shouldBehaveLikeConfigurableAvailabilityPeriod } from './mechanics/availability-period/configurable-availability-period.behaviour';
 import { shouldBehaveLikeConfigurableRentalPeriod } from './mechanics/rental-period/configurable-rental-period.behaviour';
@@ -105,7 +104,6 @@ export function unitTestWarpers(): void {
 
     shouldBehaveLikeWarper();
     shouldBehaveLikeERC721Warper();
-    shouldBehaveLikeERC721PresetConfigurable();
     shouldBehavesLikeMulticall();
     shouldBehaveLikeRentalPeriod();
     shouldBehaveLikeConfigurableRentalPeriod();

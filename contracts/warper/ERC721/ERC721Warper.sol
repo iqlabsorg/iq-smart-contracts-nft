@@ -151,8 +151,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
     function ownerOf(uint256 tokenId) public view returns (address) {
         // Special rent-sate handling
         {
-            IERC721WarperController warperController = _warperController();
-            Rentings.RentalStatus rentalStatus = warperController.rentalStatus(_metahub(), address(this), tokenId);
+            Rentings.RentalStatus rentalStatus = _getWarperRentalStatus(tokenId);
 
             if (rentalStatus == Rentings.RentalStatus.NONE) revert OwnerQueryForNonexistentToken(tokenId);
             if (rentalStatus == Rentings.RentalStatus.AVAILABLE) return _metahub();
@@ -168,18 +167,19 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
 
     /**
      * @inheritdoc IERC721
-     * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function getApproved(uint256) public pure returns (address) {
-        revert MethodNotAllowed();
+    function getApproved(uint256 tokenId) public view returns (address) {
+        Rentings.RentalStatus rentalStatus = _getWarperRentalStatus(tokenId);
+        if (rentalStatus == Rentings.RentalStatus.NONE) revert OwnerQueryForNonexistentToken(tokenId);
+
+        return _metahub();
     }
 
     /**
      * @inheritdoc IERC721
-     * @dev Method is disabled, kept only for interface compatibility purposes.
      */
-    function isApprovedForAll(address, address) public pure returns (bool) {
-        revert MethodNotAllowed();
+    function isApprovedForAll(address, address operator) public view returns (bool) {
+        return operator == _metahub();
     }
 
     /**
@@ -322,5 +322,13 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
                 }
             }
         }
+    }
+
+    /**
+     * @dev Get the rental status of a token.
+     */
+    function _getWarperRentalStatus(uint256 tokenId) private view returns (Rentings.RentalStatus) {
+        IERC721WarperController warperController = _warperController();
+        return warperController.rentalStatus(_metahub(), address(this), tokenId);
     }
 }
