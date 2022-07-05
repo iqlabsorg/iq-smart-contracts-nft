@@ -89,7 +89,7 @@ library Accounts {
         Rentings.RentalFees calldata fees,
         address payer,
         uint256 maxPaymentAmount,
-        Warpers.Registry storage warperRegistry,
+        IWarperManager warperManager,
         Listings.Registry storage listingRegistry
     ) external returns (RentalEarnings memory earnings) {
         // Ensure no rental fee payment slippage.
@@ -120,7 +120,7 @@ library Accounts {
         }
 
         // Handle universe fee component.
-        earnings.universeId = warperRegistry.warpers[rentingParams.warper].universeId;
+        earnings.universeId = warperManager.warperInfo(rentingParams.warper).universeId;
         earnings.universeEarningValue = fees.universeBaseFee + fees.universePremium;
         earnings.universeEarningToken = rentingParams.paymentToken;
         // Increase universe balance.

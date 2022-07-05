@@ -38,9 +38,9 @@ abstract contract MetahubStorage {
     Assets.Registry internal _assetRegistry;
 
     /**
-     * @dev Warper registry contains the data about all registered warpers.
+     * @dev Warper manager contains the data about all registered warpers.
      */
-    Warpers.Registry internal _warperRegistry;
+    IWarperManager internal _warperManager;
 
     /**
      * @dev Listing registry contains the data about all listings.

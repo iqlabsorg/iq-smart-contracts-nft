@@ -28,7 +28,7 @@ contract WarperManager is
      * @param universeRegistry
      * @param acl
      */
-    struct WareprManagerInitParams {
+    struct WarperManagerInitParams {
         IWarperPresetFactory warperPresetFactory;
         IAssetClassRegistry assetClassRegistry;
         IUniverseRegistry universeRegistry;
@@ -63,7 +63,7 @@ contract WarperManager is
      * @dev Metahub initializer.
      * @param params Initialization params.
      */
-    function initialize(WareprManagerInitParams calldata params) external initializer {
+    function initialize(WarperManagerInitParams calldata params) external initializer {
         __UUPSUpgradeable_init();
 
         _aclContract = params.acl;
@@ -199,6 +199,20 @@ contract WarperManager is
      */
     function warperInfo(address warper) external view registeredWarper(warper) returns (Warpers.Warper memory) {
         return _warperRegistry.warpers[warper];
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function checkSupportedAsset(address asset) external view {
+        return _warperRegistry.checkSupportedAsset(asset);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function checkRegisteredWarper(address warper) external view {
+        return _warperRegistry.checkRegisteredWarper(warper);
     }
 
     /**

@@ -84,7 +84,7 @@ library Warpers {
     /**
      * @dev Reverts if the warper original does not match the `asset`;
      */
-    function checkCompatibleAsset(Warper storage self, Assets.Asset memory asset) internal view {
+    function checkCompatibleAsset(Warper memory self, Assets.Asset memory asset) internal view {
         address original = asset.token();
         if (self.original != original) revert IncompatibleAsset(original);
     }
@@ -110,7 +110,7 @@ library Warpers {
     /**
      * @dev Reverts if the warper is paused.
      */
-    function checkNotPaused(Warper storage self) internal view {
+    function checkNotPaused(Warper memory self) internal pure {
         if (self.paused) revert WarperIsPaused();
     }
 
