@@ -52,6 +52,7 @@ export function shouldBehaveLikePaymentManager(): void {
     let assetController: IAssetController;
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
+    let warperManager: IWarperManager;
     let listingStrategyRegistry: IListingStrategyRegistry;
     let paymentToken: ERC20Mock;
 
@@ -79,6 +80,7 @@ export function shouldBehaveLikePaymentManager(): void {
         universeRegistry,
         assetClassRegistry,
         warperPresetFactory,
+        warperManager,
         listingStrategyRegistry,
       } = this.contracts);
 
@@ -97,6 +99,7 @@ export function shouldBehaveLikePaymentManager(): void {
         erc721assetVault.address,
         listingManager,
         metahub.connect(universeOwner),
+        warperManager,
         universeRegistry.connect(universeOwner),
         warperPresetFactory,
         listingStrategyRegistry,
@@ -105,11 +108,11 @@ export function shouldBehaveLikePaymentManager(): void {
 
       universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
       warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-      await metahub.connect(universeOwner).unpauseWarper(warperAddress);
+      await warperManager.connect(universeOwner).unpauseWarper(warperAddress);
       listingId = await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
 
       const warperController = IWarperController__factory.connect(
-        await metahub.warperController(warperAddress),
+        await warperManager.warperController(warperAddress),
         metahub.signer,
       );
       const assetStruct = makeERC721Asset(warperAddress, tokenId);

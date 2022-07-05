@@ -13,10 +13,9 @@ import {
 } from '../../../../typechain';
 import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
 import { warperPresetId } from '../metahub';
-import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
+import { Warpers, Assets } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ASSET_CLASS } from '../../../../src';
 import { ADDRESS_ZERO } from '../../../shared/types';
-import { Assets } from '../../../../typechain/contracts/metahub/IMetahub';
 
 /**
  * The metahub contract behaves like IWarperManager

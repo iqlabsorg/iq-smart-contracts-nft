@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "./Protocol.sol";
+import "../warper/IWarperManager.sol";
 
 interface IProtocolConfigManager {
     /**
@@ -27,4 +28,9 @@ interface IProtocolConfigManager {
      * @return The base token address.
      */
     function baseToken() external view returns (address);
+
+    /**
+     * TODO
+     */
+    function warperManager() external view returns (IWarperManager);
 }

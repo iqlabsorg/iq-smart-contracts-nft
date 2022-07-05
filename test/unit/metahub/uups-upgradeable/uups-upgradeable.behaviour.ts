@@ -71,10 +71,9 @@ export function shouldBehaveLikeUUPSUpgradeable(): void {
         })) as MetahubV2Mock;
 
         await upgradeable.initialize({
-          warperPresetFactory: ADDRESS_ZERO,
+          warperManager: ADDRESS_ZERO,
           universeRegistry: ADDRESS_ZERO,
           listingStrategyRegistry: ADDRESS_ZERO,
-          assetClassRegistry: ADDRESS_ZERO,
           acl: this.contracts.acl.address,
           baseToken: ADDRESS_ZERO,
           rentalFeePercent: 100,

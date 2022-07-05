@@ -34,6 +34,7 @@ import {
   Multicall,
   UUPSUpgradeable,
   WarperPresetMock,
+  WarperManager,
 } from '../../typechain';
 
 // eslint-disable-next-line filenames-simple/typescript-module-declaration
@@ -51,8 +52,10 @@ export interface Contracts {
   paymentManager: IPaymentManager;
   listingManager: IListingManager;
   rentingManager: IRentingManager;
-  warperManager: IWarperManager;
   metahub: IMetahub;
+
+  // Warper manager
+  warperManager: IWarperManager;
 
   // acl
   acl: IACL;
@@ -97,6 +100,7 @@ export interface Contracts {
 
 export interface Mocks {
   metahub: FakeContract<Metahub>;
+  warperManager: FakeContract<WarperManager>;
   assetClassRegistry: FakeContract<AssetClassRegistry>;
   solidityInterfaces: SolidityInterfaces;
   assets: {

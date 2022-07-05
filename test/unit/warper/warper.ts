@@ -12,6 +12,8 @@ import {
   ERC721WarperController,
   Metahub,
   Metahub__factory,
+  WarperManager,
+  WarperManager__factory,
 } from '../../../typechain';
 import { shouldBehavesLikeMulticall } from '../shared/multicall.behaviour';
 import { shouldBehaveLikeERC721Warper } from './erc721/erc721-warper.behaviour';
@@ -24,6 +26,7 @@ import { shouldBehaveLikeWarper } from './warper.behaviour';
 export async function unitFixtureERC721WarperConfigurable(): Promise<{
   erc721Warper: any;
   metahub: FakeContract<Metahub>;
+  warperManager: FakeContract<WarperManager>;
   oNFT: ERC721Mock;
   erc20Token: ERC20Mock;
   uninitializedErc721Warper: ERC721PresetConfigurable;
@@ -42,6 +45,9 @@ export async function unitFixtureERC721WarperConfigurable(): Promise<{
   // Fake MetaHub
   const metahub = await smock.fake<Metahub>(Metahub__factory);
   const assetClassRegistry = await smock.fake<AssetClassRegistry>(AssetClassRegistry__factory);
+
+  // Fake WarperManager
+  const warperManager = await smock.fake<WarperManager>(WarperManager__factory);
 
   // Deploy preset.
   const erc721Warper = (await hre.run('deploy:erc721-preset-configurable')) as ERC721PresetConfigurable;
@@ -64,6 +70,7 @@ export async function unitFixtureERC721WarperConfigurable(): Promise<{
     erc721Warper,
     metahub,
     oNFT,
+    warperManager,
     erc20Token,
     uninitializedErc721Warper,
     erc721WarperController,
@@ -74,11 +81,11 @@ export async function unitFixtureERC721WarperConfigurable(): Promise<{
 export function unitTestWarpers(): void {
   describe('ERC721 Preset Configurable', function () {
     beforeEach(async function () {
-      const { erc721Warper, metahub, oNFT, erc721WarperController, assetClassRegistry } = await this.loadFixture(
-        unitFixtureERC721WarperConfigurable,
-      );
+      const { erc721Warper, metahub, oNFT, erc721WarperController, warperManager, assetClassRegistry } =
+        await this.loadFixture(unitFixtureERC721WarperConfigurable);
       this.mocks.assetClassRegistry = assetClassRegistry;
       this.mocks.metahub = metahub;
+      this.mocks.warperManager = warperManager;
       this.contracts.erc721WarperController = erc721WarperController;
       this.mocks.assets.erc721 = oNFT;
 

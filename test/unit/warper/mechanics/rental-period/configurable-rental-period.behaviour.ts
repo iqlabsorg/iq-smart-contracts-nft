@@ -1,6 +1,6 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
-import { ConfigurableRentalPeriodExtension, Metahub } from '../../../../../typechain';
+import { ConfigurableRentalPeriodExtension, WarperManager } from '../../../../../typechain';
 
 /**
  * TODO
@@ -8,23 +8,23 @@ import { ConfigurableRentalPeriodExtension, Metahub } from '../../../../../typec
 export function shouldBehaveLikeConfigurableRentalPeriod(): void {
   describe('Configurable rental period', function () {
     let warper: ConfigurableRentalPeriodExtension;
-    let metahub: FakeContract<Metahub>;
+    let warperManager: FakeContract<WarperManager>;
 
     beforeEach(function () {
       warper = this.contracts.configurableRentalPeriodExtension;
-      metahub = this.mocks.metahub;
+      warperManager = this.mocks.warperManager;
 
-      metahub.isWarperAdmin.returns(true);
+      warperManager.isWarperAdmin.returns(true);
     });
     describe('__setMinRentalPeriod', function () {
       it('allows warper admin to change param value', async () => {
-        metahub.isWarperAdmin.returns(true);
+        warperManager.isWarperAdmin.returns(true);
         await warper.__setMinRentalPeriod(42);
         await expect(warper.__minRentalPeriod()).to.eventually.eq(42);
       });
 
       it('forbids stranger to change param value', async () => {
-        metahub.isWarperAdmin.returns(false);
+        warperManager.isWarperAdmin.returns(false);
         await expect(warper.__setMinRentalPeriod(42)).to.be.revertedWith('CallerIsNotWarperAdmin');
       });
 
@@ -48,13 +48,13 @@ export function shouldBehaveLikeConfigurableRentalPeriod(): void {
 
     describe('__setMaxRentalPeriod', function () {
       it('allows warper admin to change param value', async () => {
-        metahub.isWarperAdmin.returns(true);
+        warperManager.isWarperAdmin.returns(true);
         await warper.__setMaxRentalPeriod(42);
         await expect(warper.__maxRentalPeriod()).to.eventually.eq(42);
       });
 
       it('forbids stranger to change param value', async () => {
-        metahub.isWarperAdmin.returns(false);
+        warperManager.isWarperAdmin.returns(false);
         await expect(warper.__setMaxRentalPeriod(42)).to.be.revertedWith('CallerIsNotWarperAdmin');
       });
 

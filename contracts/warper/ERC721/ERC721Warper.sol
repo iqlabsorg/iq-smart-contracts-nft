@@ -290,7 +290,7 @@ abstract contract ERC721Warper is IERC721Warper, Warper {
      * @dev Get the associated warper controller.
      */
     function _warperController() internal view returns (IERC721WarperController) {
-        return IERC721WarperController(IWarperManager(_metahub()).warperController(address(this)));
+        return IERC721WarperController(IMetahub(_metahub()).warperManager().warperController(address(this)));
     }
 
     /**
