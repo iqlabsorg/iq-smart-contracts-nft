@@ -303,7 +303,7 @@ library Rentings {
         Params calldata params,
         Protocol.Config storage protocolConfig,
         Listings.Registry storage listingRegistry,
-        Warpers.Registry storage warperRegistry
+        IWarperManager warperManager
     ) external view {
         // Validate from the protocol perspective.
         protocolConfig.checkBaseToken(params.paymentToken);
@@ -315,8 +315,8 @@ library Rentings {
         listing.checkValidLockPeriod(params.rentalPeriod);
 
         // Validate from the warper perspective.
-        warperRegistry.checkRegisteredWarper(params.warper);
-        Warpers.Warper storage warper = warperRegistry.warpers[params.warper];
+        warperManager.checkRegisteredWarper(params.warper);
+        Warpers.Warper memory warper = warperManager.warperInfo(params.warper);
         warper.checkCompatibleAsset(listing.asset);
         warper.checkNotPaused();
         warper.controller.validateRentingParams(listing.asset, params);
@@ -329,7 +329,7 @@ library Rentings {
         Params calldata rentingParams,
         Protocol.Config storage protocolConfig,
         Listings.Registry storage listingRegistry,
-        Warpers.Registry storage warperRegistry,
+        IWarperManager warperManager,
         IUniverseRegistry universeRegistry
     ) external view returns (RentalFees memory fees) {
         // Calculate lister base fee.
@@ -340,7 +340,7 @@ library Rentings {
         fees.listerBaseFee = listingController.calculateRentalFee(listingParams, rentingParams);
 
         // Calculate universe base fee.
-        Warpers.Warper storage warper = warperRegistry.warpers[rentingParams.warper];
+        Warpers.Warper memory warper = warperManager.warperInfo(rentingParams.warper);
         uint16 universeRentalFeePercent = universeRegistry.universeRentalFeePercent(warper.universeId);
         fees.universeBaseFee = (fees.listerBaseFee * universeRentalFeePercent) / HUNDRED_PERCENT;
 

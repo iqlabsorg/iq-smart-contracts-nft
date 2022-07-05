@@ -87,6 +87,17 @@ interface IWarperManager {
     function setWarperController(address[] calldata warpers, address controller) external;
 
     /**
+     * @dev Reverts if asset is not supported.
+     * @param asset Asset address.
+     */
+    function checkSupportedAsset(address asset) external view;
+
+    /**
+     * @dev Reverts if warper is not registered.
+     */
+    function checkRegisteredWarper(address warper) external view;
+
+    /**
      * @dev Returns the number of warpers belonging to the particular universe.
      * @param universeId The universe ID.
      * @return Warper count.

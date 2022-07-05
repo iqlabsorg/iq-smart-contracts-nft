@@ -23,7 +23,6 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     /**
      * @dev Metahub initialization params.
      * @param warperPresetFactory Warper preset factory address.
-     * @param assetClassRegistry
      * @param listingStrategyRegistry
      * @param universeRegistry
      * @param acl
@@ -31,8 +30,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @param rentalFeePercent
      */
     struct MetahubInitParams {
-        IWarperPresetFactory warperPresetFactory;
-        IAssetClassRegistry assetClassRegistry;
+        IWarperManager warperManager;
         IListingStrategyRegistry listingStrategyRegistry;
         IUniverseRegistry universeRegistry;
         IACL acl;
@@ -89,8 +87,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _aclContract = params.acl;
         _protocolConfig = Protocol.Config({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
 
-        _warperRegistry.presetFactory = params.warperPresetFactory;
-        _assetRegistry.classRegistry = params.assetClassRegistry;
+        _warperManager = params.warperManager;
         _listingRegistry.strategyRegistry = params.listingStrategyRegistry;
         _universeRegistry = params.universeRegistry;
     }
@@ -113,7 +110,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         bool immediatePayout
     ) external returns (uint256) {
         // Check that asset is supported.
-        _warperRegistry.checkSupportedAsset(asset.token());
+        _warperManager.checkSupportedAsset(asset.token());
 
         // Check that listing strategy is supported.
         _listingRegistry.checkSupportedListingStrategy(params.strategy);
@@ -220,7 +217,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function rent(Rentings.Params calldata rentingParams, uint256 maxPaymentAmount) external returns (uint256) {
         // Validate renting parameters.
-        Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
+        Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperManager);
 
         // Warp the asset and deliver to to the renter.
         (bytes32 warpedCollectionId, Assets.Asset memory warpedAsset) = _warpListedAsset(
@@ -275,13 +272,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      * @inheritdoc IRentingManager
      */
     function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory) {
-        Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperRegistry);
+        Rentings.validateRentingParams(rentingParams, _protocolConfig, _listingRegistry, _warperManager);
         return
             Rentings.calculateRentalFees(
                 rentingParams,
                 _protocolConfig,
                 _listingRegistry,
-                _warperRegistry,
+                _warperManager,
                 _universeRegistry
             );
     }
@@ -464,7 +461,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         address renter
     ) internal returns (bytes32 collectionId, Assets.Asset memory warpedAsset) {
         Assets.Asset memory asset = _listingRegistry.listings[listingId].asset;
-        address controller = address(_warperRegistry.warpers[warper].controller);
+        address controller = _warperManager.warperController(warper);
         (collectionId, warpedAsset) = abi.decode(
             controller.functionDelegateCall(
                 abi.encodeWithSelector(IWarperController.warp.selector, asset, warper, renter)
@@ -486,7 +483,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             rentingParams,
             _protocolConfig,
             _listingRegistry,
-            _warperRegistry,
+            _warperManager,
             _universeRegistry
         );
 
@@ -495,7 +492,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             fees,
             payer,
             maxPaymentAmount,
-            _warperRegistry,
+            _warperManager,
             _listingRegistry
         );
 
@@ -526,7 +523,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Rentings.Agreement memory rentalAgreement,
         Accounts.RentalEarnings memory rentalEarnings
     ) internal {
-        address controller = address(_warperRegistry.warpers[warper].controller);
+        address controller = _warperManager.warperController(warper);
 
         controller.functionDelegateCall(
             abi.encodeWithSelector(
