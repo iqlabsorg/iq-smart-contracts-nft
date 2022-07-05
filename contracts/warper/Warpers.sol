@@ -84,7 +84,7 @@ library Warpers {
     /**
      * @dev Reverts if the warper original does not match the `asset`;
      */
-    function checkCompatibleAsset(Warper memory self, Assets.Asset memory asset) internal view {
+    function checkCompatibleAsset(Warper memory self, Assets.Asset memory asset) internal pure {
         address original = asset.token();
         if (self.original != original) revert IncompatibleAsset(original);
     }
@@ -141,7 +141,7 @@ library Warpers {
         address warper,
         IWarperManager.WarperRegistrationParams calldata params,
         Assets.Registry storage assetRegistry
-    ) external returns (bytes4 assetClass, address original) {
+    ) internal returns (bytes4 assetClass, address original) {
         // Check that provided warper address is a valid contract.
         if (!warper.isContract() || !warper.supportsInterface(type(IWarper).interfaceId)) {
             revert InvalidWarperInterface();
@@ -200,7 +200,7 @@ library Warpers {
     /**
      * @dev Removes warper data from the registry.
      */
-    function remove(Registry storage self, address warperAddress) external {
+    function remove(Registry storage self, address warperAddress) internal {
         Warper storage warper = self.warpers[warperAddress];
         // Clean up universe index.
         self.universeWarperIndex[warper.universeId].remove(warperAddress);
@@ -220,7 +220,7 @@ library Warpers {
         uint256 universeId,
         uint256 offset,
         uint256 limit
-    ) external view returns (address[] memory, Warpers.Warper[] memory) {
+    ) internal view returns (address[] memory, Warpers.Warper[] memory) {
         return self.paginateIndexedWarpers(self.universeWarperIndex[universeId], offset, limit);
     }
 
@@ -232,7 +232,7 @@ library Warpers {
         address original,
         uint256 offset,
         uint256 limit
-    ) external view returns (address[] memory, Warpers.Warper[] memory) {
+    ) internal view returns (address[] memory, Warpers.Warper[] memory) {
         return self.paginateIndexedWarpers(self.assetWarperIndex[original], offset, limit);
     }
 
