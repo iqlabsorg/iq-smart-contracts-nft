@@ -23,6 +23,7 @@ import './controllers';
 import './universe';
 import './assets';
 import './listings';
+import './warper-manager';
 import './unsafe-deployment';
 import { formatBytes32String } from 'ethers/lib/utils';
 import { ASSET_CLASS, LISTING_STRATEGY } from '../../src';
@@ -91,14 +92,23 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         unsafe,
       })) as UniverseRegistry;
 
+      console.log('Step 5/13...'); // TODO update this console.log
+      // Deploy WarperManager token
+      const warperManager = (await hre.run('deploy:warper-manager', {
+        acl: aclContract.address,
+        warperPresetFactory: warperPresetFactory.address,
+        assetClassRegistry: assetClassRegistry.address,
+        universeRegistry: universeRegistry.address,
+        unsafe,
+      })) as UniverseRegistry;
+
       console.log('Step 6/13...');
       // Deploy Metahub
       const metahub = (await hre.run('deploy:metahub', {
         acl: aclContract.address,
         universeRegistry: universeRegistry.address,
-        warperPresetFactory: warperPresetFactory.address,
+        warperManager: warperManager.address,
         listingStrategyRegistry: listingStrategyRegistry.address,
-        assetClassRegistry: assetClassRegistry.address,
         baseToken: baseToken,
         rentalFeePercent: rentalFee,
         unsafe,
@@ -165,6 +175,7 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         assetClassRegistry: assetClassRegistry,
         listingStrategyRegistry: listingStrategyRegistry,
         warperPresetFactory: warperPresetFactory,
+        warperManager: warperManager,
         universeRegistry: universeRegistry,
         metahub: metahub,
         fixedPriceListingController: fixedPriceListingController,

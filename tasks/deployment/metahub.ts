@@ -33,7 +33,6 @@ task('deploy:metahub-libraries', 'Deploy the `Metahub` libraries').setAction(asy
     'contracts/renting/Rentings.sol:Rentings': rentingsLib.address,
     'contracts/listing/Listings.sol:Listings': listingsLib.address,
     'contracts/asset/Assets.sol:Assets': assetsLib.address,
-    'contracts/warper/Warpers.sol:Warpers': warpersLib.address,
     'contracts/accounting/Accounts.sol:Accounts': accountsLib.address,
   };
   return metahubLibs;
@@ -43,9 +42,8 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
   .addParam('baseToken', 'The base token contract address', undefined, types.string)
   .addParam('listingStrategyRegistry', 'The `ListingStrategyRegistry` contract address', undefined, types.string)
-  .addParam('assetClassRegistry', 'The `AssetClassRegistry` contract address', undefined, types.string)
   .addParam('rentalFeePercent', 'The rental fee percent on metahub', undefined, types.int)
-  .addParam('warperPresetFactory', 'The address of warper preset factory', undefined, types.string)
+  .addParam('warperManager', 'The address of the warperManager', undefined, types.string)
   .addParam('universeRegistry', 'The address of the universe registry', undefined, types.string)
   .addParam(
     'unsafe',
@@ -59,18 +57,16 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
         acl,
         baseToken,
         rentalFeePercent,
-        assetClassRegistry,
         listingStrategyRegistry,
-        warperPresetFactory,
+        warperManager,
         universeRegistry,
         unsafe,
       }: {
         acl: string;
         baseToken: string;
         rentalFeePercent: string;
-        assetClassRegistry: string;
         listingStrategyRegistry: string;
-        warperPresetFactory: string;
+        warperManager: string;
         universeRegistry: string;
         unsafe: string;
       },
@@ -101,7 +97,6 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
               Rentings: metahubLibs['contracts/renting/Rentings.sol:Rentings'],
               Listings: metahubLibs['contracts/listing/Listings.sol:Listings'],
               Assets: metahubLibs['contracts/asset/Assets.sol:Assets'],
-              Warpers: metahubLibs['contracts/warper/Warpers.sol:Warpers'],
               Accounts: metahubLibs['contracts/accounting/Accounts.sol:Accounts'],
             },
             {
@@ -118,10 +113,9 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
       {
         console.log('Initializing metahub: ');
         const tx = await metahub.initialize({
-          warperPresetFactory: warperPresetFactory,
+          warperManager: warperManager,
           universeRegistry: universeRegistry,
           listingStrategyRegistry,
-          assetClassRegistry,
           acl,
           baseToken,
           rentalFeePercent,

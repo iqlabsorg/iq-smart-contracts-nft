@@ -11,6 +11,7 @@ import {
   IAssetController__factory,
   IERC721WarperController,
   IUniverseRegistry,
+  IWarperManager,
   ListingStrategyRegistry,
   Metahub,
   WarperPresetFactory,
@@ -31,6 +32,7 @@ export function unitTestMetahub(): void {
     erc721Vault: ERC721AssetVault;
     listingStrategyRegistry: ListingStrategyRegistry;
     warperPresetFactory: WarperPresetFactory;
+    warperManager: IWarperManager;
     metahub: Metahub;
     baseToken: ERC20Mock;
   }> {
@@ -61,6 +63,7 @@ export function unitTestMetahub(): void {
       assetClassRegistry,
       listingStrategyRegistry,
       warperPresetFactory,
+      warperManager,
       universeRegistry,
       metahub,
       fixedPriceListingController,
@@ -74,6 +77,7 @@ export function unitTestMetahub(): void {
     return {
       assetClassRegistry,
       universeRegistry,
+      warperManager,
       fixedPriceListingController,
       originalAsset,
       erc721Controller,
@@ -95,6 +99,7 @@ export function unitTestMetahub(): void {
         universeRegistry,
         listingStrategyRegistry,
         warperPresetFactory,
+        warperManager,
         fixedPriceListingController,
         assetClassRegistry,
         erc721Controller,
@@ -106,9 +111,11 @@ export function unitTestMetahub(): void {
       this.contracts.metahub = metahub;
       this.contracts.listingManager = metahub;
       this.contracts.rentingManager = metahub;
-      this.contracts.warperManager = metahub;
       this.contracts.paymentManager = metahub;
       this.contracts.uupsUpgradeable = metahub;
+
+      // Warper manager
+      this.contracts.warperManager = warperManager;
 
       // Common dependencies
       this.contracts.listingStrategyRegistry = listingStrategyRegistry;

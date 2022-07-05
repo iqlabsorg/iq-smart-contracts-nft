@@ -50,6 +50,7 @@ export function shouldBehaveLikeListingManager(): void {
     let assetController: IAssetController;
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
+    let warperManager: IWarperManager;
     let listingStrategyRegistry: IListingStrategyRegistry;
     let paymentToken: ERC20Mock;
 
@@ -69,6 +70,7 @@ export function shouldBehaveLikeListingManager(): void {
         universeRegistry,
         assetClassRegistry,
         warperPresetFactory,
+        warperManager,
         listingStrategyRegistry,
       } = this.contracts);
       originalAsset = this.mocks.assets.erc721;
@@ -83,6 +85,7 @@ export function shouldBehaveLikeListingManager(): void {
         erc721assetVault.address,
         listingManager,
         metahub,
+        warperManager,
         universeRegistry,
         warperPresetFactory,
         listingStrategyRegistry,
@@ -264,7 +267,7 @@ export function shouldBehaveLikeListingManager(): void {
             renter: stranger.address,
             warper: warperAddress,
           };
-          await metahub.unpauseWarper(warperAddress);
+          await warperManager.unpauseWarper(warperAddress);
           await paymentToken.mint(stranger.address, maxPaymentAmount);
           await paymentToken.connect(stranger).approve(metahub.address, maxPaymentAmount);
           await metahub.connect(stranger).rent(rentingParams1, maxPaymentAmount);

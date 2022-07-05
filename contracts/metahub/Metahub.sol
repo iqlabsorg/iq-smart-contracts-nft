@@ -269,6 +269,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function warperManager() external view returns (IWarperManager) {
+        return _warperManager;
+    }
+
+    /**
      * @inheritdoc IRentingManager
      */
     function estimateRent(Rentings.Params calldata rentingParams) external view returns (Rentings.RentalFees memory) {

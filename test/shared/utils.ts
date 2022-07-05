@@ -187,6 +187,7 @@ export class AssetListerHelper {
     readonly erc721assetVault: string,
     readonly listingManager: IListingManager,
     readonly metahub: IMetahub,
+    readonly warperManager: IWarperManager,
     readonly universeRegistry: IUniverseRegistry,
     readonly warperPresetFactory: IWarperPresetFactory,
     readonly listingStrategyRegistry: IListingStrategyRegistry,
@@ -216,7 +217,7 @@ export class AssetListerHelper {
       this.metahub.address,
       originalAsset.address,
     );
-    await this.metahub.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
+    await this.warperManager.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
     return warperAddress;
   }
 
