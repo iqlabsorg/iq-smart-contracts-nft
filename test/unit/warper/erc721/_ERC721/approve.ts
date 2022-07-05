@@ -23,11 +23,5 @@ export function shouldBehaveLikeApprove(): void {
         );
       });
     });
-
-    context('When calling `getApproved`', () => {
-      it('reverts', async () => {
-        await expect(erc721warper.connect(assetOwner).getApproved(tokenId)).to.be.revertedWith('MethodNotAllowed()');
-      });
-    });
   });
 }
