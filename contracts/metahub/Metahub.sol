@@ -261,7 +261,8 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             listingId: rentingParams.listingId,
             renter: rentingParams.renter,
             startTime: blockTimestamp,
-            endTime: blockTimestamp + rentingParams.rentalPeriod
+            endTime: blockTimestamp + rentingParams.rentalPeriod,
+            listingParams: rentingParams.listingParams
         });
 
         // Register new rental agreement.
