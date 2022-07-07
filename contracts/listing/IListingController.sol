@@ -23,7 +23,7 @@ interface IListingController is IERC165 {
      * @dev Calculates rental fee based on renting params and implemented listing strategy.
      * @param listingParams Listing strategy params.
      * @param rentingParams Renting params.
-     * @return Rental fee.
+     * @return Asset rental fee (base tokens per second).
      */
     function calculateRentalFee(Listings.Params calldata listingParams, Rentings.Params calldata rentingParams)
         external
