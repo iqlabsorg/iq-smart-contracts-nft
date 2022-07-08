@@ -46,7 +46,7 @@ contract WarperManager is
     /**
      * @dev Modifier to make sure that the warper has been registered beforehand.
      */
-    modifier registeredWarper(address warper) {
+    modifier onlyRegisteredWarper(address warper) {
         _warperRegistry.checkRegisteredWarper(warper);
         _;
     }
@@ -55,6 +55,14 @@ contract WarperManager is
      * @dev Modifier to make a function callable only by the universe owner.
      */
     modifier onlyUniverseOwner(uint256 universeId) {
+        _universeRegistry.checkUniverseOwner(universeId, _msgSender());
+        _;
+    }
+
+    /**
+     * @dev Modifier to make a function callable only by the universe owner.
+     */
+    modifier whileMetahub(uint256 universeId) {
         _universeRegistry.checkUniverseOwner(universeId, _msgSender());
         _;
     }
@@ -69,8 +77,15 @@ contract WarperManager is
         _aclContract = params.acl;
 
         _warperRegistry.presetFactory = params.warperPresetFactory;
-        _assetRegistry.classRegistry = params.assetClassRegistry;
+        _assetClassRegistry = params.assetClassRegistry;
         _universeRegistry = params.universeRegistry;
+    }
+
+    /**
+     * @dev Set Metahub post-initialization to avoid circular dependencies.
+     */
+    function setMetahub(IMetahub metahub) external onlyAdmin {
+        _metahub = metahub;
     }
 
     /**
@@ -80,12 +95,9 @@ contract WarperManager is
         external
         onlyUniverseOwner(params.universeId)
     {
-        (bytes4 assetClass, address original) = _warperRegistry.registerWarper(warper, params, _assetRegistry);
+        (bytes4 assetClass, address original) = _warperRegistry.registerWarper(warper, params, _assetClassRegistry);
 
-        // Register the original asset if it is seen for the first time.
-        if (!_assetRegistry.isRegisteredAsset(original)) {
-            _assetRegistry.registerAsset(assetClass, original);
-        }
+        _metahub.registerAsset(assetClass, original);
 
         emit WarperRegistered(params.universeId, warper, original, assetClass);
     }
@@ -172,32 +184,14 @@ contract WarperManager is
     /**
      * @inheritdoc IWarperManager
      */
-    function supportedAssetCount() external view returns (uint256) {
-        return _assetRegistry.assetCount();
-    }
-
-    /**
-     * @inheritdoc IWarperManager
-     */
-    function supportedAssets(uint256 offset, uint256 limit)
-        external
-        view
-        returns (address[] memory, Assets.AssetConfig[] memory)
-    {
-        return _assetRegistry.supportedAssets(offset, limit);
-    }
-
-    /**
-     * @inheritdoc IWarperManager
-     */
-    function isWarperAdmin(address warper, address account) external view registeredWarper(warper) returns (bool) {
+    function isWarperAdmin(address warper, address account) external view onlyRegisteredWarper(warper) returns (bool) {
         return _universeRegistry.isUniverseOwner(_warperRegistry.warpers[warper].universeId, account);
     }
 
     /**
      * @inheritdoc IWarperManager
      */
-    function warperInfo(address warper) external view registeredWarper(warper) returns (Warpers.Warper memory) {
+    function warperInfo(address warper) external view onlyRegisteredWarper(warper) returns (Warpers.Warper memory) {
         return _warperRegistry.warpers[warper];
     }
 
@@ -218,7 +212,7 @@ contract WarperManager is
     /**
      * @inheritdoc IWarperManager
      */
-    function warperController(address warper) external view registeredWarper(warper) returns (address) {
+    function warperController(address warper) external view onlyRegisteredWarper(warper) returns (address) {
         return address(_warperRegistry.warpers[warper].controller);
     }
 

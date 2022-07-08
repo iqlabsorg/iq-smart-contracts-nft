@@ -11,6 +11,7 @@ import {
   ListingStrategyRegistry,
   Metahub,
   UniverseRegistry,
+  WarperManager,
   WarperPresetFactory,
 } from '../../typechain';
 
@@ -55,7 +56,7 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
       console.log('########################################################');
       console.log('');
 
-      console.log('Step 1/13...');
+      console.log('Step 1/15...');
       // Deploy the ACL contract (conditionally)
       let aclContract: ACL;
       if (acl === undefined) {
@@ -64,45 +65,45 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         aclContract = ACL__factory.connect(acl, await hre.ethers.getNamedSigner('deployer'));
       }
 
-      console.log('Step 2/13...');
+      console.log('Step 2/15...');
       // Deploy Asset Class Registry.
       const assetClassRegistry = (await hre.run('deploy:asset-class-registry', {
         acl: aclContract.address,
         unsafe,
       })) as AssetClassRegistry;
 
-      console.log('Step 3/13...');
+      console.log('Step 3/15...');
       // Deploy Listing Strategy Registry
       const listingStrategyRegistry = (await hre.run('deploy:listing-strategy-registry', {
         acl: aclContract.address,
         unsafe,
       })) as ListingStrategyRegistry;
 
-      console.log('Step 4/13...');
+      console.log('Step 4/15...');
       // Deploy Warper preset factory
       const warperPresetFactory = (await hre.run('deploy:warper-preset-factory', {
         acl: aclContract.address,
         unsafe,
       })) as WarperPresetFactory;
 
-      console.log('Step 5/13...');
+      console.log('Step 5/15...');
       // Deploy Universe token
       const universeRegistry = (await hre.run('deploy:universe-registry', {
         acl: aclContract.address,
         unsafe,
       })) as UniverseRegistry;
 
-      console.log('Step 5/13...'); // TODO update this console.log
-      // Deploy WarperManager token
+      console.log('Step 6/15...');
+      // Deploy WarperManager
       const warperManager = (await hre.run('deploy:warper-manager', {
         acl: aclContract.address,
         warperPresetFactory: warperPresetFactory.address,
         assetClassRegistry: assetClassRegistry.address,
         universeRegistry: universeRegistry.address,
         unsafe,
-      })) as UniverseRegistry;
+      })) as WarperManager;
 
-      console.log('Step 6/13...');
+      console.log('Step 7/15...');
       // Deploy Metahub
       const metahub = (await hre.run('deploy:metahub', {
         acl: aclContract.address,
@@ -114,17 +115,17 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         unsafe,
       })) as Metahub;
 
-      console.log('Step 7/13...');
+      console.log('Step 8/15...');
       // Deploy fixed price listing controller
       const fixedPriceListingController = (await hre.run('deploy:fixed-price-listing-controller', {
         unsafe,
       })) as FixedPriceListingController;
 
-      console.log('Step 8/13...');
+      console.log('Step 9/15...');
       // Deploy ERC721 Warper controller
       const erc721Controller = (await hre.run('deploy:erc721-warper-controller', { unsafe })) as ERC721WarperController;
 
-      console.log('Step 9/13...');
+      console.log('Step 10/15...');
       // Deploy ERC721 asset vault
       const erc721Vault = (await hre.run('deploy:erc721-asset-vault', {
         operator: metahub.address,
@@ -132,7 +133,7 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         unsafe,
       })) as ERC721AssetVault;
 
-      console.log('Step 10/13...');
+      console.log('Step 11/15...');
       // Deploy and register warper preset
       const erc721presetConfigurable = (await hre.run('deploy:erc721-preset-configurable', {
         unsafe,
@@ -140,14 +141,15 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
 
       // Register the warper-configurable preset
       {
-        console.log('Step 11/13...');
+        console.log('Step 12/15...');
         const tx = await warperPresetFactory.addPreset(PRESET_CONFIGURABLE_ID, erc721presetConfigurable.address);
         console.log('tx: addPreset', tx.hash, tx.gasPrice?.toString());
         await tx.wait();
       }
 
+      // Register asset class
       {
-        console.log('Step 12/13...');
+        console.log('Step 13/15...');
         const tx = await assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
           controller: erc721Controller.address,
           vault: erc721Vault.address,
@@ -156,11 +158,20 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         await tx.wait();
       }
 
+      // Register listing strategy
       {
-        console.log('Step 13/13...');
+        console.log('Step 14/15...');
         const tx = await listingStrategyRegistry.registerListingStrategy(LISTING_STRATEGY.FIXED_PRICE, {
           controller: fixedPriceListingController.address,
         });
+        console.log('tx: registerListingStrategy', tx.hash, tx.gasPrice?.toString());
+        await tx.wait();
+      }
+
+      //  Set Metahub on the warper manager
+      {
+        console.log('Step 15/15...');
+        const tx = await warperManager.setMetahub(metahub.address);
         console.log('tx: registerListingStrategy', tx.hash, tx.gasPrice?.toString());
         await tx.wait();
       }

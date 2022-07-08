@@ -6,6 +6,11 @@ import "../warper/IWarperManager.sol";
 
 interface IProtocolConfigManager {
     /**
+     * TODO
+     */
+    error CallerIsNotWarperManager();
+
+    /**
      * @dev Emitted when a protocol rental fee is changed.
      * @param rentalFeePercent New protocol rental fee percentage.
      */
@@ -32,5 +37,5 @@ interface IProtocolConfigManager {
     /**
      * TODO
      */
-    function warperManager() external view returns (IWarperManager);
+    function warperController(address warper) external view returns (address);
 }

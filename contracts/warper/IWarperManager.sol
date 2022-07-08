@@ -140,24 +140,6 @@ interface IWarperManager {
     ) external view returns (address[] memory, Warpers.Warper[] memory);
 
     /**
-     * @dev Returns the number of currently supported assets.
-     * @return Asset count.
-     */
-    function supportedAssetCount() external view returns (uint256);
-
-    /**
-     * @dev Returns the list of all supported asset addresses.
-     * @param offset Starting index.
-     * @param limit Max number of items.
-     * @return List of original asset addresses.
-     * @return List of asset config structures.
-     */
-    function supportedAssets(uint256 offset, uint256 limit)
-        external
-        view
-        returns (address[] memory, Assets.AssetConfig[] memory);
-
-    /**
      * @dev Returns warper preset factory address.
      */
     function warperPresetFactory() external view returns (address);

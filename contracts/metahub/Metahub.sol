@@ -47,6 +47,14 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * TODO
+     */
+    modifier onlyWarperManager() {
+        if (_msgSender() != address(_warperManager)) revert CallerIsNotWarperManager();
+        _;
+    }
+
+    /**
      * @dev Modifier to make a function callable only by the asset lister (original owner).
      */
     modifier onlyLister(uint256 listingId) {
@@ -134,6 +142,16 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
 
         return listingId;
+    }
+
+    /**
+     * @inheritdoc IAssetManager
+     */
+    function registerAsset(bytes4 assetClass, address original) external onlyWarperManager {
+        // Register the original asset if it is seen for the first time.
+        if (!_assetRegistry.isRegisteredAsset(original)) {
+            _assetRegistry.registerAsset(assetClass, original);
+        }
     }
 
     /**
@@ -269,10 +287,28 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
-     * @inheritdoc IProtocolConfigManager
+     * @inheritdoc IAssetManager
      */
-    function warperManager() external view returns (IWarperManager) {
-        return _warperManager;
+    function assetClassController(bytes4 assetClass) external view returns (address) {
+        return _assetRegistry.assetClassController(assetClass);
+    }
+
+    /**
+     * @inheritdoc IAssetManager
+     */
+    function supportedAssetCount() external view returns (uint256) {
+        return _assetRegistry.assetCount();
+    }
+
+    /**
+     * @inheritdoc IAssetManager
+     */
+    function supportedAssets(uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory, Assets.AssetConfig[] memory)
+    {
+        return _assetRegistry.supportedAssets(offset, limit);
     }
 
     /**
@@ -302,6 +338,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
      */
     function baseToken() external view returns (address) {
         return address(_protocolConfig.baseToken);
+    }
+
+    /**
+     * @inheritdoc IProtocolConfigManager
+     */
+    function warperController(address warper) external view returns (address) {
+        return _warperManager.warperController(warper);
     }
 
     /**

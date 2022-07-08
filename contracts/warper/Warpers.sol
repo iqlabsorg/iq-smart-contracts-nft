@@ -140,7 +140,7 @@ library Warpers {
         Registry storage self,
         address warper,
         IWarperManager.WarperRegistrationParams calldata params,
-        Assets.Registry storage assetRegistry
+        IAssetClassRegistry assetClassRegistry
     ) internal returns (bytes4 assetClass, address original) {
         // Check that provided warper address is a valid contract.
         if (!warper.isContract() || !warper.supportsInterface(type(IWarper).interfaceId)) {
@@ -156,7 +156,7 @@ library Warpers {
 
         // Retrieve warper controller based on assetClass.
         // Controller resolution for unsupported asset class will revert.
-        IWarperController controller = IWarperController(assetRegistry.assetClassController(assetClass));
+        IWarperController controller = IWarperController(assetClassRegistry.assetClassConfig(assetClass).controller);
 
         // Ensure warper compatibility with the current generation of asset controller.
         controller.checkCompatibleWarper(warper);
