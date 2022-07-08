@@ -2,21 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
 import { WarperManager, WarperManager__factory, IWarperManager__factory, Assets__factory } from '../../typechain';
-import { WarperManagerLibraryAddresses } from '../../typechain/factories/contracts/warper/WarperManager__factory';
 import { unsafeDeployment } from './unsafe-deployment';
-
-task('deploy:warper-manager-libraries', 'Deploy the `WarperManager` libraries').setAction(async (_args, hre) => {
-  const deployer = await hre.ethers.getNamedSigner('deployer');
-
-  // Deploy external libraries used by WarperManager.
-  const assetsLib = await new Assets__factory(deployer).deploy();
-  console.log('assetsLib', assetsLib.address);
-
-  const metahubLibs: WarperManagerLibraryAddresses = {
-    'contracts/asset/Assets.sol:Assets': assetsLib.address,
-  };
-  return metahubLibs;
-});
 
 task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
   .addParam('acl', 'The `ACL` contract address', undefined, types.string)
@@ -47,8 +33,7 @@ task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
       hre,
     ) => {
       const deployer = await hre.ethers.getNamedSigner('deployer');
-      const warperManagerLibs = (await hre.run('deploy:metahub-libraries')) as WarperManagerLibraryAddresses;
-      const factory = new WarperManager__factory(warperManagerLibs, deployer);
+      const factory = new WarperManager__factory(deployer);
 
       // Safe deployment
       const safeDeployment = async () => {

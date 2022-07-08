@@ -6,6 +6,7 @@ import "../warper/Warpers.sol";
 import "../acl/IACL.sol";
 import "../universe/IUniverseRegistry.sol";
 import "../asset/Assets.sol";
+import "../metahub/IMetahub.sol";
 
 abstract contract WarperManagerStorage {
     /**
@@ -13,18 +14,11 @@ abstract contract WarperManagerStorage {
      */
     IACL internal _aclContract;
 
-    /**
-     * @dev Warper registry contains the data about all registered warpers.
-     */
     Warpers.Registry internal _warperRegistry;
 
-    /**
-     * @dev Asset registry contains the data about all registered assets and supported asset classes.
-     */
-    Assets.Registry internal _assetRegistry;
+    IAssetClassRegistry internal _assetClassRegistry;
 
-    /**
-     * @dev Universe registry contains the data about all registered universes and their settings.
-     */
+    IMetahub internal _metahub;
+
     IUniverseRegistry internal _universeRegistry;
 }
