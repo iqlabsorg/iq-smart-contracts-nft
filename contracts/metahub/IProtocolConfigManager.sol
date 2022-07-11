@@ -6,7 +6,7 @@ import "../warper/IWarperManager.sol";
 
 interface IProtocolConfigManager {
     /**
-     * TODO
+     * @dev Raised when the caller is not the WarperManager contract.
      */
     error CallerIsNotWarperManager();
 
@@ -35,7 +35,9 @@ interface IProtocolConfigManager {
     function baseToken() external view returns (address);
 
     /**
-     * TODO
+     * @dev Get thee Warper Controller contracts address for a given warper.
+     * @param warper the warper address.
+     * @return The Warper Controller address.
      */
     function warperController(address warper) external view returns (address);
 }

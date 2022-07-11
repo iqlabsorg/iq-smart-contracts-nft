@@ -2,11 +2,29 @@
 pragma solidity ^0.8.13;
 
 interface IWarperPresetFactory {
-    // TODO Docs
+    /**
+     * @dev Thrown when the implementation does not support the IWarperPreset interface
+     */
     error InvalidWarperPresetInterface();
+
+    /**
+     * @dev Thrown when the warper preset id is already present in the storage.
+     */
     error DuplicateWarperPresetId(bytes32 presetId);
+
+    /**
+     * @dev Thrown when the warper preset has been disabled, when it was expected for it to be enabled.
+     */
     error DisabledWarperPreset(bytes32 presetId);
+
+    /**
+     * @dev Thrown when the warper preset has been enabled, when it was expected for it to be disabled.
+     */
     error EnabledWarperPreset(bytes32 presetId);
+
+    /**
+     * @dev Thrown when it was expected for the warper preset to be registeredr.
+     */
     error WarperPresetNotRegistered(bytes32 presetId);
 
     /**
