@@ -77,6 +77,7 @@ export function shouldBehaveLikeUUPSUpgradeable(): void {
           acl: this.contracts.acl.address,
           baseToken: ADDRESS_ZERO,
           rentalFeePercent: 100,
+          assetClassRegistry: ADDRESS_ZERO,
         });
 
         const metahubV2 = (await hre.run('upgrade:metahub', { proxy: upgradeable.address })) as MetahubV2Mock;

@@ -16,6 +16,14 @@ interface IAssetManager {
     function assetClassController(bytes4 assetClass) external view returns (address);
 
     /**
+     * @dev Checks whether `account` is the `warper` admin.
+     * @param warper Warper address.
+     * @param account Account address.
+     * @return True if the `account` is the admin of the `warper` and false otherwise.
+     */
+    function isWarperAdmin(address warper, address account) external view returns (bool);
+
+    /**
      * @dev Returns the number of currently supported assets.
      * @return Asset count.
      */

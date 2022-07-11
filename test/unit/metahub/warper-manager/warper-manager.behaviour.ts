@@ -13,7 +13,7 @@ import {
 } from '../../../../typechain';
 import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
 import { warperPresetId } from '../metahub';
-import { Warpers, Assets } from '../../../../typechain/contracts/warper/IWarperManager';
+import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ASSET_CLASS } from '../../../../src';
 import { ADDRESS_ZERO } from '../../../shared/types';
 
@@ -280,70 +280,6 @@ export function shouldBehaveLikeWarperManager(): void {
         context('Offset larger than total amount', () => {
           it('returns empty arrays', async () => {
             const result = await warperManager.assetWarpers(originalAsset.address, 5, 10);
-
-            expect(result).to.deep.equal([[], []]);
-          });
-        });
-      });
-    });
-
-    describe('supportedAssetCount', () => {
-      context('When warpers are not registered', () => {
-        it('returns 0', async () => {
-          await expect(warperManager.supportedAssetCount()).to.eventually.eq(0);
-        });
-      });
-      context('When warpers are registered', () => {
-        beforeEach(async () => {
-          const original1 = await deployRandomERC721Token();
-          await deployManyWarperPresetsAndRegister(universeId, 2, original1.address);
-          const original2 = await deployRandomERC721Token();
-          await deployManyWarperPresetsAndRegister(universeId, 1, original2.address);
-        });
-        it('returns correct warper count', async () => {
-          await expect(warperManager.supportedAssetCount()).to.eventually.eq(2);
-        });
-      });
-    });
-
-    describe('supportedAssets', () => {
-      context('When warpers are not registered', () => {
-        it('returns an empty list', async () => {
-          await expect(warperManager.supportedAssets(0, 10)).to.eventually.eql([[], []]);
-        });
-      });
-
-      context('When warpers are registered', () => {
-        const supportedAssets: string[] = [];
-        beforeEach(async () => {
-          // register warpers for different original assets
-          for (let i = 0; i < 3; i++) {
-            const original = await deployRandomERC721Token();
-            // deploy 2 warper for each original asset
-            await deployManyWarperPresetsAndRegister(universeId, 2, original.address);
-            supportedAssets.push(original.address);
-          }
-        });
-
-        it('returns a paginated list of supported asset addresses', async () => {
-          const limit = 2;
-          const assetConfig = await assetClassRegistry.assetClassConfig(ASSET_CLASS.ERC721);
-          for (let offset = 0; offset < supportedAssets.length; offset += limit) {
-            const [supportedAssetAddresses, supportedAssetConfigs] = await warperManager.supportedAssets(offset, limit);
-            expect(supportedAssetAddresses).to.eql(supportedAssets.slice(offset, offset + limit));
-
-            const configs: Array<Assets.AssetConfigStruct> = [];
-            for (const _expectedConfig of supportedAssetConfigs) {
-              configs.push({ ...assetConfig, assetClass: ASSET_CLASS.ERC721 });
-            }
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            expect(supportedAssetConfigs).to.containsAllStructs(configs);
-          }
-        });
-
-        context('Offset larger than total amount', () => {
-          it('returns empty arrays', async () => {
-            const result = await warperManager.supportedAssets(3, 10);
 
             expect(result).to.deep.equal([[], []]);
           });

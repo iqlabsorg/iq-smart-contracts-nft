@@ -34,12 +34,19 @@ task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
     ) => {
       const deployer = await hre.ethers.getNamedSigner('deployer');
       const factory = new WarperManager__factory(deployer);
+      const args = [
+        {
+          warperPresetFactory,
+          assetClassRegistry,
+          universeRegistry,
+          acl,
+        },
+      ];
 
       // Safe deployment
       const safeDeployment = async () => {
-        return (await hre.upgrades.deployProxy(factory, [], {
+        return (await hre.upgrades.deployProxy(factory, args, {
           kind: 'uups',
-          initializer: false,
           unsafeAllow: ['delegatecall', 'external-library-linking'],
         })) as WarperManager;
       };
@@ -50,7 +57,7 @@ task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
             factory,
             'WarperManager',
             hre,
-            [],
+            args,
             {},
             {
               // We perform the contract initialization at a later step manually
@@ -62,22 +69,7 @@ task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
 
       console.log('WarperManager deployed at', warperManager.address);
 
-      // Initializing WarperManager.
-      {
-        console.log('Initializing warperManager: ');
-        const tx = await warperManager.initialize({
-          warperPresetFactory,
-          assetClassRegistry,
-          universeRegistry,
-          acl,
-        });
-        console.log(`tx hash: ${tx.hash} | gas price ${tx.gasPrice?.toString() ?? ''}`);
-        await tx.wait();
-      }
-
-      console.log('WarperManager', warperManager.address);
-
-      return IWarperManager__factory.connect(warperManager.address, deployer);
+      return warperManager;
     },
   );
 

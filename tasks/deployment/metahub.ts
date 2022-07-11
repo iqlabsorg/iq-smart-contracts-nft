@@ -42,6 +42,7 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
   .addParam('baseToken', 'The base token contract address', undefined, types.string)
   .addParam('listingStrategyRegistry', 'The `ListingStrategyRegistry` contract address', undefined, types.string)
+  .addParam('assetClassRegistry', 'The `AssetClassRegistry` contract address', undefined, types.string)
   .addParam('rentalFeePercent', 'The rental fee percent on metahub', undefined, types.int)
   .addParam('warperManager', 'The address of the warperManager', undefined, types.string)
   .addParam('universeRegistry', 'The address of the universe registry', undefined, types.string)
@@ -60,6 +61,7 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
         listingStrategyRegistry,
         warperManager,
         universeRegistry,
+        assetClassRegistry,
         unsafe,
       }: {
         acl: string;
@@ -67,6 +69,7 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
         rentalFeePercent: string;
         listingStrategyRegistry: string;
         warperManager: string;
+        assetClassRegistry: string;
         universeRegistry: string;
         unsafe: string;
       },
@@ -113,9 +116,10 @@ task('deploy:metahub', 'Deploy the `Metahub` contract.')
       {
         console.log('Initializing metahub: ');
         const tx = await metahub.initialize({
-          warperManager: warperManager,
-          universeRegistry: universeRegistry,
+          warperManager,
+          universeRegistry,
           listingStrategyRegistry,
+          assetClassRegistry,
           acl,
           baseToken,
           rentalFeePercent,

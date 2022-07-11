@@ -1,3 +1,4 @@
+import { shouldBehaveLikeAssetManager } from './asset-manager/asset-manager.behaviour';
 import { shouldBehaveLikeListingManager } from './listing-manager/listing-manager.behaviour';
 import { shouldBehaveLikePaymentManager } from './payment-manager/payment-manager.behaviour';
 import { shouldBehaveLikeRentingManager } from './renting-manager/renting-manager.behaviour';
@@ -13,4 +14,5 @@ export function shouldBehaveLikeMetahub(): void {
   shouldBehaveLikeListingManager();
   shouldBehaveLikeWarperManager();
   shouldBehaveLikePaymentManager();
+  shouldBehaveLikeAssetManager();
 }

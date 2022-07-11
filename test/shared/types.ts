@@ -35,6 +35,7 @@ import {
   UUPSUpgradeable,
   WarperPresetMock,
   WarperManager,
+  IAssetManager,
 } from '../../typechain';
 
 // eslint-disable-next-line filenames-simple/typescript-module-declaration
@@ -52,6 +53,7 @@ export interface Contracts {
   paymentManager: IPaymentManager;
   listingManager: IListingManager;
   rentingManager: IRentingManager;
+  assetManager: IAssetManager;
   metahub: IMetahub;
 
   // Warper manager
