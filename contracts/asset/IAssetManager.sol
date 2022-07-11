@@ -6,20 +6,24 @@ import "../warper/IWarperController.sol";
 
 interface IAssetManager {
     /**
-     * TODO
+     * @dev Register a new asset.
+     * @param assetClass Asset class identifier.
+     * @param original The original assets address.
      */
     function registerAsset(bytes4 assetClass, address original) external;
 
     /**
-     * TODO
+     * @dev Retrieve the asset class controller for a given assetClass.
+     * @param assetClass Asset class identifier.
+     * @return The asset class controller.
      */
     function assetClassController(bytes4 assetClass) external view returns (address);
 
     /**
-     * @dev Checks whether `account` is the `warper` admin.
-     * @param warper Warper address.
-     * @param account Account address.
-     * @return True if the `account` is the admin of the `warper` and false otherwise.
+     * @dev Check if the given account is the admin of a warper.
+     * @param warper Address of the warper.
+     * @param account The users account to checked for the admin permissions on the warper.
+     * @return True if the account is the admin of the warper.
      */
     function isWarperAdmin(address warper, address account) external view returns (bool);
 

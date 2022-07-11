@@ -48,7 +48,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
-     * TODO
+     * @dev Modifier to make a function callable only by the WarperManager contract.
      */
     modifier onlyWarperManager() {
         if (_msgSender() != address(_warperManager)) revert CallerIsNotWarperManager();
