@@ -108,6 +108,7 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
       const metahub = (await hre.run('deploy:metahub', {
         acl: aclContract.address,
         universeRegistry: universeRegistry.address,
+        assetClassRegistry: assetClassRegistry.address,
         warperManager: warperManager.address,
         listingStrategyRegistry: listingStrategyRegistry.address,
         baseToken: baseToken,
@@ -172,7 +173,7 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
       {
         console.log('Step 15/15...');
         const tx = await warperManager.setMetahub(metahub.address);
-        console.log('tx: registerListingStrategy', tx.hash, tx.gasPrice?.toString());
+        console.log('tx: setMetahub', tx.hash, tx.gasPrice?.toString());
         await tx.wait();
       }
 

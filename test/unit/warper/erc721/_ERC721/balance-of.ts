@@ -1,7 +1,7 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { IERC721Warper, IERC721WarperController, Metahub, WarperManager } from '../../../../../typechain';
+import { IERC721Warper, IERC721WarperController, Metahub } from '../../../../../typechain';
 import { ADDRESS_ZERO } from '../../../../shared/types';
 
 export function shouldBehaveLikeBalanceOf(): void {
@@ -10,18 +10,15 @@ export function shouldBehaveLikeBalanceOf(): void {
     let erc721warper: IERC721Warper;
     let erc721WarperController: IERC721WarperController;
     let metahub: FakeContract<Metahub>;
-    let warperManager: FakeContract<WarperManager>;
     let assetOwner: SignerWithAddress;
 
     beforeEach(async function () {
       metahub = this.mocks.metahub;
-      warperManager = this.mocks.warperManager;
       assetOwner = this.signers.named.assetOwner;
       erc721WarperController = this.contracts.erc721WarperController;
       erc721warper = this.contracts.erc721Warper;
 
-      metahub.warperManager.returns(warperManager.address);
-      warperManager.warperController.returns(erc721WarperController.address);
+      metahub.warperController.returns(erc721WarperController.address);
 
       await erc721warper.connect(metahub.wallet).mint(assetOwner.address, mintedTokenId, '0x');
     });

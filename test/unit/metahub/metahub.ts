@@ -113,6 +113,7 @@ export function unitTestMetahub(): void {
       this.contracts.rentingManager = metahub;
       this.contracts.paymentManager = metahub;
       this.contracts.uupsUpgradeable = metahub;
+      this.contracts.assetManager = metahub;
 
       // Warper manager
       this.contracts.warperManager = warperManager;

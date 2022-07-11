@@ -145,6 +145,11 @@ interface IWarperManager {
     function warperPresetFactory() external view returns (address);
 
     /**
+     * @dev Returns the Metahub address.
+     */
+    function metahub() external view returns (address);
+
+    /**
      * @dev Checks whether `account` is the `warper` admin.
      * @param warper Warper address.
      * @param account Account address.

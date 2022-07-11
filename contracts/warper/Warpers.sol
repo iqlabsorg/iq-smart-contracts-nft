@@ -149,7 +149,8 @@ library Warpers {
 
         // Check that warper has correct metahub reference.
         address metahub = IWarper(warper).__metahub();
-        if (metahub != address(this)) revert WarperHasIncorrectMetahubReference(metahub, address(this));
+        if (metahub != IWarperManager(address(this)).metahub())
+            revert WarperHasIncorrectMetahubReference(metahub, address(this));
 
         // Check that warper asset class is supported.
         assetClass = IWarper(warper).__assetClass();

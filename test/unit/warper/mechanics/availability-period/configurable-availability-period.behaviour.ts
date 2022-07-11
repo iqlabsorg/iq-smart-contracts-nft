@@ -1,6 +1,6 @@
 import { FakeContract } from '@defi-wonderland/smock';
 import { expect } from 'chai';
-import { ConfigurableAvailabilityPeriodExtension, WarperManager } from '../../../../../typechain';
+import { ConfigurableAvailabilityPeriodExtension, Metahub } from '../../../../../typechain';
 
 /**
  * TODO
@@ -8,23 +8,23 @@ import { ConfigurableAvailabilityPeriodExtension, WarperManager } from '../../..
 export function shouldBehaveLikeConfigurableAvailabilityPeriod(): void {
   describe('Configurable availability period', function () {
     let warper: ConfigurableAvailabilityPeriodExtension;
-    let warperManager: FakeContract<WarperManager>;
+    let metahub: FakeContract<Metahub>;
 
     beforeEach(function () {
       warper = this.contracts.configurableAvailabilityPeriodExtension;
-      warperManager = this.mocks.warperManager;
+      metahub = this.mocks.metahub;
 
-      warperManager.isWarperAdmin.returns(true);
+      metahub.isWarperAdmin.returns(true);
     });
     describe('__setAvailabilityPeriodEnd', function () {
       it('allows warper admin to change param value', async () => {
-        warperManager.isWarperAdmin.returns(true);
+        metahub.isWarperAdmin.returns(true);
         await warper.__setAvailabilityPeriodEnd(42);
         await expect(warper.__availabilityPeriodEnd()).to.eventually.eq(42);
       });
 
       it('forbids stranger to change param value', async () => {
-        warperManager.isWarperAdmin.returns(false);
+        metahub.isWarperAdmin.returns(false);
         await expect(warper.__setAvailabilityPeriodEnd(42)).to.be.revertedWith('CallerIsNotWarperAdmin');
       });
 
@@ -52,13 +52,13 @@ export function shouldBehaveLikeConfigurableAvailabilityPeriod(): void {
 
     describe('__setAvailabilityPeriodStart', function () {
       it('allows warper admin to change param value', async () => {
-        warperManager.isWarperAdmin.returns(true);
+        metahub.isWarperAdmin.returns(true);
         await warper.__setAvailabilityPeriodStart(42);
         await expect(warper.__availabilityPeriodStart()).to.eventually.eq(42);
       });
 
       it('forbids stranger to change param value', async () => {
-        warperManager.isWarperAdmin.returns(false);
+        metahub.isWarperAdmin.returns(false);
         await expect(warper.__setAvailabilityPeriodStart(42)).to.be.revertedWith('CallerIsNotWarperAdmin');
       });
 

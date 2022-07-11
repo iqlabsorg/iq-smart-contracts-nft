@@ -84,8 +84,8 @@ contract WarperManager is
     /**
      * @dev Set Metahub post-initialization to avoid circular dependencies.
      */
-    function setMetahub(IMetahub metahub) external onlyAdmin {
-        _metahub = metahub;
+    function setMetahub(IMetahub metahub_) external onlyAdmin {
+        _metahub = metahub_;
     }
 
     /**
@@ -143,6 +143,13 @@ contract WarperManager is
      */
     function warperPresetFactory() external view returns (address) {
         return address(_warperRegistry.presetFactory);
+    }
+
+    /**
+     * @inheritdoc IWarperManager
+     */
+    function metahub() external view returns (address) {
+        return address(_metahub);
     }
 
     /**

@@ -33,6 +33,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         IWarperManager warperManager;
         IListingStrategyRegistry listingStrategyRegistry;
         IUniverseRegistry universeRegistry;
+        IAssetClassRegistry assetClassRegistry;
         IACL acl;
         IERC20Upgradeable baseToken;
         uint16 rentalFeePercent;
@@ -96,8 +97,9 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         _protocolConfig = Protocol.Config({baseToken: params.baseToken, rentalFeePercent: params.rentalFeePercent});
 
         _warperManager = params.warperManager;
-        _listingRegistry.strategyRegistry = params.listingStrategyRegistry;
         _universeRegistry = params.universeRegistry;
+        _assetRegistry.classRegistry = params.assetClassRegistry;
+        _listingRegistry.strategyRegistry = params.listingStrategyRegistry;
     }
 
     /**
@@ -309,6 +311,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         returns (address[] memory, Assets.AssetConfig[] memory)
     {
         return _assetRegistry.supportedAssets(offset, limit);
+    }
+
+    /**
+     * @inheritdoc IAssetManager
+     */
+    function isWarperAdmin(address warper, address account) external view returns (bool) {
+        return _warperManager.isWarperAdmin(warper, account);
     }
 
     /**
