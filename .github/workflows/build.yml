@@ -101,6 +101,22 @@ jobs:
         uses: borales/actions-yarn@v3.0.0
         with:
           cmd: test
+  gas:
+    name: gas
+    runs-on: ubuntu-20.04
+    needs: ["build"]
+    steps:
+      - uses: actions/cache@v3
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      # will run `yarn gas` command
+      - name: Execute the gas check tests
+        uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: gas
 
   # TODO: Uncomment the `slither` job when this is fixed: https://github.com/crytic/slither/issues/1001
   # slither:
