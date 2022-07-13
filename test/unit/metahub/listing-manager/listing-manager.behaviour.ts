@@ -123,8 +123,8 @@ export function shouldBehaveLikeListingManager(): void {
             listingGroupId: BigNumber.from(1),
             lister: nftCreator.address,
             asset: asset,
-            maxLockPeriod: maxLockPeriod,
             params: params,
+            maxLockPeriod: maxLockPeriod,
           });
         });
 
@@ -320,9 +320,9 @@ export function shouldBehaveLikeListingManager(): void {
           const asset = makeERC721Asset(originalAsset.address, tokenId);
 
           expect(assetListed).to.equalStruct({
-            asset: asset,
-            lister: nftCreator.address,
             listingId: BigNumber.from(1),
+            lister: nftCreator.address,
+            asset: asset,
           });
         });
       });

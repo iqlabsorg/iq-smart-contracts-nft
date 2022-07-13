@@ -95,6 +95,13 @@ Assertion.addMethod('equalStruct', function (expectedStruct: Record<string, any>
   const cleanedUpExpectedStruct = transmuteObject(expectedStruct);
   const cleanedUpStruct = transmuteObject(this._obj);
 
+  // Make sure that the order of keys is persisted!
+  new Assertion(Object.keys(cleanedUpStruct)).to.deep.equal(
+    Object.keys(cleanedUpExpectedStruct),
+    'The order of the keys is not preserved',
+  );
+
+  // Make sure that the actual values are equal!
   return new Assertion(cleanedUpStruct).to.deep.equal(cleanedUpExpectedStruct, message);
 });
 

@@ -616,12 +616,12 @@ export function shouldBehaveLikeRentingManager(): void {
             expect(universeBaseFee.toNumber()).to.be.lessThan(listerBaseFee.toNumber());
             expect(protocolFee.toNumber()).to.be.lessThan(listerBaseFee.toNumber());
             expect(estimate).to.equalStruct({
-              listerBaseFee: listerBaseFee,
-              universeBaseFee: universeBaseFee,
-              protocolFee: protocolFee,
-              listerPremium: listerPremium,
-              universePremium: universePremium,
               total: total,
+              protocolFee: protocolFee,
+              listerBaseFee: listerBaseFee,
+              listerPremium: listerPremium,
+              universeBaseFee: universeBaseFee,
+              universePremium: universePremium,
             });
           });
         });

@@ -57,12 +57,12 @@ export function shouldBehaveLikeWarperManager(): void {
         await registerWarper(warperManager, address, { universeId, name, paused });
 
         result[address] = {
-          controller: classConfig.controller,
+          assetClass: ASSET_CLASS.ERC721,
           original,
+          paused,
+          controller: classConfig.controller,
           name,
           universeId,
-          paused,
-          assetClass: ASSET_CLASS.ERC721,
         };
       }
       return result;
@@ -320,10 +320,10 @@ export function shouldBehaveLikeWarperManager(): void {
         it('returns the warper info', async () => {
           await expect(warperManager.warperInfo(warperAddress)).to.eventually.equalStruct({
             assetClass: ASSET_CLASS.ERC721,
-            controller: warperInfo.controller,
-            name: 'Warper 0',
             original: originalAddress,
             paused: false,
+            controller: warperInfo.controller,
+            name: 'Warper 0',
             universeId: universeId,
           });
         });
