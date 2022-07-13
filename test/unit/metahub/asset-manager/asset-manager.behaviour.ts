@@ -189,7 +189,11 @@ export function shouldBehaveLikeAssetManager(): void {
 
             const configs: Array<Assets.AssetConfigStruct> = [];
             for (const _expectedConfig of supportedAssetConfigs) {
-              configs.push({ ...assetConfig, assetClass: ASSET_CLASS.ERC721 });
+              configs.push({
+                controller: assetConfig.controller,
+                assetClass: ASSET_CLASS.ERC721,
+                vault: assetConfig.vault,
+              });
             }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             expect(supportedAssetConfigs).to.containsAllStructs(configs);
