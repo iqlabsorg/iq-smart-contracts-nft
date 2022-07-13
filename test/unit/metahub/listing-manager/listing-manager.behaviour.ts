@@ -16,7 +16,6 @@ import {
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
-import { ADDRESS_ZERO } from '../../../shared/types';
 import { AssetListerHelper, deployRandomERC721Token } from '../../../shared/utils';
 import { makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
 
@@ -120,9 +119,10 @@ export function shouldBehaveLikeListingManager(): void {
           const assetListed = events[0].args;
           await expect(tx).to.emit(listingManager, 'AssetListed');
           expect(assetListed).to.equalStruct({
-            asset: asset,
-            lister: nftCreator.address,
             listingId: BigNumber.from(1),
+            listingGroupId: BigNumber.from(1),
+            lister: nftCreator.address,
+            asset: asset,
             maxLockPeriod: maxLockPeriod,
             params: params,
           });
@@ -197,20 +197,12 @@ export function shouldBehaveLikeListingManager(): void {
         });
 
         it('updates the listing', async () => {
+          const listingInfoBefore = await listingManager.listingInfo(listingId);
           await listingManager.connect(nftCreator).delistAsset(listingId);
 
-          const asset = makeERC721Asset(originalAsset.address, tokenId);
-          const listingParams = makeFixedPriceStrategy(baseRate);
-
           await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
-            asset: asset,
-            params: listingParams,
-            lister: nftCreator.address,
-            maxLockPeriod: maxLockPeriod,
-            lockedTill: 0,
-            immediatePayout: false,
+            ...listingInfoBefore,
             delisted: true,
-            paused: false,
           });
 
           // NOTE: the listing counts should not decrement!
@@ -228,7 +220,7 @@ export function shouldBehaveLikeListingManager(): void {
     });
 
     describe('withdrawAsset', () => {
-      context('caller not lister', () => {
+      context('When caller is not lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -248,7 +240,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
       });
 
-      context('Asset is locked', () => {
+      context('When the asset is locked', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -366,7 +358,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
       });
 
-      context('When asset already paused', () => {
+      context('When the listing is already paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -387,7 +379,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
       });
 
-      context('When successfully paused', () => {
+      context('When the listing is not paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -407,19 +399,10 @@ export function shouldBehaveLikeListingManager(): void {
         });
 
         it('pauses the listing', async () => {
+          const listingInfoBefore = await listingManager.listingInfo(listingId);
           await listingManager.connect(nftCreator).pauseListing(listingId);
-
-          const asset = makeERC721Asset(originalAsset.address, tokenId);
-          const listingParams = makeFixedPriceStrategy(baseRate);
-
           await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
-            asset: asset,
-            params: listingParams,
-            lister: nftCreator.address,
-            maxLockPeriod: maxLockPeriod,
-            lockedTill: 0,
-            immediatePayout: false,
-            delisted: false,
+            ...listingInfoBefore,
             paused: true,
           });
         });
@@ -456,7 +439,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
       });
 
-      context('When asset not paused', () => {
+      context('When the listing is not paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -476,7 +459,7 @@ export function shouldBehaveLikeListingManager(): void {
         });
       });
 
-      context('When successfully unpaused', () => {
+      context('When the listing is paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -497,19 +480,11 @@ export function shouldBehaveLikeListingManager(): void {
         });
 
         it('unpauses the listing', async () => {
+          const listingInfoBefore = await listingManager.listingInfo(listingId);
           await listingManager.connect(nftCreator).unpauseListing(listingId);
 
-          const asset = makeERC721Asset(originalAsset.address, tokenId);
-          const listingParams = makeFixedPriceStrategy(baseRate);
-
           await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
-            asset: asset,
-            params: listingParams,
-            lister: nftCreator.address,
-            maxLockPeriod: maxLockPeriod,
-            lockedTill: 0,
-            immediatePayout: false,
-            delisted: false,
+            ...listingInfoBefore,
             paused: false,
           });
         });
@@ -666,7 +641,7 @@ export function shouldBehaveLikeListingManager(): void {
           await listingsAreEqual(0, 5);
         });
 
-        context('A user has less listings than requested', () => {
+        context('When a user has less listings than requested', () => {
           it('returns the requested amount', async () => {
             const retrievedListings = await listingManager.userListings(stranger.address, 0, 10);
 
@@ -675,7 +650,7 @@ export function shouldBehaveLikeListingManager(): void {
           });
         });
 
-        context('Offset larger than total amount', () => {
+        context('When the offset is larger than total amount', () => {
           it('returns empty arrays', async () => {
             const retrievedListings = await listingManager.userListings(stranger.address, 5, 10);
 
@@ -686,7 +661,7 @@ export function shouldBehaveLikeListingManager(): void {
     });
 
     describe('listingInfo', () => {
-      context('Listing entry exists', () => {
+      context('When the listing exists', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
           listingId = await assetListerHelper.listAsset(
@@ -702,6 +677,7 @@ export function shouldBehaveLikeListingManager(): void {
         it('returns the information', async () => {
           const asset = makeERC721Asset(originalAsset.address, tokenId);
           const listingParams = makeFixedPriceStrategy(baseRate);
+          const listingGroupId = await assetListerHelper.listingGroupId(listingId);
 
           await expect(listingManager.listingInfo(listingId)).to.eventually.equalStruct({
             asset: asset,
@@ -712,6 +688,7 @@ export function shouldBehaveLikeListingManager(): void {
             immediatePayout: false,
             delisted: false,
             paused: false,
+            groupId: listingGroupId,
           });
         });
       });

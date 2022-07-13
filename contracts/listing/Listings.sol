@@ -46,6 +46,19 @@ library Listings {
      */
     error UnsupportedListingStrategy(bytes4 strategyId);
 
+    /**
+     * @dev Thrown when the operation is not allowed due to the listing group being nonempty.
+     * @param listingGroupId Listing group ID.
+     */
+    error ListingGroupIsNotEmpty(uint256 listingGroupId);
+
+    /**
+     * @dev Thrown when the provided `account` doesn't match the listing group owner address.
+     * @param listingGroupId Listing group ID.
+     * @param account Invalid owner account.
+     */
+    error InvalidListingGroupOwner(uint256 listingGroupId, address account);
+
     /*
      * @dev Listing strategy identifiers to be used across the system:
      */
@@ -75,16 +88,73 @@ library Listings {
      * If FALSE, the rental fees get accumulated until withdrawn manually.
      * @param delisted Indicates whether the asset is delisted.
      * @param paused Indicates whether the listing is paused.
+     * @param groupId Listing group ID.
      */
     struct Listing {
+        // slots 0-2
         Assets.Asset asset;
+        // slot 3-4
         Params params;
+        // slot 5 (1 byte)
         address lister;
         uint32 maxLockPeriod;
         uint32 lockedTill;
         bool immediatePayout;
         bool delisted;
         bool paused;
+        // slot 6
+        uint256 groupId;
+    }
+
+    /**
+     * @dev Listing related data associated with the specific account.
+     * @param listingIndex The set of listing IDs.
+     * @param listingGroupIndex The set of listing group IDs.
+     */
+    struct ListerInfo {
+        EnumerableSetUpgradeable.UintSet listingIndex;
+        EnumerableSetUpgradeable.UintSet listingGroupIndex;
+    }
+
+    /**
+     * @dev Listing related data associated with the specific account.
+     * @param listingIndex The set of listing IDs.
+     */
+    struct AssetInfo {
+        EnumerableSetUpgradeable.UintSet listingIndex;
+    }
+
+    /**
+     * @dev Listing group information.
+     * @param name The listing group name.
+     * @param owner The listing group owner address.
+     * @param listingIndex The set of listing IDs which belong to the group.
+     */
+    struct ListingGroupInfo {
+        string name;
+        address owner;
+        EnumerableSetUpgradeable.UintSet listingIndex;
+    }
+
+    /**
+     * @dev Listing registry.
+     * @param idTracker Listing ID tracker (incremental counter).
+     * @param strategyRegistry Listing strategy registry contract.
+     * @param listingIndex The global set of registered listing IDs.
+     * @param listings Mapping from listing ID to the listing info.
+     * @param listers Mapping from lister address to the lister info.
+     * @param assets Mapping from an asset address to the asset info.
+     * @param listingGroups Mapping from listing group ID to the listing group info.
+     */
+    struct Registry {
+        CountersUpgradeable.Counter listingIdTracker;
+        IListingStrategyRegistry strategyRegistry;
+        EnumerableSetUpgradeable.UintSet listingIndex;
+        mapping(uint256 => Listing) listings;
+        mapping(address => ListerInfo) listers;
+        mapping(address => AssetInfo) assets;
+        CountersUpgradeable.Counter listingGroupIdTracker;
+        mapping(uint256 => ListingGroupInfo) listingGroups;
     }
 
     /**
@@ -145,54 +215,69 @@ library Listings {
     }
 
     /**
-     * @dev Listing related data associated with the specific account.
-     * @param listingIndex The set of listing IDs.
+     * @dev Registers new listing group.
+     * @param name The listing group name.
+     * @param owner The listing group owner address.
+     * @return listingGroupId New listing group ID.
      */
-    struct ListerInfo {
-        EnumerableSetUpgradeable.UintSet listingIndex;
-    }
-    /**
-     * @dev Listing related data associated with the specific account.
-     * @param listingIndex The set of listing IDs.
-     */
-    struct AssetInfo {
-        EnumerableSetUpgradeable.UintSet listingIndex;
+    function registerListingGroup(
+        Registry storage self,
+        string memory name,
+        address owner
+    ) external returns (uint256 listingGroupId) {
+        listingGroupId = _registerListingGroup(self, name, owner);
     }
 
     /**
-     * @dev Listing registry.
-     * @param idTracker Listing ID tracker (incremental counter).
-     * @param strategyRegistry Listing strategy registry contract.
-     * @param listingIndex The global set of registered listing IDs.
-     * @param listings Mapping from listing ID to the listing info.
-     * @param listers Mapping from lister address to the lister info.
-     * @param assets Mapping from an asset address to the asset info.
+     * @dev Removes listing group data.
+     * @param listingGroupId The ID of the listing group to be deleted.
      */
-    struct Registry {
-        CountersUpgradeable.Counter idTracker;
-        IListingStrategyRegistry strategyRegistry;
-        EnumerableSetUpgradeable.UintSet listingIndex;
-        mapping(uint256 => Listing) listings;
-        mapping(address => ListerInfo) listers;
-        mapping(address => AssetInfo) assets;
+    function removeListingGroup(Registry storage self, uint256 listingGroupId) external {
+        ListingGroupInfo storage listingGroup = self.listingGroups[listingGroupId];
+
+        // Deleting nonempty listing groups is forbidden.
+        if (listingGroup.listingIndex.length() > 0) revert ListingGroupIsNotEmpty(listingGroupId);
+
+        // Remove the listing group ID from the user account data.
+        self.listers[listingGroup.owner].listingGroupIndex.remove(listingGroupId);
+
+        // Delete listing group.
+        delete self.listingGroups[listingGroupId];
     }
 
     /**
      * @dev Registers new listing.
      * @return listingId New listing ID.
+     * @return listingGroupId Effective listing group ID.
      */
-    function register(Registry storage self, Listing memory listing) external returns (uint256 listingId) {
+    function register(Registry storage self, Listing memory listing)
+        external
+        returns (uint256 listingId, uint256 listingGroupId)
+    {
         // Generate new listing ID.
-        self.idTracker.increment();
-        listingId = self.idTracker.current();
-        // Store new listing record.
-        self.listings[listingId] = listing;
+        self.listingIdTracker.increment();
+        listingId = self.listingIdTracker.current();
+
+        // Listing is being added to an existing group.
+        if (listing.groupId != 0) {
+            listingGroupId = listing.groupId;
+            self.checkListingGroupOwner(listingGroupId, listing.lister);
+        } else {
+            // Otherwise the new listing group is created and the listing is added to this group by default.
+            listingGroupId = _registerListingGroup(self, "", listing.lister);
+            listing.groupId = listingGroupId;
+        }
+
         // Add new listing ID to the global index.
         self.listingIndex.add(listingId);
+        // Add new listing ID to the listing group index.
+        self.listingGroups[listingGroupId].listingIndex.add(listingId);
         // Add user listing data.
         self.listers[listing.lister].listingIndex.add(listingId);
         // Add asset listing data.
         self.assets[listing.asset.token()].listingIndex.add(listingId);
+        // Store new listing record.
+        self.listings[listingId] = listing;
     }
 
     /**
@@ -202,12 +287,15 @@ library Listings {
     function remove(Registry storage self, uint256 listingId) external {
         address lister = self.listings[listingId].lister;
         address original = self.listings[listingId].asset.token();
+        uint256 listingGroupId = self.listings[listingId].groupId;
 
         // Remove the listing ID from the global index.
         self.listingIndex.remove(listingId);
+        // Remove the listing ID from the group index.
+        self.listingGroups[listingGroupId].listingIndex.remove(listingId);
         // Remove user listing data.
         self.listers[lister].listingIndex.remove(listingId);
-        // Delete asset.
+        // Remove asset listing data.
         self.assets[original].listingIndex.remove(listingId);
         // Delete listing.
         delete self.listings[listingId];
@@ -254,6 +342,20 @@ library Listings {
      */
     function checkRegisteredListing(Registry storage self, uint256 listingId) external view {
         if (!self.isRegisteredListing(listingId)) revert ListingIsNotRegistered(listingId);
+    }
+
+    /**
+     * @dev Reverts if the provided `account` doesn't match the listing group owner address.
+     * @param listingGroupId Listing group ID.
+     * @param account The account to check ownership for.
+     */
+    function checkListingGroupOwner(
+        Registry storage self,
+        uint256 listingGroupId,
+        address account
+    ) internal view {
+        if (self.listingGroups[listingGroupId].owner != account)
+            revert InvalidListingGroupOwner(listingGroupId, account);
     }
 
     /**
@@ -334,5 +436,28 @@ library Listings {
         }
 
         return (listingIds, listings);
+    }
+
+    /**
+     * @dev Registers new listing group.
+     * @param name The listing group name.
+     * @param owner The listing group owner address.
+     * @return listingGroupId New listing group ID.
+     */
+    function _registerListingGroup(
+        Registry storage self,
+        string memory name,
+        address owner
+    ) private returns (uint256 listingGroupId) {
+        // Generate new listing group ID.
+        self.listingGroupIdTracker.increment();
+        listingGroupId = self.listingGroupIdTracker.current();
+
+        // Store new listing group record.
+        self.listingGroups[listingGroupId].name = name;
+        self.listingGroups[listingGroupId].owner = owner;
+
+        // Associate the new listing group with the user account.
+        self.listers[owner].listingGroupIndex.add(listingGroupId);
     }
 }

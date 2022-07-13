@@ -118,7 +118,7 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
         Listings.Params calldata params,
         uint32 maxLockPeriod,
         bool immediatePayout
-    ) external returns (uint256) {
+    ) external returns (uint256 listingId, uint256 listingGroupId) {
         // Check that asset is supported.
         _warperManager.checkSupportedAsset(asset.token());
 
@@ -134,16 +134,23 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
             lockedTill: 0,
             immediatePayout: immediatePayout,
             delisted: false,
-            paused: false
+            paused: false,
+            groupId: 0
         });
-        uint256 listingId = _listingRegistry.register(listing);
+
+        (listingId, listingGroupId) = _listingRegistry.register(listing);
 
         // Transfer asset from lister account to the vault.
         _assetRegistry.transferAssetToVault(asset, _msgSender());
 
-        emit AssetListed(listingId, listing.lister, listing.asset, listing.params, listing.maxLockPeriod);
-
-        return listingId;
+        emit AssetListed(
+            listingId,
+            listingGroupId,
+            listing.lister,
+            listing.asset,
+            listing.params,
+            listing.maxLockPeriod
+        );
     }
 
     /**

@@ -1,5 +1,5 @@
 import hre, { ethers } from 'hardhat';
-import { BigNumber, BytesLike, ContractReceipt, ContractTransaction, Signer } from 'ethers';
+import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction, Signer } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
@@ -234,11 +234,16 @@ export class AssetListerHelper {
     const asset = makeERC721Asset(originalAsset.address, tokenId);
     const listingParams = makeFixedPriceStrategy(baseRate);
 
-    const listingId = await this.listingManager
+    const { listingId } = await this.listingManager
       .connect(lister)
       .callStatic.listAsset(asset, listingParams, maxLockPeriod, false);
+
     await this.listingManager.connect(lister).listAsset(asset, listingParams, maxLockPeriod, immediatePayout);
 
     return listingId;
+  }
+
+  async listingGroupId(listingId: BigNumberish): Promise<BigNumber> {
+    return (await this.listingManager.listingInfo(listingId)).groupId;
   }
 }
