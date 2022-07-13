@@ -101,8 +101,9 @@ jobs:
         uses: borales/actions-yarn@v3.0.0
         with:
           cmd: test
-  gas:
-    name: gas
+
+  unsafe-tests:
+    name: unsafe-tests
     runs-on: ubuntu-20.04
     needs: ["build"]
     steps:
@@ -112,11 +113,11 @@ jobs:
           path: ./*
           key: ${{ github.sha }}
 
-      # will run `yarn gas` command
-      - name: Execute the gas check tests
+      # will run `yarn test-unsafe` command
+      - name: Execute the unsafe deployment tests
         uses: borales/actions-yarn@v3.0.0
         with:
-          cmd: gas
+          cmd: test-unsafe
 
   # TODO: Uncomment the `slither` job when this is fixed: https://github.com/crytic/slither/issues/1001
   # slither:
