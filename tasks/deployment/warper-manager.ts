@@ -52,19 +52,7 @@ task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
       };
 
       // Deploy WarperManager
-      const warperManager = await (unsafe
-        ? unsafeDeployment(
-            factory,
-            'WarperManager',
-            hre,
-            args,
-            {},
-            {
-              // We perform the contract initialization at a later step manually
-              execute: undefined,
-            },
-          )
-        : safeDeployment());
+      const warperManager = await (unsafe ? unsafeDeployment(factory, 'WarperManager', hre, args) : safeDeployment());
       await warperManager.deployed();
 
       console.log('WarperManager deployed at', warperManager.address);
