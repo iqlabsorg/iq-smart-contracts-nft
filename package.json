@@ -33,14 +33,13 @@
     "dev": "hardhat node --watch",
     "format": "prettier --check '**/*.{ts,js,sol}'",
     "format:fix": "prettier --write '**/*.{ts,js,sol}'",
-    "gas": "cross-env REPORT_GAS=true HARDHAT_DEPLOY_FIXTURE=true hardhat test test/unit",
     "lint": "eslint '**/*.{js,ts}' && solhint './contracts/**/*.sol'",
     "lint:fix": "eslint --fix '**/*.{js,ts}' && solhint --fix './contracts/**/*.sol'",
     "prepare": "husky install",
     "publish": "cd dist && yarn publish --ignore-scripts --no-commit-hooks",
     "size": "cross-env REPORT_SIZE=true hardhat compile",
     "test": "yarn test:unit",
-    "test:unit": "hardhat test test/unit"
+    "test:unit": "cross-env REPORT_GAS=true hardhat test test/unit"
   },
   "lint-staged": {
     "**/*.{js,ts}": "eslint --fix",

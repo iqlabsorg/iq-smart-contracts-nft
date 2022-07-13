@@ -89,6 +89,7 @@ export function shouldBehaveLikeRentingManager(): void {
 
     let universeId: BigNumber;
     let listingId: BigNumber;
+    let listingGroupId: BigNumber;
     let warperAddress: string;
 
     beforeEach(async function () {
@@ -745,7 +746,7 @@ export function shouldBehaveLikeRentingManager(): void {
         });
       });
 
-      context('immediate payout is turned on', () => {
+      context('When immediate payout is turned on', () => {
         beforeEach(async () => {
           const mockedWarperController = await new ERC721WarperControllerMock__factory(metahub.signer).deploy();
           await assetClassRegistry.setAssetClassController(ASSET_CLASS.ERC721, mockedWarperController.address);
@@ -761,10 +762,11 @@ export function shouldBehaveLikeRentingManager(): void {
             tokenId,
             true,
           );
+          listingGroupId = await assetListerHelper.listingGroupId(listingId);
           await warperManager.unpauseWarper(warperAddress);
         });
 
-        context('asset is rented', () => {
+        context('When asset is rented', () => {
           let rentalParams: Rentings.ParamsStruct;
           let rentCost: Rentings.RentalFeesStructOutput;
           beforeEach(async () => {
@@ -866,6 +868,7 @@ export function shouldBehaveLikeRentingManager(): void {
               immediatePayout: true,
               delisted: false,
               paused: false,
+              groupId: listingGroupId,
             });
           });
         });

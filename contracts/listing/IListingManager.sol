@@ -21,6 +21,7 @@ interface IListingManager {
     /**
      * @dev Emitted when a new asset is listed for renting.
      * @param listingId Listing ID.
+     * @param listingGroupId Listing group ID.
      * @param lister Lister account address.
      * @param asset Listing asset.
      * @param params Listing strategy parameters.
@@ -28,6 +29,7 @@ interface IListingManager {
      */
     event AssetListed(
         uint256 indexed listingId,
+        uint256 indexed listingGroupId,
         address indexed lister,
         Assets.Asset asset,
         Listings.Params params,
@@ -70,14 +72,15 @@ interface IListingManager {
      * @param maxLockPeriod The maximum amount of time the original asset owner can wait before getting the asset back.
      * @param immediatePayout Indicates whether the rental fee must be transferred to the lister on every renting.
      * If FALSE, the rental fees get accumulated until withdrawn manually.
-     * @return New listing ID.
+     * @return listingId New listing ID.
+     * @return listingGroupId Listing group ID.
      */
     function listAsset(
         Assets.Asset calldata asset,
         Listings.Params calldata params,
         uint32 maxLockPeriod,
         bool immediatePayout
-    ) external returns (uint256);
+    ) external returns (uint256 listingId, uint256 listingGroupId);
 
     /**
      * @dev Marks the asset as being delisted. This operation in irreversible.
