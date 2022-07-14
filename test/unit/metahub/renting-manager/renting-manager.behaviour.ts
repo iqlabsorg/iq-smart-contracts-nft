@@ -49,6 +49,7 @@ const emptyRentingAgreement: Rentings.AgreementStruct = {
   renter: ADDRESS_ZERO,
   startTime: 0,
   endTime: 0,
+  listingParams: { strategy: '0x00000000', data: '0x' },
 };
 
 const warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct = {
@@ -1198,6 +1199,7 @@ export function shouldBehaveLikeRentingManager(): void {
                   renter: stranger.address,
                   startTime: iterator.activatedAt,
                   endTime: iterator.activatedAt + Number(iterator.rentingParams.rentalPeriod),
+                  listingParams: makeFixedPriceStrategy(baseRate),
                 };
 
                 await expect(
