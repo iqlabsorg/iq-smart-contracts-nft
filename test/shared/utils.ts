@@ -6,8 +6,11 @@ import { defaultAbiCoder } from 'ethers/lib/utils';
 import {
   ERC721,
   ERC721Mock,
+  ERC721__factory,
   IACL,
   IAssetClassRegistry,
+  IAssetVault,
+  IAssetVault__factory,
   IListingManager,
   IListingStrategyRegistry,
   IMetahub,
@@ -16,6 +19,8 @@ import {
   IWarperPresetFactory,
   IWarperPreset__factory,
   WarperPresetFactory,
+  IERC721AssetVault,
+  IAssetController,
 } from '../../typechain';
 import { ASSET_CLASS, makeERC721Asset, makeFixedPriceStrategy } from '../../src';
 import { PRESET_CONFIGURABLE_ID } from '../../tasks/deployment';
@@ -173,6 +178,247 @@ export class AccessControlledHelper {
         }
       });
     });
+  }
+}
+
+class BuilderNotConfiguredError extends Error {
+  constructor() {
+    super('Builder not properly configured');
+  }
+}
+
+export class AssetListerHelperBuilder {
+  public warperPresetId?: string = undefined;
+  public assetClassRegistry?: IAssetClassRegistry = undefined;
+  public assetController?: IAssetController = undefined;
+  public listingManager?: IListingManager = undefined;
+  public metahub?: IMetahub = undefined;
+  public warperManager?: IWarperManager = undefined;
+  public universeRegistry?: IUniverseRegistry = undefined;
+  public warperPresetFactory?: IWarperPresetFactory = undefined;
+
+  withAssetClassRegistry(assetClassRegistry: IAssetClassRegistry): this {
+    this.assetClassRegistry = assetClassRegistry;
+    return this;
+  }
+
+  withAssetController(assetController: IAssetController): this {
+    this.assetController = assetController;
+    return this;
+  }
+
+  withListingManager(listingManager: IListingManager): this {
+    this.listingManager = listingManager;
+    return this;
+  }
+
+  withMetahub(metahub: IMetahub): this {
+    this.metahub = metahub;
+    return this;
+  }
+
+  withWarperManager(warperManager: IWarperManager): this {
+    this.warperManager = warperManager;
+    return this;
+  }
+
+  withUniverseRegistry(universeRegistry: IUniverseRegistry): this {
+    this.universeRegistry = universeRegistry;
+    return this;
+  }
+  withWarperPresetFactory(warperPresetFactory: IWarperPresetFactory): this {
+    this.warperPresetFactory = warperPresetFactory;
+    return this;
+  }
+
+  withConfigurableWarperPreset(): this {
+    this.warperPresetId = PRESET_CONFIGURABLE_ID;
+    return this;
+  }
+
+  intoUniverseHelper(): UniverseHelper {
+    if (this.universeRegistry === undefined) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    return new UniverseHelper(this.universeRegistry);
+  }
+
+  intoListerHelper(): ListerHelper {
+    if (this.metahub === undefined || this.listingManager === undefined) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    return new ListerHelper(this.metahub, this.listingManager);
+  }
+
+  intoWarperHelper(): WarperHelper {
+    if (
+      this.metahub === undefined ||
+      this.warperPresetFactory === undefined ||
+      this.warperManager === undefined ||
+      this.warperPresetId === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    return new WarperHelper(this.warperPresetFactory, this.metahub, this.warperManager, this.warperPresetId);
+  }
+
+  intoRegistryHelper(): RegistryHelper {
+    if (
+      this.assetClassRegistry === undefined ||
+      this.assetController === undefined ||
+      this.universeRegistry === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+    return new RegistryHelper(this.assetClassRegistry, this.assetController, this.universeRegistry);
+  }
+}
+
+export class RegistryHelper {
+  public assetVault?: IAssetVault = undefined;
+  public assetClass?: BytesLike = undefined;
+
+  constructor(
+    readonly assetClassRegistry: IAssetClassRegistry,
+    readonly assetController: IAssetController,
+    readonly universeRegistry: IUniverseRegistry,
+  ) {}
+
+  withERC721Registries(erc721assetVault: IERC721AssetVault): this {
+    this.assetClass = ASSET_CLASS.ERC721;
+    this.assetVault = IAssetVault__factory.connect(erc721assetVault.address, erc721assetVault.signer);
+    return this;
+  }
+
+  async setupRegistries(): Promise<this> {
+    if (this.assetVault === undefined || this.assetClass === undefined) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    if (!(await this.assetClassRegistry.isRegisteredAssetClass(this.assetClass))) {
+      await this.assetClassRegistry.registerAssetClass(this.assetClass, {
+        controller: this.assetController.address,
+        vault: this.assetVault.address,
+      });
+    }
+    return this;
+  }
+}
+
+export class UniverseHelper {
+  public universeRegistrationParams?: IUniverseRegistry.UniverseParamsStruct = undefined;
+
+  constructor(readonly universeRegistry: IUniverseRegistry) {}
+
+  withUniverseRegistrationParams(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct): this {
+    this.universeRegistrationParams = universeRegistrationParams;
+    return this;
+  }
+
+  async setupUniverse(): Promise<ReturnType<typeof createUniverse>> {
+    if (this.universeRegistrationParams === undefined) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    return createUniverse(this.universeRegistry, this.universeRegistrationParams);
+  }
+}
+
+export class WarperHelper {
+  constructor(
+    readonly warperPresetFactory: IWarperPresetFactory,
+    readonly metahub: IMetahub,
+    readonly warperManager: IWarperManager,
+    readonly presetId: BytesLike,
+  ) {}
+
+  async setupWarper(
+    originalAsset: ERC721Mock,
+    universeId: BigNumber,
+    warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct,
+  ): Promise<string> {
+    const warperAddress = await deployWarperPreset(
+      this.warperPresetFactory,
+      this.presetId,
+      this.metahub.address,
+      originalAsset.address,
+    );
+    await this.warperManager.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
+    return warperAddress;
+  }
+}
+
+export class ListerHelper {
+  public lister?: SignerWithAddress = undefined;
+  public maxLockPeriod?: number = undefined;
+  public immediatePayout?: boolean = undefined;
+  public pricingStrategy?: ReturnType<typeof makeFixedPriceStrategy> = undefined;
+  public asset?: {
+    original: string;
+    tokenId: BigNumberish;
+    forMetahub: ReturnType<typeof makeERC721Asset>;
+  } = undefined;
+
+  constructor(readonly metahub: IMetahub, readonly listingManager: IListingManager) {}
+
+  withFixedPriceStrategy(baseRate: number): this {
+    this.pricingStrategy = makeFixedPriceStrategy(baseRate);
+    return this;
+  }
+
+  withERC721Asset(originalAssetAddress: string, tokenId: BigNumberish): this {
+    this.asset = {
+      forMetahub: makeERC721Asset(originalAssetAddress, tokenId),
+      original: originalAssetAddress,
+      tokenId: tokenId,
+    };
+    return this;
+  }
+
+  withLister(lister: SignerWithAddress): this {
+    this.lister = lister;
+    return this;
+  }
+
+  withImmediatePayout(immediatePayout: boolean): this {
+    this.immediatePayout = immediatePayout;
+    return this;
+  }
+
+  withMaxLockPeriod(maxLockPeriod: number): this {
+    this.maxLockPeriod = maxLockPeriod;
+    return this;
+  }
+
+  async listAsset(): Promise<ReturnType<IListingManager['callStatic']['listAsset']>> {
+    if (
+      this.lister === undefined ||
+      this.maxLockPeriod === undefined ||
+      this.pricingStrategy === undefined ||
+      this.asset === undefined ||
+      this.immediatePayout === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    await ERC721__factory.connect(this.asset.original, this.lister).setApprovalForAll(this.metahub.address, true);
+
+    const returnData = await this.listingManager
+      .connect(this.lister)
+      .callStatic.listAsset(this.asset.forMetahub, this.pricingStrategy, this.maxLockPeriod, this.immediatePayout);
+
+    await this.listingManager
+      .connect(this.lister)
+      .listAsset(this.asset.forMetahub, this.pricingStrategy, this.maxLockPeriod, this.immediatePayout);
+
+    return returnData;
+  }
+
+  async listingGroupId(listingId: BigNumberish): Promise<BigNumber> {
+    return (await this.listingManager.listingInfo(listingId)).groupId;
   }
 }
 

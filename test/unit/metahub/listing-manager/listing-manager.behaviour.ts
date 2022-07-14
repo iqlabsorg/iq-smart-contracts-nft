@@ -9,14 +9,13 @@ import {
   IAssetController,
   IERC721AssetVault,
   IListingManager,
-  IListingStrategyRegistry,
   IMetahub,
   IUniverseRegistry,
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
-import { AssetListerHelper, deployRandomERC721Token } from '../../../shared/utils';
+import { AssetListerHelperBuilder, ListerHelper, deployRandomERC721Token, WarperHelper } from '../../../shared/utils';
 import { LISTING_STRATEGY, makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
 
 const universeRegistrationParams = {
@@ -50,7 +49,6 @@ export function shouldBehaveLikeListingManager(): void {
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
     let warperManager: IWarperManager;
-    let listingStrategyRegistry: IListingStrategyRegistry;
     let paymentToken: ERC20Mock;
 
     let universeId: BigNumber;
@@ -58,7 +56,8 @@ export function shouldBehaveLikeListingManager(): void {
 
     let nftCreator: SignerWithAddress;
     let stranger: SignerWithAddress;
-    let assetListerHelper: AssetListerHelper;
+    let assetListerHelper: ListerHelper;
+    let warperHelper: WarperHelper;
 
     beforeEach(async function () {
       ({
@@ -70,7 +69,6 @@ export function shouldBehaveLikeListingManager(): void {
         assetClassRegistry,
         warperPresetFactory,
         warperManager,
-        listingStrategyRegistry,
       } = this.contracts);
       originalAsset = this.mocks.assets.erc721;
       paymentToken = this.mocks.assets.erc20;
@@ -78,21 +76,33 @@ export function shouldBehaveLikeListingManager(): void {
       nftCreator = this.signers.named.nftCreator;
       [stranger] = this.signers.unnamed;
 
-      assetListerHelper = new AssetListerHelper(
-        assetClassRegistry,
-        assetController.address,
-        erc721assetVault.address,
-        listingManager,
-        metahub,
-        warperManager,
-        universeRegistry,
-        warperPresetFactory,
-        listingStrategyRegistry,
-      );
+      const builder = new AssetListerHelperBuilder()
+        .withAssetClassRegistry(assetClassRegistry)
+        .withAssetController(assetController)
+        .withConfigurableWarperPreset()
+        .withListingManager(listingManager)
+        .withMetahub(metahub)
+        .withUniverseRegistry(universeRegistry)
+        .withWarperManager(warperManager)
+        .withWarperPresetFactory(warperPresetFactory);
 
-      await assetListerHelper.setupRegistries();
-      universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
-      warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+      await builder.intoRegistryHelper().withERC721Registries(erc721assetVault).setupRegistries();
+
+      universeId = await builder
+        .intoUniverseHelper()
+        .withUniverseRegistrationParams(universeRegistrationParams)
+        .setupUniverse();
+
+      warperHelper = builder.intoWarperHelper();
+      warperAddress = await warperHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+
+      assetListerHelper = builder
+        .intoListerHelper()
+        .withERC721Asset(originalAsset.address, tokenId)
+        .withFixedPriceStrategy(baseRate)
+        .withImmediatePayout(false)
+        .withMaxLockPeriod(maxLockPeriod)
+        .withLister(nftCreator);
       await originalAsset.connect(nftCreator).setApprovalForAll(metahub.address, true);
     });
 
@@ -172,14 +182,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When asset listed', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         context('When called by non-lister', () => {
@@ -223,14 +226,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When caller is not lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('reverts', async () => {
@@ -243,15 +239,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When the asset is locked', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
-
+          ({ listingId } = await assetListerHelper.listAsset());
           const rentingParams1 = {
             listingId: listingId,
             paymentToken: paymentToken.address,
@@ -275,14 +263,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('Successfully withdraw asset', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('deletes the listing record', async () => {
@@ -341,14 +322,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When caller is not the lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('reverts', async () => {
@@ -361,14 +335,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When the listing is already paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
           await listingManager.connect(nftCreator).pauseListing(listingId);
         });
 
@@ -382,14 +349,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When the listing is not paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('emits an event', async () => {
@@ -422,14 +382,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When caller is not the lister', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('reverts', async () => {
@@ -442,14 +395,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When the listing is not paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('reverts', async () => {
@@ -462,14 +408,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When the listing is paused', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
           await listingManager.connect(nftCreator).pauseListing(listingId);
         });
 
@@ -500,15 +439,8 @@ export function shouldBehaveLikeListingManager(): void {
 
       context('When two listings', () => {
         beforeEach(async () => {
-          await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
-          await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            BigNumber.from(2),
-            false,
-          );
+          await assetListerHelper.listAsset();
+          await assetListerHelper.withERC721Asset(originalAsset.address, 2).listAsset();
         });
 
         it('returns 2', async () => {
@@ -534,9 +466,8 @@ export function shouldBehaveLikeListingManager(): void {
           for (let index = 0; index < listingCount; index++) {
             const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
             await originalAsset.mint(nftCreator.address, tokenId);
-            listings.push(
-              await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false),
-            );
+            const listReturnData = await assetListerHelper.withERC721Asset(originalAsset.address, tokenId).listAsset();
+            listings.push(listReturnData.listingId);
           }
         });
 
@@ -602,9 +533,14 @@ export function shouldBehaveLikeListingManager(): void {
             const tokenId2 = BigNumber.from(600 + index); // offset to not clash with the pre-minted token ids
             await originalAsset.mint(nftCreator.address, tokenId);
             await originalAsset.mint(stranger.address, tokenId2);
-            await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
+            await assetListerHelper.withLister(nftCreator).withERC721Asset(originalAsset.address, tokenId).listAsset();
             listings.push(
-              await assetListerHelper.listAsset(stranger, originalAsset, maxLockPeriod, baseRate, tokenId2, false),
+              (
+                await assetListerHelper
+                  .withLister(stranger)
+                  .withERC721Asset(originalAsset.address, tokenId2)
+                  .listAsset()
+              ).listingId,
             );
           }
         });
@@ -664,14 +600,7 @@ export function shouldBehaveLikeListingManager(): void {
       context('When the listing exists', () => {
         let listingId: BigNumber;
         beforeEach(async () => {
-          listingId = await assetListerHelper.listAsset(
-            nftCreator,
-            originalAsset,
-            maxLockPeriod,
-            baseRate,
-            tokenId,
-            false,
-          );
+          ({ listingId } = await assetListerHelper.listAsset());
         });
 
         it('returns the information', async () => {
@@ -716,8 +645,8 @@ export function shouldBehaveLikeListingManager(): void {
             const tokenId2 = BigNumber.from(600 + index); // offset to not clash with the pre-minted token ids
             await originalAsset.mint(nftCreator.address, tokenId);
             await originalAsset.mint(stranger.address, tokenId2);
-            await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
-            await assetListerHelper.listAsset(stranger, originalAsset, maxLockPeriod, baseRate, tokenId2, false);
+            await assetListerHelper.withLister(nftCreator).withERC721Asset(originalAsset.address, tokenId).listAsset();
+            await assetListerHelper.withLister(stranger).withERC721Asset(originalAsset.address, tokenId2).listAsset();
           }
         });
 
@@ -742,7 +671,7 @@ export function shouldBehaveLikeListingManager(): void {
         beforeEach(async () => {
           originalAssetA = originalAsset;
           originalAssetB = ERC721Mock__factory.connect((await deployRandomERC721Token()).address, originalAsset.signer);
-          await assetListerHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
+          await warperHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
 
           for (const iterator of [
             { count: listingCountA, asset: originalAssetA },
@@ -751,7 +680,10 @@ export function shouldBehaveLikeListingManager(): void {
             for (let index = 0; index < iterator.count; index++) {
               const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
               await iterator.asset.mint(nftCreator.address, tokenId);
-              await assetListerHelper.listAsset(nftCreator, iterator.asset, maxLockPeriod, baseRate, tokenId, false);
+              await assetListerHelper
+                .withLister(nftCreator)
+                .withERC721Asset(iterator.asset.address, tokenId)
+                .listAsset();
             }
           }
         });
@@ -791,7 +723,7 @@ export function shouldBehaveLikeListingManager(): void {
         beforeEach(async () => {
           originalAssetA = originalAsset;
           originalAssetB = ERC721Mock__factory.connect((await deployRandomERC721Token()).address, originalAsset.signer);
-          await assetListerHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
+          await warperHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
 
           listingsB = [];
           for (const iterator of [
@@ -801,9 +733,11 @@ export function shouldBehaveLikeListingManager(): void {
             for (let index = 0; index < iterator.count; index++) {
               const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
               await iterator.asset.mint(nftCreator.address, tokenId);
-              iterator.listingBucket.push(
-                await assetListerHelper.listAsset(nftCreator, iterator.asset, maxLockPeriod, baseRate, tokenId, false),
-              );
+              const listResult = await assetListerHelper
+                .withLister(nftCreator)
+                .withERC721Asset(iterator.asset.address, tokenId)
+                .listAsset();
+              iterator.listingBucket.push(listResult.listingId);
             }
           }
         });
