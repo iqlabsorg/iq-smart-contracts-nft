@@ -255,13 +255,15 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
         // Register new rental agreement.
         uint32 blockTimestamp = uint32(block.timestamp);
+        Listings.Params storage listingParams = _listingRegistry.listings[rentingParams.listingId].params;
         Rentings.Agreement memory rentalAgreement = Rentings.Agreement({
             warpedAsset: warpedAsset,
             collectionId: warpedCollectionId,
             listingId: rentingParams.listingId,
             renter: rentingParams.renter,
             startTime: blockTimestamp,
-            endTime: blockTimestamp + rentingParams.rentalPeriod
+            endTime: blockTimestamp + rentingParams.rentalPeriod,
+            listingParams: listingParams
         });
 
         // Register new rental agreement.

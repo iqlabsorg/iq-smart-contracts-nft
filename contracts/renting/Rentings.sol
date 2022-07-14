@@ -97,14 +97,21 @@ library Rentings {
      * considered to be an warped asset owner.
      * @param endTime The rental agreement ending time. After this timestamp, the rental agreement is terminated
      * and the `renter` is no longer the owner of the warped asset.
+     * @param listingParams Selected listing parameters.
      */
     struct Agreement {
+        // slots 0-2
         Assets.Asset warpedAsset;
+        // slot 3
         bytes32 collectionId;
+        // slot 4
         uint256 listingId;
+        // slot 5 (4 bytes left)
         address renter;
         uint32 startTime;
         uint32 endTime;
+        // slots 6-7
+        Listings.Params listingParams;
     }
 
     function isEffective(Agreement storage self) internal view returns (bool) {
