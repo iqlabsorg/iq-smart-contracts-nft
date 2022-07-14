@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "./IFixedPriceWithRewardListingController.sol";
 import "../../ListingController.sol";
 
-contract FixedPriceListingController is IFixedPriceWithRewardListingController, ListingController {
+contract FixedPriceWithRewardListingController is IFixedPriceWithRewardListingController, ListingController {
     /**
      * @inheritdoc IListingController
      */
