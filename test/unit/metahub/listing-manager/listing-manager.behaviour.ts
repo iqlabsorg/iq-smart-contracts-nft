@@ -6,7 +6,6 @@ import {
   ERC721Mock,
   ERC721Mock__factory,
   IAssetClassRegistry,
-  IAssetController,
   IERC721AssetVault,
   IListingManager,
   IMetahub,
@@ -15,7 +14,13 @@ import {
   IWarperPresetFactory,
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
-import { AssetListerHelperBuilder, ListerHelper, deployRandomERC721Token, WarperHelper } from '../../../shared/utils';
+import {
+  ListingHelper,
+  deployRandomERC721Token,
+  WarperHelper,
+  AssetRegistryHelper,
+  UniverseHelper,
+} from '../../../shared/utils';
 import { LISTING_STRATEGY, makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
 
 const universeRegistrationParams = {
@@ -45,18 +50,16 @@ export function shouldBehaveLikeListingManager(): void {
     let metahub: IMetahub;
     let erc721assetVault: IERC721AssetVault;
     let assetClassRegistry: IAssetClassRegistry;
-    let assetController: IAssetController;
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
     let warperManager: IWarperManager;
     let paymentToken: ERC20Mock;
 
-    let universeId: BigNumber;
     let warperAddress: string;
 
     let nftCreator: SignerWithAddress;
     let stranger: SignerWithAddress;
-    let assetListerHelper: ListerHelper;
+    let assetListerHelper: ListingHelper;
     let warperHelper: WarperHelper;
 
     beforeEach(async function () {
@@ -64,7 +67,6 @@ export function shouldBehaveLikeListingManager(): void {
         listingManager,
         metahub,
         erc721assetVault,
-        assetController,
         universeRegistry,
         assetClassRegistry,
         warperPresetFactory,
@@ -76,33 +78,24 @@ export function shouldBehaveLikeListingManager(): void {
       nftCreator = this.signers.named.nftCreator;
       [stranger] = this.signers.unnamed;
 
-      const builder = new AssetListerHelperBuilder()
-        .withAssetClassRegistry(assetClassRegistry)
-        .withAssetController(assetController)
-        .withConfigurableWarperPreset()
-        .withListingManager(listingManager)
-        .withMetahub(metahub)
-        .withUniverseRegistry(universeRegistry)
-        .withWarperManager(warperManager)
-        .withWarperPresetFactory(warperPresetFactory);
+      // Instantiate the universe and the warpers
+      await new AssetRegistryHelper(assetClassRegistry)
+        .withERC721ClassConfig(erc721assetVault, this.contracts.erc721WarperController)
+        .registerAssetClasses();
+      await new UniverseHelper(universeRegistry).create(universeRegistrationParams);
+      warperHelper = new WarperHelper(warperPresetFactory, metahub, warperManager).withConfigurableWarperPreset();
 
-      await builder.intoRegistryHelper().withERC721Registries(erc721assetVault).setupRegistries();
+      const warper = await warperHelper.deployAndRegister(originalAsset, warperRegistrationParams);
+      warperAddress = warper.address;
 
-      universeId = await builder
-        .intoUniverseHelper()
-        .withUniverseRegistrationParams(universeRegistrationParams)
-        .setupUniverse();
-
-      warperHelper = builder.intoWarperHelper();
-      warperAddress = await warperHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
-
-      assetListerHelper = builder
-        .intoListerHelper()
+      // Prepare listing helper
+      assetListerHelper = new ListingHelper(listingManager)
         .withERC721Asset(originalAsset.address, tokenId)
-        .withFixedPriceStrategy(baseRate)
+        .withFixedPriceListingStrategy(baseRate)
         .withImmediatePayout(false)
         .withMaxLockPeriod(maxLockPeriod)
         .withLister(nftCreator);
+
       await originalAsset.connect(nftCreator).setApprovalForAll(metahub.address, true);
     });
 
@@ -531,8 +524,10 @@ export function shouldBehaveLikeListingManager(): void {
           for (let index = 0; index < listingCount; index++) {
             const tokenId = BigNumber.from(500 + index); // offset to not clash with the pre-minted token ids
             const tokenId2 = BigNumber.from(600 + index); // offset to not clash with the pre-minted token ids
+
             await originalAsset.mint(nftCreator.address, tokenId);
             await originalAsset.mint(stranger.address, tokenId2);
+
             await assetListerHelper.withLister(nftCreator).withERC721Asset(originalAsset.address, tokenId).listAsset();
             listings.push(
               (
@@ -671,7 +666,7 @@ export function shouldBehaveLikeListingManager(): void {
         beforeEach(async () => {
           originalAssetA = originalAsset;
           originalAssetB = ERC721Mock__factory.connect((await deployRandomERC721Token()).address, originalAsset.signer);
-          await warperHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
+          await warperHelper.deployAndRegister(originalAssetB, warperRegistrationParams);
 
           for (const iterator of [
             { count: listingCountA, asset: originalAssetA },
@@ -723,7 +718,7 @@ export function shouldBehaveLikeListingManager(): void {
         beforeEach(async () => {
           originalAssetA = originalAsset;
           originalAssetB = ERC721Mock__factory.connect((await deployRandomERC721Token()).address, originalAsset.signer);
-          await warperHelper.setupWarper(originalAssetB, universeId, warperRegistrationParams);
+          await warperHelper.deployAndRegister(originalAssetB, warperRegistrationParams);
 
           listingsB = [];
           for (const iterator of [

@@ -11,7 +11,7 @@ import {
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
-import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
+import { deployRandomERC721Token, deployWarperPreset, registerWarper, UniverseHelper } from '../../../shared/utils';
 import { warperPresetId } from '../metahub';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ASSET_CLASS } from '../../../../src';
@@ -80,10 +80,10 @@ export function shouldBehaveLikeWarperManager(): void {
 
       // Assume a universe is already registered.
       // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
-      universeId = await createUniverse(universeRegistry, {
+      ({ universeId } = await new UniverseHelper(universeRegistry).create({
         name: 'Universe',
         rentalFeePercent: 1000,
-      });
+      }));
       warperRegistrationParams.universeId = universeId;
     });
 
