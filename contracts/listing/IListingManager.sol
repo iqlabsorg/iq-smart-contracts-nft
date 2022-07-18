@@ -177,4 +177,11 @@ interface IListingManager {
         uint256 offset,
         uint256 limit
     ) external view returns (uint256[] memory, Listings.Listing[] memory);
+
+    /**
+     * @dev Returns listing strategy controller.
+     * @param strategyId Listing strategy ID.
+     * @return Listing controller address.
+     */
+    function listingController(bytes4 strategyId) external view returns (address);
 }

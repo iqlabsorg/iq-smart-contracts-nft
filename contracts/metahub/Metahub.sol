@@ -466,6 +466,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
     }
 
     /**
+     * @inheritdoc IListingManager
+     */
+    function listingController(bytes4 strategyId) external view returns (address) {
+        return _listingRegistry.strategyRegistry.listingController(strategyId);
+    }
+
+    /**
      * @inheritdoc IPaymentManager
      */
     function protocolBalance(address token) external view returns (uint256) {
