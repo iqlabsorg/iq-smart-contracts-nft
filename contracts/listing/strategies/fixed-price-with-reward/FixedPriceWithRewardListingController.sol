@@ -1,10 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "./IFixedPriceWithRewardListingController.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "../../../acl/AccessControlledUpgradeable.sol";
 import "../../ListingController.sol";
 
-contract FixedPriceWithRewardListingController is IFixedPriceWithRewardListingController, ListingController {
+import "./IFixedPriceWithRewardListingController.sol";
+import "./FixedPriceWithRewardListingControllerStorage.sol";
+
+contract FixedPriceWithRewardListingController is
+    IFixedPriceWithRewardListingController,
+    UUPSUpgradeable,
+    AccessControlledUpgradeable,
+    ListingController,
+    FixedPriceWithRewardListingControllerStorage
+{
+    /**
+     * @custom:oz-upgrades-unsafe-allow constructor
+     */
+    constructor() initializer {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
+    /**
+     * @dev Contract initializer.
+     * @param acl ACL contract address.
+     */
+    function initialize(address acl) external initializer {
+        __UUPSUpgradeable_init();
+        _aclContract = IACL(acl);
+    }
+
     /**
      * @inheritdoc IListingController
      */
@@ -43,5 +69,19 @@ contract FixedPriceWithRewardListingController is IFixedPriceWithRewardListingCo
         returns (uint256 baseRate, uint16 baseRewardPercent)
     {
         return abi.decode(params.data, (uint256, uint16));
+    }
+
+    /**
+     * @inheritdoc UUPSUpgradeable
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
+    /**
+     * @inheritdoc AccessControlledUpgradeable
+     */
+    function _acl() internal view override returns (IACL) {
+        return _aclContract;
     }
 }
