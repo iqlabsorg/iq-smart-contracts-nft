@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment,sonarjs/no-duplicate-string */
 import { task, types } from 'hardhat/config';
 import {
   ACL,
@@ -29,6 +29,7 @@ import './warper-manager';
 import './unsafe-deployment';
 import { formatBytes32String } from 'ethers/lib/utils';
 import { ASSET_CLASS, LISTING_STRATEGY } from '../../src';
+import { Contract } from 'ethers';
 
 export const PRESET_CONFIGURABLE_ID = formatBytes32String('ERC721PresetConfigurable');
 
@@ -196,13 +197,7 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         await tx.wait();
       }
 
-      console.log();
-      console.log('########################');
-      console.log('# Deployment complete! #');
-      console.log('########################');
-      console.log();
-
-      return {
+      const deployments: Record<string, Contract> = {
         acl: aclContract,
         erc721Controller,
         erc721Vault,
@@ -216,5 +211,18 @@ task('deploy:initial-deployment', 'Deploy the initial deployment set')
         fixedPriceListingController,
         fixedPriceWithRewardListingController,
       };
+
+      console.log();
+      console.log('########################');
+      console.log('# Deployment complete! #');
+      console.log('########################');
+      console.table(
+        Object.entries(deployments).map(([name, contract]) => ({ name, address: contract.address })),
+        ['name', 'address'],
+      );
+      console.log('########################');
+      console.log();
+
+      return deployments;
     },
   );
