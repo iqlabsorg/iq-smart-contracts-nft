@@ -11,6 +11,7 @@ task('deploy:erc721-asset-controller', 'Deploy ERC721 Asset Controller').setActi
     args: [],
     log: true,
   });
+
   console.log('ERC721AssetController deployed', deployment.address);
 
   return IAssetController__factory.connect(deployment.address, deployer);
@@ -26,6 +27,7 @@ task('deploy:erc721-warper-controller', 'Deploy ERC721 Asset Controller').setAct
     args: [],
     log: true,
   });
+
   console.log('ERC721WarperController deployed', deployment.address);
 
   return IERC721WarperController__factory.connect(deployment.address, deployer);

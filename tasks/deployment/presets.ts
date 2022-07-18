@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
 import {
   ERC721PresetConfigurable__factory,
   IWarperPresetFactory__factory,
-  WarperPresetFactory,
   WarperPresetFactory__factory,
 } from '../../typechain';
 import { unsafeDeployment } from './unsafe-deployment';
+import { Contract } from 'ethers';
 
 task('deploy:erc721-preset-configurable', 'Deploy ERC721 preset configurable').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
@@ -36,11 +35,11 @@ task('deploy:warper-preset-factory', 'Deploy Warper preset factory')
     const factory = new WarperPresetFactory__factory(deployer);
     const args = [acl];
 
-    const safeDeployment = async () => {
-      return (await hre.upgrades.deployProxy(factory, args, {
+    const safeDeployment = async (): Promise<Contract> => {
+      return hre.upgrades.deployProxy(factory, args, {
         kind: 'uups',
         initializer: 'initialize(address)',
-      })) as WarperPresetFactory;
+      });
     };
 
     const deployment = await (unsafe ? unsafeDeployment(factory, 'WarperPresetFactory', hre, args) : safeDeployment());

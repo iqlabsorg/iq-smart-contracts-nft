@@ -3,7 +3,7 @@ import './interface-printer';
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call */
 import { task } from 'hardhat/config';
-import { WarperExtendingPreset__factory, WarperExtendingPreset } from '../../typechain';
+import { WarperExtendingPreset, WarperExtendingPreset__factory } from '../../typechain';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 
 task('misc:test-warper-preset-extensions', '..').setAction(async (_args, hre) => {

@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { Contract } from 'ethers';
 import { task, types } from 'hardhat/config';
-import { ACL__factory, IACL } from '../../typechain';
+import { ACL__factory } from '../../typechain';
 import { unsafeDeployment } from './unsafe-deployment';
 
 task('deploy:acl', 'Deploy the `ACL` contract')
@@ -14,20 +14,17 @@ task('deploy:acl', 'Deploy the `ACL` contract')
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     const factory = new ACL__factory(deployer);
-    // Safe deployment
-    const safeACL = async () => {
-      return (await hre.upgrades.deployProxy(factory, [], {
+    const safeDeployment = async (): Promise<Contract> => {
+      return hre.upgrades.deployProxy(factory, [], {
         kind: 'uups',
         initializer: 'initialize()',
-      })) as IACL;
+      });
     };
 
-    const deployment = await (unsafe ? unsafeDeployment(factory, 'ACL', hre) : safeACL());
+    const deployment = await (unsafe ? unsafeDeployment(factory, 'ACL', hre) : safeDeployment());
     await deployment.deployed();
 
     console.log('ACL deployed', deployment.address);
 
     return deployment;
   });
-
-export {};

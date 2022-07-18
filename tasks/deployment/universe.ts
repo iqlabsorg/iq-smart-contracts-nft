@@ -33,5 +33,3 @@ task('deploy:universe-registry', 'Deploy the `UniverseRegistry` contracts.')
     console.log('UniverseToken deployed', await deployment.universeToken());
     return deployment;
   });
-
-export {};

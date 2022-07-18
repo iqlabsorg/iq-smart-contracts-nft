@@ -4,11 +4,11 @@ import { parseEther } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
 import {
   ERC20Mock__factory,
+  ERC721InternalTest__factory,
   ERC721Mock__factory,
   SolidityInterfaces__factory,
   WarperPresetMock__factory,
 } from '../../typechain';
-import { ERC721InternalTest__factory } from '../../typechain/factories/contracts/mocks/ERC721InternalTest__factory';
 
 const TOTAL_TOKENS = 1_000_000_000;
 const TOKEN_DECIMALS = 18;
@@ -107,5 +107,3 @@ task('deploy:interfaces-printer', 'Print interfaces IDs to the stdout').setActio
 
   return new SolidityInterfaces__factory(deployer).attach(deployment.address);
 });
-
-export {};
