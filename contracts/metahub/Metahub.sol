@@ -22,12 +22,13 @@ contract Metahub is IMetahub, Initializable, UUPSUpgradeable, AccessControlledUp
 
     /**
      * @dev Metahub initialization params.
-     * @param warperPresetFactory Warper preset factory address.
-     * @param listingStrategyRegistry
-     * @param universeRegistry
-     * @param acl
-     * @param baseToken
-     * @param rentalFeePercent
+     * @param warperManager Warper manager contract address.
+     * @param listingStrategyRegistry Listing strategy registry contract address.
+     * @param universeRegistry Universe registry contract address.
+     * @param assetClassRegistry Asset class registry contract address.
+     * @param acl Protocol access control contract address.
+     * @param baseToken Protocol base token (ERC20) address.
+     * @param rentalFeePercent Default protocol rental fee percentage.
      */
     struct MetahubInitParams {
         IWarperManager warperManager;
