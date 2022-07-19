@@ -8,6 +8,7 @@ export const ASSET_CLASS = {
 
 export const LISTING_STRATEGY = {
   FIXED_PRICE: solidityId('FIXED_PRICE'),
+  FIXED_PRICE_WITH_REWARD: solidityId('FIXED_PRICE_WITH_REWARD'),
 };
 
 /**

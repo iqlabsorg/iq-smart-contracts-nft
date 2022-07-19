@@ -1,8 +1,8 @@
 /* eslint-disable multiline-ternary */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
-import { WarperManager, WarperManager__factory, IWarperManager__factory, Assets__factory } from '../../typechain';
+import { WarperManager__factory } from '../../typechain';
 import { unsafeDeployment } from './unsafe-deployment';
+import { Contract } from 'ethers';
 
 task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
   .addParam('acl', 'The `ACL` contract address', undefined, types.string)
@@ -44,20 +44,20 @@ task('deploy:warper-manager', 'Deploy the `WarperManager` contract.')
       ];
 
       // Safe deployment
-      const safeDeployment = async () => {
-        return (await hre.upgrades.deployProxy(factory, args, {
+      const safeDeployment = async (): Promise<Contract> => {
+        return hre.upgrades.deployProxy(factory, args, {
           kind: 'uups',
           unsafeAllow: ['delegatecall', 'external-library-linking'],
-        })) as WarperManager;
+        });
       };
 
       // Deploy WarperManager
-      const warperManager = await (unsafe ? unsafeDeployment(factory, 'WarperManager', hre, args) : safeDeployment());
-      await warperManager.deployed();
+      const deployment = await (unsafe ? unsafeDeployment(factory, 'WarperManager', hre, args) : safeDeployment());
+      await deployment.deployed();
 
-      console.log('WarperManager deployed at', warperManager.address);
+      console.log('WarperManager deployed at', deployment.address);
 
-      return warperManager;
+      return deployment;
     },
   );
 

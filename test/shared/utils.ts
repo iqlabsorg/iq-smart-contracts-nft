@@ -17,10 +17,8 @@ import {
   IWarperPreset__factory,
   WarperPresetFactory,
 } from '../../typechain';
-import { ASSET_CLASS, LISTING_STRATEGY, makeERC721Asset, makeFixedPriceStrategy } from '../../src';
+import { ASSET_CLASS, makeERC721Asset, makeFixedPriceStrategy } from '../../src';
 import { PRESET_CONFIGURABLE_ID } from '../../tasks/deployment';
-
-export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 
 export const wait = async (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => {
   return (await txPromise).wait();

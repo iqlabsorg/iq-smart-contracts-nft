@@ -1,12 +1,5 @@
 import { task, types } from 'hardhat/config';
-import {
-  Accounts__factory,
-  Assets__factory,
-  Listings__factory,
-  Metahub__factory,
-  Rentings__factory,
-  Warpers__factory,
-} from '../../typechain';
+import { Metahub__factory } from '../../typechain';
 import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
 
 task('upgrade:metahub', 'Deploy and upgrade the `Metahub` implementation contracts.')

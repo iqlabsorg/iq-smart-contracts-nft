@@ -2,14 +2,14 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { task, types } from 'hardhat/config';
 import {
+  Accounts__factory,
+  Assets__factory,
+  IMetahub__factory,
+  Listings__factory,
   Metahub,
   Metahub__factory,
-  IMetahub__factory,
   Rentings__factory,
-  Listings__factory,
   Warpers__factory,
-  Assets__factory,
-  Accounts__factory,
 } from '../../typechain';
 import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
 import { unsafeDeployment } from './unsafe-deployment';
@@ -17,7 +17,7 @@ import { unsafeDeployment } from './unsafe-deployment';
 task('deploy:metahub-libraries', 'Deploy the `Metahub` libraries').setAction(async (_args, hre) => {
   const deployer = await hre.ethers.getNamedSigner('deployer');
 
-  // Deploy external libraries used by Metahub.
+  console.log('Deploying external libraries used by Metahub:');
   const rentingsLib = await new Rentings__factory(deployer).deploy();
   console.log('rentingsLib', rentingsLib.address);
   const listingsLib = await new Listings__factory(deployer).deploy();

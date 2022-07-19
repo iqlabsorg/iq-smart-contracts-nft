@@ -17,7 +17,7 @@ import {
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
 import { AssetListerHelper, deployRandomERC721Token } from '../../../shared/utils';
-import { makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
+import { LISTING_STRATEGY, makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',
@@ -856,6 +856,15 @@ export function shouldBehaveLikeListingManager(): void {
             expect(retrievedListings).to.deep.equal([[], []]);
           });
         });
+      });
+    });
+
+    describe('listingController', () => {
+      it('returns correct listing controller address', async () => {
+        const expectedControllerAddress = await listingStrategyRegistry.listingController(LISTING_STRATEGY.FIXED_PRICE);
+        await expect(listingManager.listingController(LISTING_STRATEGY.FIXED_PRICE)).to.eventually.equal(
+          expectedControllerAddress,
+        );
       });
     });
   });

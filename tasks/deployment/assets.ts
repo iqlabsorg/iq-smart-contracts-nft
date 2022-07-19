@@ -1,15 +1,8 @@
-/* eslint-disable multiline-ternary */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable sonarjs/no-identical-functions, multiline-ternary */
 import { task, types } from 'hardhat/config';
-import {
-  IAssetClassRegistry__factory,
-  AssetClassRegistry,
-  AssetClassRegistry__factory,
-  ListingStrategyRegistry,
-  ListingStrategyRegistry__factory,
-  IListingStrategyRegistry__factory,
-} from '../../typechain';
+import { AssetClassRegistry__factory, ListingStrategyRegistry__factory } from '../../typechain';
 import { unsafeDeployment } from './unsafe-deployment';
+import { Contract } from 'ethers';
 
 task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
   .addParam(
@@ -21,21 +14,21 @@ task('deploy:asset-class-registry', 'Deploy the `UniverseToken` contracts.')
   .addParam('acl', 'The ACL contract address', undefined, types.string)
   .setAction(async ({ acl, unsafe }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
-    const args = [acl];
     const factory = new AssetClassRegistry__factory(deployer);
+    const args = [acl];
 
-    const safeDeployment = async () => {
-      return (await hre.upgrades.deployProxy(factory, args, {
+    const safeDeployment = async (): Promise<Contract> => {
+      return hre.upgrades.deployProxy(factory, args, {
         kind: 'uups',
         initializer: 'initialize(address)',
-      })) as AssetClassRegistry;
+      });
     };
 
     const deployment = await (unsafe ? unsafeDeployment(factory, 'AssetClassRegistry', hre, args) : safeDeployment());
     await deployment.deployed();
 
     console.log('AssetClassRegistry deployed', deployment.address);
-    return IAssetClassRegistry__factory.connect(deployment.address, deployer);
+    return deployment;
   });
 
 task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.')
@@ -51,19 +44,21 @@ task('deploy:listing-strategy-registry', 'Deploy the `UniverseToken` contracts.'
     const args = [acl];
     const factory = new ListingStrategyRegistry__factory(deployer);
 
-    const safeDeployment = async () => {
-      return (await hre.upgrades.deployProxy(factory, [acl], {
+    const safeDeployment = async (): Promise<Contract> => {
+      return hre.upgrades.deployProxy(factory, args, {
         kind: 'uups',
         initializer: 'initialize(address)',
-      })) as ListingStrategyRegistry;
+      });
     };
 
     const deployment = await (unsafe
       ? unsafeDeployment(factory, 'ListingStrategyRegistry', hre, args)
       : safeDeployment());
+
     await deployment.deployed();
+
     console.log('ListingStrategyRegistry deployed', deployment.address);
-    return IListingStrategyRegistry__factory.connect(deployment.address, deployer);
+    return deployment;
   });
 
 export {};

@@ -12,7 +12,7 @@ interface IRentingHookMechanics {
     error RentingHookError(string reason);
 
     /**
-     * @dev Executes arbitrary logic after successful rending.
+     * @dev Executes arbitrary logic after successful renting.
      * NOTE: This function should not revert directly and must set correct `success` value instead.
      *
      * @param rentalId Rental agreement ID.
