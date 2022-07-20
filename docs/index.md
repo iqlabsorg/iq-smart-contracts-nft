@@ -5,14 +5,15 @@
 ### BNB testnet
 
 | Contract                  | Address                                                                                                                      |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Metahub                   | [0x5Ca4Bdbe5314736949876e1277B762D3B61fBB3c](https://testnet.bscscan.com/address/0x5Ca4Bdbe5314736949876e1277B762D3B61fBB3c) |
-| Asset class registry      | [0x9501AE9A5332299Db46AB8bD9178F9CA2ee45a0B](https://testnet.bscscan.com/address/0x9501AE9A5332299Db46AB8bD9178F9CA2ee45a0B) |
-| Listing strategy registry | [0x4e8Dd17a192E97B34ec42F37E1F573dC15ddfaBf](https://testnet.bscscan.com/address/0x4e8Dd17a192E97B34ec42F37E1F573dC15ddfaBf) |
-| Universe registry         | [0x8a10734f85f0B4f42666F9179Bb2A61fE8ebF086](https://testnet.bscscan.com/address/0x8a10734f85f0B4f42666F9179Bb2A61fE8ebF086) |
-| Universe token            | [0xc479Ed9f57a43592589B84A395749f964397312e](https://testnet.bscscan.com/address/0xc479Ed9f57a43592589B84A395749f964397312e) |
-| Warper preset factory     | [0xd2997e6De526A3A8AB6e7ced61B3aa78d7Caae99](https://testnet.bscscan.com/address/0xd2997e6De526A3A8AB6e7ced61B3aa78d7Caae99) |
-| ERC721 asset vault        | [0x1bc7688488ddbb882e54f1564b9517f969eF5fE9](https://testnet.bscscan.com/address/0x1bc7688488ddbb882e54f1564b9517f969eF5fE9) |
+| ------------------------- |------------------------------------------------------------------------------------------------------------------------------|
+| ACL                       | [0x35E5f18A8A15b06C8A80346EAeDbcd5643283888](https://testnet.bscscan.com/address/0x35E5f18A8A15b06C8A80346EAeDbcd5643283888) |
+| Metahub                   | [0xbD0ac6866c1C15070182E3E8d030965225C990CA](https://testnet.bscscan.com/address/0xbD0ac6866c1C15070182E3E8d030965225C990CA) |
+| Asset class registry      | [0x459A3Bf3496CA1E2EB58eEC795BE38D8051927be](https://testnet.bscscan.com/address/0x459A3Bf3496CA1E2EB58eEC795BE38D8051927be) |
+| Listing strategy registry | [0x45d1434224af121018CD366570f9519335188D5b](https://testnet.bscscan.com/address/0x45d1434224af121018CD366570f9519335188D5b) |
+| Universe registry         | [0x443D663eE3aCE0621E96A97C7CD09687Db6e62Df](https://testnet.bscscan.com/address/0x443D663eE3aCE0621E96A97C7CD09687Db6e62Df) |
+| Universe token            | [0x0a29d2cC53332c932B7b90829F93e6B23B74223B](https://testnet.bscscan.com/address/0x0a29d2cC53332c932B7b90829F93e6B23B74223B) |
+| Warper preset factory     | [0x6E9ae880c4c8D2d106C6686eeF79cc1b70A3d08C](https://testnet.bscscan.com/address/0x6E9ae880c4c8D2d106C6686eeF79cc1b70A3d08C) |
+| ERC721 asset vault        | [0x66A9b016E381BA752434fa655A5c900f2eb27C0D](https://testnet.bscscan.com/address/0x66A9b016E381BA752434fa655A5c900f2eb27C0D) |
 | Base token (ERC20)        | [0x7D6a53F6932eB3c13C6Da2650C9449F215365BA9](https://testnet.bscscan.com/address/0x7D6a53F6932eB3c13C6Da2650C9449F215365BA9) |
 | Mock ERC721 (for tests)   | [0x13B194B552fa059A9FB8cecc317D7085f7f254a6](https://testnet.bscscan.com/address/0x13B194B552fa059A9FB8cecc317D7085f7f254a6) |
 
