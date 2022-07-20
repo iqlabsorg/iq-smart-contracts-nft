@@ -19,14 +19,19 @@ task('deploy:metahub-libraries', 'Deploy the `Metahub` libraries').setAction(asy
 
   console.log('Deploying external libraries used by Metahub:');
   const rentingsLib = await new Rentings__factory(deployer).deploy();
+  await rentingsLib.deployed();
   console.log('rentingsLib', rentingsLib.address);
   const listingsLib = await new Listings__factory(deployer).deploy();
+  await listingsLib.deployed();
   console.log('listingsLib', listingsLib.address);
   const assetsLib = await new Assets__factory(deployer).deploy();
+  await assetsLib.deployed();
   console.log('assetsLib', assetsLib.address);
   const warpersLib = await new Warpers__factory(deployer).deploy();
+  await warpersLib.deployed();
   console.log('warpersLib', warpersLib.address);
   const accountsLib = await new Accounts__factory(deployer).deploy();
+  await accountsLib.deployed();
   console.log('accountsLib', accountsLib.address);
 
   const metahubLibs: MetahubLibraryAddresses = {
