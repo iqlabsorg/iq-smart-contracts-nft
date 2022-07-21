@@ -38,3 +38,9 @@
 1. manually update the version in `package.json`
 2. yarn build
 3. yarn run publish
+
+
+## Manual contract verification
+Every time the deployment command is executed, a new set of deployment artifacts is created under 
+`deployments/<network>`. The `deployments/<network>/solcInputs` directory will contain a new [Standard JSON-input](https://docs.soliditylang.org/en/latest/using-the-compiler.html#input-description) file which can be used for 
+contract verification.
