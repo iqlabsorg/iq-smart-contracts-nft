@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.6.0",
-    "@openzeppelin/contracts-upgradeable": "4.6.0"
+    "@openzeppelin/contracts-upgradeable": "4.7.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^15.0.0",
