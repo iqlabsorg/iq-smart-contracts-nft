@@ -366,6 +366,27 @@ export class RentingHelper {
     return this;
   }
 
+  async estimateRent(listingId: BigNumberish): Promise<ReturnType<IRentingManager['callStatic']['estimateRent']>> {
+    if (
+      this.renter === undefined ||
+      this.maxPaymentAmount === undefined ||
+      this.paymentToken === undefined ||
+      this.warper === undefined ||
+      this.rentalPeriod === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    const rentingParams = {
+      listingId: listingId,
+      paymentToken: this.paymentToken.address,
+      rentalPeriod: this.rentalPeriod,
+      renter: this.renter.address,
+      warper: this.warper.address,
+    };
+    return this.rentingManager.estimateRent(rentingParams);
+  }
+
   async rent(listingId: BigNumberish): Promise<WithTx<ReturnType<IRentingManager['callStatic']['rent']>>> {
     if (
       this.paymentToken === undefined ||

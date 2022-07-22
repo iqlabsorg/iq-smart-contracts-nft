@@ -21,6 +21,7 @@ import {
   AccessControlledHelper,
   AssetRegistryHelper,
   ListingHelper,
+  RentingHelper,
   UniverseHelper,
   WarperHelper,
 } from '../../../shared/utils';
@@ -70,8 +71,8 @@ export function shouldBehaveLikePaymentManager(): void {
     let listingId: BigNumber;
     let warperAddress: string;
 
-    let rentalParams: Rentings.ParamsStruct;
     let rentCost: Rentings.RentalFeesStructOutput;
+    const rentalPeriod = 100;
 
     beforeEach(async function () {
       ({
@@ -116,8 +117,8 @@ export function shouldBehaveLikePaymentManager(): void {
         .withMaxLockPeriod(maxLockPeriod)
         .withLister(nftCreator);
 
-      warperAddress = (await warperHelper.deployAndRegister(originalAsset, { ...warperRegistrationParams, universeId }))
-        .address;
+      const warper = await warperHelper.deployAndRegister(originalAsset, { ...warperRegistrationParams, universeId });
+      warperAddress = warper.address;
       await warperManager.connect(universeOwner).unpauseWarper(warperAddress);
 
       ({ listingId } = await assetListerHelper.listAsset());
@@ -128,19 +129,19 @@ export function shouldBehaveLikePaymentManager(): void {
       );
       const assetStruct = makeERC721Asset(warperAddress, tokenId);
       await warperController.collectionId(assetStruct.id);
-      rentalParams = {
-        listingId: listingId,
-        paymentToken: paymentToken.address,
-        rentalPeriod: 100,
-        renter: stranger.address,
-        warper: warperAddress,
-      };
 
       await paymentToken.mint(stranger.address, maxPaymentAmount);
       await paymentToken.connect(stranger).approve(metahub.address, maxPaymentAmount);
 
-      rentCost = await metahub.connect(stranger).estimateRent(rentalParams);
-      await metahub.connect(stranger).rent(rentalParams, maxPaymentAmount);
+      const rentingHelper = new RentingHelper(metahub)
+        .withMaxPaymentAmount(maxPaymentAmount)
+        .withRenter(stranger)
+        .withPaymentToken(paymentToken)
+        .withRentalPeriod(rentalPeriod)
+        .withWarper(warper);
+
+      rentCost = await rentingHelper.estimateRent(listingId);
+      await rentingHelper.rent(listingId);
     });
 
     describe('withdrawProtocolFunds', () => {

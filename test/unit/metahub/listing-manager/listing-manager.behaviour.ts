@@ -13,6 +13,7 @@ import {
   IUniverseRegistry,
   IWarperManager,
   IWarperPresetFactory,
+  IWarper__factory,
 } from '../../../../typechain';
 import { Assets, Listings } from '../../../../typechain/contracts/metahub/Metahub';
 import {
@@ -21,6 +22,7 @@ import {
   WarperHelper,
   AssetRegistryHelper,
   UniverseHelper,
+  RentingHelper,
 } from '../../../shared/utils';
 import { LISTING_STRATEGY, makeERC721Asset, makeFixedPriceStrategy, solidityId } from '../../../../src';
 
@@ -236,17 +238,17 @@ export function shouldBehaveLikeListingManager(): void {
         let listingId: BigNumber;
         beforeEach(async () => {
           ({ listingId } = await assetListerHelper.listAsset());
-          const rentingParams1 = {
-            listingId: listingId,
-            paymentToken: paymentToken.address,
-            rentalPeriod: 300,
-            renter: stranger.address,
-            warper: warperAddress,
-          };
           await warperManager.unpauseWarper(warperAddress);
           await paymentToken.mint(stranger.address, maxPaymentAmount);
           await paymentToken.connect(stranger).approve(metahub.address, maxPaymentAmount);
-          await metahub.connect(stranger).rent(rentingParams1, maxPaymentAmount);
+
+          const rentingHelper = new RentingHelper(metahub)
+            .withMaxPaymentAmount(maxPaymentAmount)
+            .withRenter(stranger)
+            .withPaymentToken(paymentToken)
+            .withRentalPeriod(300)
+            .withWarper(IWarper__factory.connect(warperAddress, metahub.signer));
+          await rentingHelper.rent(listingId);
         });
 
         it('reverts', async () => {
