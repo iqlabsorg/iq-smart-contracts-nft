@@ -5,6 +5,7 @@ import hre from 'hardhat';
 import { ASSET_CLASS } from '../../../../src';
 import {
   ERC721Mock,
+  ERC721__factory,
   IAssetClassRegistry,
   IAssetManager,
   IMetahub,
@@ -14,8 +15,7 @@ import {
 import { Assets } from '../../../../typechain/contracts/metahub/IMetahub';
 import { IWarperManager, Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ADDRESS_ZERO } from '../../../shared/types';
-import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
-import { warperPresetId } from '../metahub';
+import { deployRandomERC721Token, UniverseHelper, WarperHelper } from '../../../shared/utils';
 
 export function shouldBehaveLikeAssetManager(): void {
   // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -28,6 +28,7 @@ export function shouldBehaveLikeAssetManager(): void {
     let warperPresetFactory: IWarperPresetFactory;
     let universeRegistry: IUniverseRegistry;
     let universeId: BigNumberish;
+    let warperHelper: WarperHelper;
 
     let warperManagerSigner: SignerWithAddress;
     let stranger: SignerWithAddress;
@@ -43,10 +44,10 @@ export function shouldBehaveLikeAssetManager(): void {
 
       [stranger] = this.signers.unnamed;
 
-      universeId = await createUniverse(universeRegistry, {
+      ({ universeId } = await new UniverseHelper(universeRegistry).create({
         name: 'Universe',
         rentalFeePercent: 1000,
-      });
+      }));
 
       // Impersonate the warper manager
       {
@@ -57,6 +58,8 @@ export function shouldBehaveLikeAssetManager(): void {
         warperManagerSigner = await hre.ethers.getSigner(warperManager.address);
         await hre.network.provider.send('hardhat_setBalance', [warperManagerSigner.address, '0x99999999999999999999']);
       }
+
+      warperHelper = new WarperHelper(warperPresetFactory, metahub, warperManager).withConfigurableWarperPreset();
     });
 
     const deployManyWarperPresetsAndRegister = async (
@@ -71,10 +74,11 @@ export function shouldBehaveLikeAssetManager(): void {
       for (const i of [...Array(count).keys()]) {
         const name = `Warper ${i}`;
         const paused = false;
-        const address = await deployWarperPreset(warperPresetFactory, warperPresetId, metahub.address, original);
-        await registerWarper(warperManager, address, { universeId, name, paused });
+        const originalInstance = ERC721__factory.connect(original, metahub.signer);
+        const warperAddress = (await warperHelper.deployAndRegister(originalInstance, { universeId, name, paused }))
+          .address;
 
-        result[address] = {
+        result[warperAddress] = {
           controller: classConfig.controller,
           original,
           name,
@@ -149,8 +153,11 @@ export function shouldBehaveLikeAssetManager(): void {
       });
       context('When warpers are registered', () => {
         beforeEach(async () => {
+          await expect(assetManager.supportedAssetCount()).to.eventually.eq(0);
+
           const original1 = await deployRandomERC721Token();
           await deployManyWarperPresetsAndRegister(universeId, 2, original1.address);
+
           const original2 = await deployRandomERC721Token();
           await deployManyWarperPresetsAndRegister(universeId, 1, original2.address);
         });
