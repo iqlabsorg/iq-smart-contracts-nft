@@ -6,10 +6,8 @@ import {
   ERC20Mock,
   ERC721Mock,
   IAssetClassRegistry,
-  IAssetController,
   IERC721AssetVault,
   IListingManager,
-  IListingStrategyRegistry,
   IMetahub,
   IPaymentManager,
   IUniverseRegistry,
@@ -19,7 +17,13 @@ import {
 } from '../../../../typechain';
 import { Rentings } from '../../../../typechain/contracts/metahub/IMetahub';
 import { ADDRESS_ZERO } from '../../../shared/types';
-import { AccessControlledHelper, AssetListerHelper } from '../../../shared/utils';
+import {
+  AccessControlledHelper,
+  AssetRegistryHelper,
+  ListingHelper,
+  UniverseHelper,
+  WarperHelper,
+} from '../../../shared/utils';
 
 const universeRegistrationParams = {
   name: 'IQ Universe',
@@ -49,14 +53,13 @@ export function shouldBehaveLikePaymentManager(): void {
     let metahub: IMetahub;
     let erc721assetVault: IERC721AssetVault;
     let assetClassRegistry: IAssetClassRegistry;
-    let assetController: IAssetController;
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
     let warperManager: IWarperManager;
-    let listingStrategyRegistry: IListingStrategyRegistry;
     let paymentToken: ERC20Mock;
 
-    let assetListerHelper: AssetListerHelper;
+    let assetListerHelper: ListingHelper;
+    let warperHelper: WarperHelper;
 
     let universeOwner: SignerWithAddress;
     let nftCreator: SignerWithAddress;
@@ -76,12 +79,10 @@ export function shouldBehaveLikePaymentManager(): void {
         listingManager,
         metahub,
         erc721assetVault,
-        assetController,
         universeRegistry,
         assetClassRegistry,
         warperPresetFactory,
         warperManager,
-        listingStrategyRegistry,
       } = this.contracts);
 
       originalAsset = this.mocks.assets.erc721;
@@ -93,23 +94,33 @@ export function shouldBehaveLikePaymentManager(): void {
       [stranger] = this.signers.unnamed;
 
       // Create a warper, create a listing, rent the listing.
-      assetListerHelper = new AssetListerHelper(
-        assetClassRegistry,
-        assetController.address,
-        erc721assetVault.address,
-        listingManager,
+
+      // Instantiate the universe and the warpers
+      await new AssetRegistryHelper(assetClassRegistry)
+        .withERC721ClassConfig(erc721assetVault, this.contracts.erc721WarperController)
+        .registerAssetClasses();
+      ({ universeId } = await new UniverseHelper(universeRegistry.connect(universeOwner)).create(
+        universeRegistrationParams,
+      ));
+      warperHelper = new WarperHelper(
+        warperPresetFactory,
         metahub,
         warperManager.connect(universeOwner),
-        universeRegistry.connect(universeOwner),
-        warperPresetFactory,
-        listingStrategyRegistry,
-      );
-      await assetListerHelper.setupRegistries();
+      ).withConfigurableWarperPreset();
 
-      universeId = await assetListerHelper.setupUniverse(universeRegistrationParams);
-      warperAddress = await assetListerHelper.setupWarper(originalAsset, universeId, warperRegistrationParams);
+      // Prepare listing helper
+      assetListerHelper = new ListingHelper(listingManager)
+        .withERC721Asset(originalAsset.address, tokenId)
+        .withFixedPriceListingStrategy(baseRate)
+        .withImmediatePayout(false)
+        .withMaxLockPeriod(maxLockPeriod)
+        .withLister(nftCreator);
+
+      warperAddress = (await warperHelper.deployAndRegister(originalAsset, { ...warperRegistrationParams, universeId }))
+        .address;
       await warperManager.connect(universeOwner).unpauseWarper(warperAddress);
-      listingId = await assetListerHelper.listAsset(nftCreator, originalAsset, maxLockPeriod, baseRate, tokenId, false);
+
+      ({ listingId } = await assetListerHelper.listAsset());
 
       const warperController = IWarperController__factory.connect(
         await warperManager.warperController(warperAddress),
