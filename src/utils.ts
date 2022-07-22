@@ -1,6 +1,7 @@
 import { BigNumberish, BigNumber } from 'ethers';
 import { BytesLike, defaultAbiCoder, hexDataSlice, solidityKeccak256 } from 'ethers/lib/utils';
 import { ASSET_CLASS, LISTING_STRATEGY } from '.';
+import { Listings } from '../typechain/contracts/listing/IListingController';
 import { Assets } from '../typechain/contracts/metahub/Metahub';
 
 /**
@@ -25,7 +26,7 @@ export const makeERC721Asset = (token: string, tokenId: BigNumberish, value: Big
  * Creates Fixed Price listing strategy params structure.
  * @param baseRate
  */
-export const makeFixedPriceStrategy = (baseRate: BigNumberish): { strategy: string; data: string } => {
+export const makeFixedPriceStrategy = (baseRate: BigNumberish): Listings.ParamsStruct => {
   return {
     strategy: LISTING_STRATEGY.FIXED_PRICE,
     data: defaultAbiCoder.encode(['uint256'], [baseRate]),

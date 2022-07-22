@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import hre, { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, BytesLike, ContractReceipt, ContractTransaction, Signer } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -5,20 +7,31 @@ import { expect } from 'chai';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import {
   ERC721,
-  ERC721Mock,
+  ERC721__factory,
   IACL,
   IAssetClassRegistry,
+  IAssetVault,
+  IAssetVault__factory,
   IListingManager,
-  IListingStrategyRegistry,
   IMetahub,
   IUniverseRegistry,
   IWarperManager,
   IWarperPresetFactory,
   IWarperPreset__factory,
   WarperPresetFactory,
+  IERC721AssetVault,
+  IAssetController,
+  ERC721AssetController,
+  IAssetController__factory,
+  IERC20,
+  IWarper,
+  IRentingManager,
+  IWarper__factory,
 } from '../../typechain';
 import { ASSET_CLASS, makeERC721Asset, makeFixedPriceStrategy } from '../../src';
 import { PRESET_CONFIGURABLE_ID } from '../../tasks/deployment';
+
+export type WithTx<T> = Awaited<T> & { tx: ContractTransaction };
 
 export const wait = async (txPromise: Promise<ContractTransaction>): Promise<ContractReceipt> => {
   return (await txPromise).wait();
@@ -42,35 +55,6 @@ export const waitBlockchainTime = async (seconds: number): Promise<void> => {
 };
 
 /**
- * Performs universe creation call and returns universe ID.
- * @param universeRegistry
- * @param params
- */
-export const createUniverse = async (
-  universeRegistry: IUniverseRegistry,
-  ...params: Parameters<IUniverseRegistry['createUniverse']>
-): Promise<BigNumber> => {
-  const receipt = await wait(universeRegistry.createUniverse(...params));
-  const events = await universeRegistry.queryFilter(universeRegistry.filters.UniverseCreated(), receipt.blockHash);
-  return events[0].args.universeId;
-};
-
-/**
- * Deploys a warper from preset via factory and returns warper address.
- */
-export const deployWarperPreset = async (
-  factory: IWarperPresetFactory,
-  presetId: BytesLike,
-  metahubAddress: string,
-  originalAddress: string,
-): Promise<string> => {
-  const initData = IWarperPreset__factory.createInterface().encodeFunctionData('__initialize', [
-    defaultAbiCoder.encode(['address', 'address'], [originalAddress, metahubAddress]),
-  ]);
-  return deployWarperPresetWithInitData(factory, presetId, initData);
-};
-
-/**
  * Deploys a warper from preset via factory and returns warper address.
  * @param factory
  * @param params
@@ -81,15 +65,6 @@ export const deployWarperPresetWithInitData = async (
 ): Promise<string> => {
   const receipt = await wait(factory.deployPreset(...params));
   const events = await factory.queryFilter(factory.filters.WarperPresetDeployed(), receipt.blockHash);
-  return events[0].args.warper;
-};
-
-export const registerWarper = async (
-  manager: IWarperManager,
-  ...params: Parameters<IWarperManager['registerWarper']>
-): Promise<string> => {
-  const receipt = await wait(manager.registerWarper(...params));
-  const events = await manager.queryFilter(manager.filters.WarperRegistered(), receipt.blockHash);
   return events[0].args.warper;
 };
 
@@ -176,72 +151,268 @@ export class AccessControlledHelper {
   }
 }
 
-export class AssetListerHelper {
-  public static warperPresetId = PRESET_CONFIGURABLE_ID;
+class BuilderNotConfiguredError extends Error {
+  constructor() {
+    super('Builder not properly configured');
+  }
+}
+
+export class AssetRegistryHelper {
+  public assetVault?: IAssetVault = undefined;
+  public assetController?: IAssetController = undefined;
+  public assetClass?: BytesLike = undefined;
+
+  constructor(readonly assetClassRegistry: IAssetClassRegistry) {}
+
+  withERC721ClassConfig(erc721assetVault: IERC721AssetVault, assetController: ERC721AssetController): this {
+    this.assetClass = ASSET_CLASS.ERC721;
+    this.assetVault = IAssetVault__factory.connect(erc721assetVault.address, erc721assetVault.signer);
+    this.assetController = IAssetController__factory.connect(assetController.address, assetController.signer);
+    return this;
+  }
+
+  async registerAssetClasses(): Promise<{ tx: ContractTransaction } | undefined> {
+    if (this.assetVault === undefined || this.assetClass === undefined || this.assetController === undefined) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    if (!(await this.assetClassRegistry.isRegisteredAssetClass(this.assetClass))) {
+      return {
+        tx: await this.assetClassRegistry.registerAssetClass(this.assetClass, {
+          controller: this.assetController.address,
+          vault: this.assetVault.address,
+        }),
+      };
+    }
+    return undefined;
+  }
+}
+
+export class UniverseHelper {
+  public universeRegistrationParams?: IUniverseRegistry.UniverseParamsStruct = undefined;
+
+  constructor(readonly universeRegistry: IUniverseRegistry) {}
+
+  async create(
+    universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct,
+  ): Promise<WithTx<{ universeId: Awaited<ReturnType<IUniverseRegistry['callStatic']['createUniverse']>> }>> {
+    const result = await this.universeRegistry.callStatic.createUniverse(universeRegistrationParams);
+    const tx = await this.universeRegistry.createUniverse(universeRegistrationParams);
+    return { tx, universeId: result };
+  }
+}
+
+export class WarperHelper {
+  public warperPresetId?: BytesLike;
+  public initData?: BytesLike;
 
   constructor(
-    readonly assetClassRegistry: IAssetClassRegistry,
-    readonly assetController: string,
-    readonly erc721assetVault: string,
-    readonly listingManager: IListingManager,
+    readonly warperPresetFactory: IWarperPresetFactory,
     readonly metahub: IMetahub,
     readonly warperManager: IWarperManager,
-    readonly universeRegistry: IUniverseRegistry,
-    readonly warperPresetFactory: IWarperPresetFactory,
-    readonly listingStrategyRegistry: IListingStrategyRegistry,
   ) {}
 
-  async setupRegistries(): Promise<void> {
-    if (!(await this.assetClassRegistry.isRegisteredAssetClass(ASSET_CLASS.ERC721))) {
-      await this.assetClassRegistry.registerAssetClass(ASSET_CLASS.ERC721, {
-        controller: this.assetController,
-        vault: this.erc721assetVault,
-      });
+  withConfigurableWarperPreset(): this {
+    this.warperPresetId = PRESET_CONFIGURABLE_ID;
+    return this;
+  }
+
+  withInitData(initData: BytesLike): this {
+    this.initData = initData;
+    return this;
+  }
+
+  async deployPreset(
+    originalAsset: ERC721,
+  ): Promise<WithTx<{ warperAddress: Awaited<ReturnType<IWarperPresetFactory['callStatic']['deployPreset']>> }>> {
+    if (this.warperPresetId === undefined) {
+      throw new BuilderNotConfiguredError();
     }
+
+    let localInitData = this.initData;
+    if (localInitData === undefined) {
+      localInitData = IWarperPreset__factory.createInterface().encodeFunctionData('__initialize', [
+        defaultAbiCoder.encode(['address', 'address'], [originalAsset.address, this.metahub.address]),
+      ]);
+    }
+
+    const result = await this.warperPresetFactory.callStatic.deployPreset(this.warperPresetId, localInitData);
+    const tx = await this.warperPresetFactory.deployPreset(this.warperPresetId, localInitData);
+    return { warperAddress: result, tx };
   }
 
-  async setupUniverse(universeRegistrationParams: IUniverseRegistry.UniverseParamsStruct): Promise<BigNumber> {
-    return createUniverse(this.universeRegistry, universeRegistrationParams);
-  }
-
-  async setupWarper(
-    originalAsset: ERC721Mock,
-    universeId: BigNumber,
+  async registerWarper(
+    warper: IWarper,
     warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct,
-  ): Promise<string> {
-    const warperAddress = await deployWarperPreset(
-      this.warperPresetFactory,
-      AssetListerHelper.warperPresetId,
-      this.metahub.address,
-      originalAsset.address,
-    );
-    await this.warperManager.registerWarper(warperAddress, { ...warperRegistrationParams, universeId });
-    return warperAddress;
+  ): Promise<ContractTransaction> {
+    await this.warperManager.callStatic.registerWarper(warper.address, warperRegistrationParams);
+    return this.warperManager.registerWarper(warper.address, warperRegistrationParams);
   }
 
-  async listAsset(
-    lister: SignerWithAddress,
-    originalAsset: ERC721Mock,
-    maxLockPeriod: number,
-    baseRate: number,
-    tokenId: BigNumber,
-    immediatePayout: boolean,
-  ): Promise<BigNumber> {
-    await originalAsset.connect(lister).setApprovalForAll(this.metahub.address, true);
+  async deployAndRegister(
+    originalAsset: ERC721,
+    warperRegistrationParams: IWarperManager.WarperRegistrationParamsStruct,
+  ): Promise<IWarper> {
+    const { warperAddress } = await this.deployPreset(originalAsset);
+    const warper = IWarper__factory.connect(warperAddress, originalAsset.signer);
+    await this.registerWarper(IWarper__factory.connect(warperAddress, originalAsset.signer), warperRegistrationParams);
 
-    const asset = makeERC721Asset(originalAsset.address, tokenId);
-    const listingParams = makeFixedPriceStrategy(baseRate);
+    return warper;
+  }
+}
 
-    const { listingId } = await this.listingManager
-      .connect(lister)
-      .callStatic.listAsset(asset, listingParams, maxLockPeriod, false);
+export class ListingHelper {
+  public lister?: SignerWithAddress = undefined;
+  public maxLockPeriod?: number = undefined;
+  public immediatePayout?: boolean = undefined;
+  public listingStrategyParams?: ReturnType<typeof makeFixedPriceStrategy> = undefined;
+  public asset?: {
+    token: string;
+    asset: ReturnType<typeof makeERC721Asset>;
+  } = undefined;
 
-    await this.listingManager.connect(lister).listAsset(asset, listingParams, maxLockPeriod, immediatePayout);
+  constructor(readonly listingManager: IListingManager) {}
 
-    return listingId;
+  withFixedPriceListingStrategy(baseRate: number): this {
+    this.listingStrategyParams = makeFixedPriceStrategy(baseRate);
+    return this;
+  }
+
+  withERC721Asset(token: string, tokenId: BigNumberish): this {
+    this.asset = {
+      asset: makeERC721Asset(token, tokenId),
+      token: token,
+    };
+    return this;
+  }
+
+  withLister(lister: SignerWithAddress): this {
+    this.lister = lister;
+    return this;
+  }
+
+  withImmediatePayout(immediatePayout: boolean): this {
+    this.immediatePayout = immediatePayout;
+    return this;
+  }
+
+  withMaxLockPeriod(maxLockPeriod: number): this {
+    this.maxLockPeriod = maxLockPeriod;
+    return this;
+  }
+
+  async listAsset(): Promise<WithTx<ReturnType<IListingManager['callStatic']['listAsset']>>> {
+    if (
+      this.lister === undefined ||
+      this.maxLockPeriod === undefined ||
+      this.listingStrategyParams === undefined ||
+      this.asset === undefined ||
+      this.immediatePayout === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    await ERC721__factory.connect(this.asset.token, this.lister).setApprovalForAll(this.listingManager.address, true);
+
+    const returnData = (await this.listingManager.connect(this.lister).callStatic.listAsset(
+      this.asset.asset,
+      this.listingStrategyParams,
+      this.maxLockPeriod,
+      this.immediatePayout,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    )) as any;
+
+    const tx = await this.listingManager
+      .connect(this.lister)
+      .listAsset(this.asset.asset, this.listingStrategyParams, this.maxLockPeriod, this.immediatePayout);
+
+    return { tx, ...returnData };
   }
 
   async listingGroupId(listingId: BigNumberish): Promise<BigNumber> {
     return (await this.listingManager.listingInfo(listingId)).groupId;
+  }
+}
+
+export class RentingHelper {
+  public renter?: SignerWithAddress = undefined;
+  public maxPaymentAmount?: BigNumberish = undefined;
+  public paymentToken?: IERC20 = undefined;
+  public warper?: IWarper = undefined;
+  public rentalPeriod?: BigNumberish = undefined;
+
+  constructor(readonly rentingManager: IRentingManager) {}
+
+  withPaymentToken(paymentToken: IERC20): this {
+    this.paymentToken = paymentToken;
+    return this;
+  }
+
+  withWarper(warper: IWarper): this {
+    this.warper = warper;
+    return this;
+  }
+
+  withRenter(renter: SignerWithAddress): this {
+    this.renter = renter;
+    return this;
+  }
+  withMaxPaymentAmount(maxPaymentAmount: BigNumberish): this {
+    this.maxPaymentAmount = maxPaymentAmount;
+    return this;
+  }
+  withRentalPeriod(rentalPeriod: BigNumberish): this {
+    this.rentalPeriod = rentalPeriod;
+    return this;
+  }
+
+  async estimateRent(listingId: BigNumberish): Promise<ReturnType<IRentingManager['callStatic']['estimateRent']>> {
+    if (
+      this.renter === undefined ||
+      this.maxPaymentAmount === undefined ||
+      this.paymentToken === undefined ||
+      this.warper === undefined ||
+      this.rentalPeriod === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    const rentingParams = {
+      listingId: listingId,
+      paymentToken: this.paymentToken.address,
+      rentalPeriod: this.rentalPeriod,
+      renter: this.renter.address,
+      warper: this.warper.address,
+    };
+    return this.rentingManager.estimateRent(rentingParams);
+  }
+
+  async rent(listingId: BigNumberish): Promise<WithTx<ReturnType<IRentingManager['callStatic']['rent']>>> {
+    if (
+      this.paymentToken === undefined ||
+      this.renter === undefined ||
+      this.maxPaymentAmount === undefined ||
+      this.rentalPeriod === undefined ||
+      this.warper === undefined
+    ) {
+      throw new BuilderNotConfiguredError();
+    }
+
+    await this.paymentToken.connect(this.renter).approve(this.rentingManager.address, this.maxPaymentAmount);
+
+    const rentingParams = {
+      listingId: listingId,
+      paymentToken: this.paymentToken.address,
+      rentalPeriod: this.rentalPeriod,
+      renter: this.renter.address,
+      warper: this.warper.address,
+    };
+    const result = (await this.rentingManager
+      .connect(this.renter)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .callStatic.rent(rentingParams, this.maxPaymentAmount)) as any;
+    const tx = await this.rentingManager.connect(this.renter).rent(rentingParams, this.maxPaymentAmount);
+
+    return { tx, ...result };
   }
 }

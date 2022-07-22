@@ -5,14 +5,14 @@ import { BigNumber, BigNumberish } from 'ethers';
 import {
   ERC721Mock,
   ERC721WarperController,
+  ERC721__factory,
   IAssetClassRegistry,
   IMetahub,
   IUniverseRegistry,
   IWarperManager,
   IWarperPresetFactory,
 } from '../../../../typechain';
-import { createUniverse, deployRandomERC721Token, deployWarperPreset, registerWarper } from '../../../shared/utils';
-import { warperPresetId } from '../metahub';
+import { deployRandomERC721Token, UniverseHelper, WarperHelper } from '../../../shared/utils';
 import { Warpers } from '../../../../typechain/contracts/warper/IWarperManager';
 import { ASSET_CLASS } from '../../../../src';
 import { ADDRESS_ZERO } from '../../../shared/types';
@@ -31,6 +31,7 @@ export function shouldBehaveLikeWarperManager(): void {
     let warperPresetFactory: IWarperPresetFactory;
     let universeRegistry: IUniverseRegistry;
     let originalAsset: ERC721Mock;
+    let warperHelper: WarperHelper;
 
     let stranger: SignerWithAddress;
     let universeId: BigNumber;
@@ -53,8 +54,8 @@ export function shouldBehaveLikeWarperManager(): void {
       for (const i of [...Array(count).keys()]) {
         const name = `Warper ${i}`;
         const paused = false;
-        const address = await deployWarperPreset(warperPresetFactory, warperPresetId, metahub.address, original);
-        await registerWarper(warperManager, address, { universeId, name, paused });
+        const originalInstance = ERC721__factory.connect(original, metahub.signer);
+        const address = (await warperHelper.deployAndRegister(originalInstance, { universeId, name, paused })).address;
 
         result[address] = {
           assetClass: ASSET_CLASS.ERC721,
@@ -80,11 +81,12 @@ export function shouldBehaveLikeWarperManager(): void {
 
       // Assume a universe is already registered.
       // Note: tests are depending on pre-existing behaviour defined by the IUniverseManager
-      universeId = await createUniverse(universeRegistry, {
+      ({ universeId } = await new UniverseHelper(universeRegistry).create({
         name: 'Universe',
         rentalFeePercent: 1000,
-      });
+      }));
       warperRegistrationParams.universeId = universeId;
+      warperHelper = new WarperHelper(warperPresetFactory, metahub, warperManager).withConfigurableWarperPreset();
     });
 
     describe('registerWarper', () => {
@@ -112,12 +114,7 @@ export function shouldBehaveLikeWarperManager(): void {
         let warperAddress: string;
 
         beforeEach(async () => {
-          warperAddress = await deployWarperPreset(
-            warperPresetFactory,
-            warperPresetId,
-            metahub.address,
-            originalAsset.address,
-          );
+          ({ warperAddress } = await warperHelper.deployPreset(originalAsset));
         });
 
         context('When called by stranger', () => {
@@ -152,13 +149,7 @@ export function shouldBehaveLikeWarperManager(): void {
       let warperAddress: string;
 
       beforeEach(async () => {
-        warperAddress = await deployWarperPreset(
-          warperPresetFactory,
-          warperPresetId,
-          metahub.address,
-          originalAsset.address,
-        );
-        await warperManager.registerWarper(warperAddress, warperRegistrationParams);
+        warperAddress = (await warperHelper.deployAndRegister(originalAsset, warperRegistrationParams)).address;
       });
 
       context('When called by stranger', () => {

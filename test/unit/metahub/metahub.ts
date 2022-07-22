@@ -125,6 +125,7 @@ export function unitTestMetahub(): void {
         erc721Controller.address,
         erc721Controller.signer,
       );
+      this.contracts.erc721WarperController = erc721Controller;
       this.contracts.assetClassRegistry = assetClassRegistry;
       this.contracts.universeRegistry = universeRegistry;
       this.contracts.warperPresetFactory = warperPresetFactory;
