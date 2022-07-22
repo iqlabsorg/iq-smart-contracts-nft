@@ -9,29 +9,52 @@
 1. Clone repository
 2. Run `yarn`
 
-## Commands
+## Compilation
 
-- `yarn compile`
-- `yarn test`
+```shell
+yarn compile
+```
+
+## Testing
+```shell
+yarn test
+```
 
 ## Generate docs
 
-- pip install -r requirements.txt
-- `yarn hardhato docgen`
-- `mkdocs serve`
+```shell
+pip install -r requirements.txt
+yarn hardhato docgen
+mkdocs serve
+```
+
+## Tasks
+Many of the protocol maintenance routines are automated using [hardhat tasks](https://hardhat.org/hardhat-runner/docs/guides/tasks-and-scripts#writing-hardhat-tasks). Find the list of available commands by running: 
+```shell
+hardhat --help
+```
 
 ## Deployment
+
+The deployment process is automated via hardhat tasks, which can be found under `tasks/deployment` directory. 
 
 ### Testing purposes (for testnet deployments)
 
 1. A payment token: `yarn hardhat --network [network name] deploy:mock:ERC20 --name USDC --symbol USDC`
 2. An NFT collection: `yarn hardhat --network [network name] deploy:mock:ERC721-internal-tests --name TEST --symbol TT`
 
-### Metahub & friends
+### Initial deployment
+The following command sequence will deploy the protocol from scratch. This process covers the deployment of all core contracts and initial configuration. 
 
 1. Create a `.env` file that resembles the `.env.example` file in the current directory.
 2. Execute the script `yarn hardhat --network [network name] deploy:initial-deployment --base-token [address]`
 
+## Upgrades
+**Beware:** Upgrading smart contracts requires extra caution, as this can lead to data loss and break the protocol.
+
+Some protocol contracts are upgradeable. This allows extending functionality and fixing the security issues.
+The upgradeability process can be automated via hardhat tasks. You can find some examples of upgrade tasks under `tasks/upgrades` directory.
+In order to reduce the risks, the protocol relies on [OZ Upgrades Plugin](https://docs.openzeppelin.com/upgrades-plugins/1.x/) for deploying and upgrading contracts. 
 
 ## Publish to NPM
 

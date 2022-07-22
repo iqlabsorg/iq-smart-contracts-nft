@@ -3,7 +3,7 @@ import { Metahub__factory } from '../../typechain';
 import { MetahubLibraryAddresses } from '../../typechain/factories/contracts/metahub/Metahub__factory';
 
 task('upgrade:metahub', 'Deploy and upgrade the `Metahub` implementation contracts.')
-  .addParam('proxy', 'The Metahub proxy contract address', undefined, types.string)
+  .addParam('proxy', 'The Metahub current proxy contract address', undefined, types.string)
   .setAction(async ({ proxy }: { proxy: string }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
