@@ -8,6 +8,7 @@ import {
   IAssetClassRegistry,
   IERC721AssetVault,
   IListingManager,
+  IListingStrategyRegistry,
   IMetahub,
   IUniverseRegistry,
   IWarperManager,
@@ -53,6 +54,7 @@ export function shouldBehaveLikeListingManager(): void {
     let universeRegistry: IUniverseRegistry;
     let warperPresetFactory: IWarperPresetFactory;
     let warperManager: IWarperManager;
+    let listingStrategyRegistry: IListingStrategyRegistry;
     let paymentToken: ERC20Mock;
 
     let warperAddress: string;
@@ -71,6 +73,7 @@ export function shouldBehaveLikeListingManager(): void {
         assetClassRegistry,
         warperPresetFactory,
         warperManager,
+        listingStrategyRegistry,
       } = this.contracts);
       originalAsset = this.mocks.assets.erc721;
       paymentToken = this.mocks.assets.erc20;
